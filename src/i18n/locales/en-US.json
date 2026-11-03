@@ -522,5 +522,24 @@
     "modalTitle": "SSH connection",
     "modalHint": "This session is a local terminal, so remote details cannot be derived from it — fill them in manually. Leave password and key empty to use the SSH agent or default key.",
     "startTransfer": "Start transfer"
+  },
+  "tree": {
+    "favorites": "Favorites",
+    "open": "Open tab",
+    "favorite": "Favorite",
+    "unfavorite": "Unfavorite",
+    "rename": "Rename",
+    "newCategory": "New category",
+    "newSession": "New session",
+    "openInFileManager": "Open in file manager",
+    "projectDeleted": "Project deleted",
+    "categoryDeleted": "Category deleted",
+    "sessionDeleted": "Session deleted",
+    "deleteTitle.project": "Delete project \"{name}\"?",
+    "deleteTitle.category": "Delete category \"{name}\"?",
+    "deleteTitle.session": "Delete session \"{name}\"?",
+    "deleteProjectDesc": "All categories and sessions under this project will be deleted. This cannot be undone.",
+    "deleteCategoryDesc": "Sessions in this category will be moved out of it (sessions are kept).",
+    "deleteSessionDesc": "The session record will be permanently deleted. This cannot be undone."
   }
 }

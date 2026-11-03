@@ -28,6 +28,7 @@ import { themeStore, initTheme } from "@/stores/themeStore";
 import { shellStore, SIDEBAR_COLLAPSED_WIDTH } from "@/stores/shellStore";
 import useKeyboardShortcuts from "@/hooks/useKeyboardShortcuts";
 import { useOnboarding, AgreementModalNext, OnboardingGuideNext } from "@/components/onboarding/OnboardingFlowNext";
+import SidebarTreeNext from "@/components/layout/SidebarTreeNext";
 import WindowFrame from "@/components/shell/WindowFrame";
 import StatusBarShell from "@/components/shell/StatusBarShell";
 import { toolVisual } from "@/components/tabs/tabVisuals";
@@ -47,36 +48,6 @@ import FileTransferPanel from "@/components/terminal/FileTransferPanel";
 import { cn } from "@/lib/utils";
 
 type MainView = "panes" | "settings" | "cost";
-
-/** 侧栏树行 */
-function TreeRow({
-  depth,
-  active,
-  colorDot,
-  label,
-  onClick,
-}: {
-  depth: number;
-  active?: boolean;
-  colorDot?: string;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[13px] transition-colors",
-        active ? "bg-accent text-accent-foreground" : "text-foreground/85 hover:bg-accent/60",
-      )}
-      style={{ paddingLeft: 8 + depth * 12 }}
-    >
-      {colorDot && <span aria-hidden className="h-2 w-2 flex-shrink-0 rounded-full" style={{ background: colorDot }} />}
-      <span className="min-w-0 flex-1 truncate">{label}</span>
-    </button>
-  );
-}
 
 /** 单 pane 内容：活动会话终端 + 记录/传输浮层（portal 宿主为终端容器） */
 function PaneContent({
@@ -125,7 +96,6 @@ export default function AppNext() {
   const sidebarWidth = shellStore((s) => s.sidebarWidth);
 
   const projects = useAppStore((s) => s.projects);
-  const categories = useAppStore((s) => s.categories);
   const sessions = useAppStore((s) => s.sessions);
   const panes = useAppStore((s) => s.panes);
   const activePaneId = useAppStore((s) => s.activePaneId);
@@ -275,62 +245,13 @@ export default function AppNext() {
                 </button>
               </div>
 
-              {/* 项目树 */}
-              <nav className="flex-1 overflow-y-auto px-2 pb-2">
-                {projects.map((project) => {
-                  const expanded = expandedProjects.has(project.id);
-                  const projectSessions = sessions.filter((s) => s.projectId === project.id);
-                  const projectCategories = categories.filter((c) => c.projectId === project.id);
-                  return (
-                    <div key={project.id} className="mb-1">
-                      <TreeRow
-                        depth={0}
-                        colorDot={project.color}
-                        label={project.name}
-                        onClick={() => toggleProject(project.id)}
-                      />
-                      {expanded && (
-                        <>
-                          {projectCategories.map((cat) => (
-                            <div key={cat.id}>
-                              <TreeRow depth={1} label={cat.name} onClick={() => toggleProject(project.id)} />
-                              {projectSessions
-                                .filter((s) => s.categoryId === cat.id)
-                                .map((s) => (
-                                  <TreeRow
-                                    key={s.id}
-                                    depth={2}
-                                    active={s.id === activeTabId}
-                                    colorDot={s.color}
-                                    label={s.title || s.toolType}
-                                    onClick={() => openSession(s.id)}
-                                  />
-                                ))}
-                            </div>
-                          ))}
-                          {projectSessions
-                            .filter((s) => !s.categoryId)
-                            .map((s) => (
-                              <TreeRow
-                                key={s.id}
-                                depth={1}
-                                active={s.id === activeTabId}
-                                colorDot={s.color}
-                                label={s.title || s.toolType}
-                                onClick={() => openSession(s.id)}
-                              />
-                            ))}
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
-                {projects.length === 0 && (
-                  <div className="px-2 py-4 text-center text-[11px] text-muted-foreground/60">
-                    {t("shell.emptyProjects")}
-                  </div>
-                )}
-              </nav>
+              <SidebarTreeNext
+                expandedProjects={expandedProjects}
+                onToggleProject={toggleProject}
+                onOpenSession={openSession}
+                onNewCategory={(projectId) => setNewCategoryModalOpen(true, projectId)}
+                onNewSession={(projectId, categoryId) => setNewSessionModalOpen(true, projectId, categoryId)}
+              />
 
               {/* 底部视图入口 */}
               <div className="border-t border-border/60 p-2">

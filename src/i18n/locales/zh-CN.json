@@ -522,5 +522,24 @@
     "modalTitle": "输入 SSH 连接参数",
     "modalHint": "本次会话是本地终端，不会从会话里取到远程连接信息，因此需要手动填写。密码和私钥都留空时，走 SSH Agent 或默认密钥。",
     "startTransfer": "开始传输"
+  },
+  "tree": {
+    "favorites": "收藏",
+    "open": "打开标签",
+    "favorite": "加入收藏",
+    "unfavorite": "取消收藏",
+    "rename": "重命名",
+    "newCategory": "新建分类",
+    "newSession": "新建会话",
+    "openInFileManager": "在文件管理器打开",
+    "projectDeleted": "项目已删除",
+    "categoryDeleted": "分类已删除",
+    "sessionDeleted": "会话已删除",
+    "deleteTitle.project": "删除项目「{name}」？",
+    "deleteTitle.category": "删除分类「{name}」？",
+    "deleteTitle.session": "删除会话「{name}」？",
+    "deleteProjectDesc": "将删除该项目的全部分类与会话记录，此操作不可撤销。",
+    "deleteCategoryDesc": "该分类下的会话将移出分类（会话本身保留）。",
+    "deleteSessionDesc": "会话记录将被永久删除，此操作不可撤销。"
   }
 }
