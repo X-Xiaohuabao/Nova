@@ -1,0 +1,46 @@
+{
+  "hooks": {
+    "enabled": true,
+    "events": {
+      "UserPromptSubmit": [
+        {
+          "matcher": "",
+          "hooks": [
+            {
+              "type": "command",
+              "command": "node .zcode/hooks/skill-forced-eval.cjs",
+              "statusMessage": "强制技能评估",
+              "timeoutMs": 10000
+            }
+          ]
+        }
+      ],
+      "PreToolUse": [
+        {
+          "matcher": "Bash|Write|Edit",
+          "hooks": [
+            {
+              "type": "command",
+              "command": "node .zcode/hooks/pre-tool-use.cjs",
+              "statusMessage": "命令安全检查",
+              "timeoutMs": 5000
+            }
+          ]
+        }
+      ],
+      "Stop": [
+        {
+          "matcher": "",
+          "hooks": [
+            {
+              "type": "command",
+              "command": "node .zcode/hooks/stop.cjs",
+              "statusMessage": "清理与提示",
+              "timeoutMs": 10000
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

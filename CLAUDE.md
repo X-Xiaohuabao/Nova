@@ -22,9 +22,9 @@ TeaCoder 是一款 AI 编程 CLI 工具的桌面管理客户端（Tauri 2.x）�
 | ---------- | ------------------------- | ------------------- |
 | 桌面框架       | Tauri                     | 2.x（不允许 1.x）        |
 | 后端         | Rust                      | stable 工具链          |
-| HTTP/WS 网关 | axum                      | 仅监听 127.0.0.1:49999 |
+| HTTP/WS 网关 | axum                      | 内部网关仅监听 127.0.0.1:49999；remote_access WS 服务默认关闭，显式开启后方可绑定非回环地址且强制鉴权 |
 | 前端         | React + TypeScript        | React 19, TS 5.x    |
-| UI 组件库     | Ant Design                | 6.x（不允许 5.x）        |
+| UI 组件库     | shadcn/ui                   | Radix UI + TailwindCSS 4，源码组件进仓库 |
 | 样式         | TailwindCSS               | 4.x，仅用于布局/间距/自定义样式  |
 | 状态管理       | Zustand                   | —                   |
 | 终端渲染       | xterm.js                  | —                   |
@@ -93,6 +93,7 @@ TeaCoder 是一款 AI 编程 CLI 工具的桌面管理客户端（Tauri 2.x）�
 - API Key / OAuth Token **必须**通过系统 Keychain 存储（keyring crate）
 - **禁止**将 API Key 明文写入 SQLite、JSONL、日志或任何文件
 - axum 网关**仅监听 127.0.0.1**，禁止绑定 0.0.0.0
+- **例外（远程访问服务）**：`remote_access` WS 服务默认**关闭**；仅当用户在设置中显式开启后方可绑定非回环地址，且必须强制配对码/令牌鉴权，日志与导出脱敏
 - 日志中所有 API Key 必须脱敏（显示 `sk-***...` 格式）
 - Profile 导出时 API Key 必须脱敏
 
@@ -102,12 +103,11 @@ TeaCoder 是一款 AI 编程 CLI 工具的桌面管理客户端（Tauri 2.x）�
 - 文件操作使用 `std::fs`，**禁止**直接 `shell out` 到 `cp`/`rm`/`mv`
 - Windows / macOS / Linux 三平台必须同等支持
 
-### 5. Ant Design + TailwindCSS 共存
+### 5. shadcn/ui + TailwindCSS
 
-- Ant Design 负责 UI 组件（按钮、表单、弹窗、表格等）
-- TailwindCSS **仅用于**布局（flex/grid）、间距（p/m）、自定义样式
-- **禁止**用 TailwindCSS 覆盖 AntD 组件的样式
-- 配置 TailwindCSS `preflight: false` 或 `corePlugins: { preflight: false }` 避免冲突
+- shadcn/ui 负责 UI 组件（按钮、表单、弹窗、下拉等），源码组件进仓库（`src/components/ui/`），可自由定制
+- 颜色/圆角/阴影一律引用语义 CSS 变量（`--background`/`--primary`/`--border` 等），**禁止**硬编码色值
+- **禁止**深改 Radix UI 原语内部结构；定制通过 className / variant（CVA）进行
 
 ## 启动命令
 
