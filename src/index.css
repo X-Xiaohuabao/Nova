@@ -1,7 +1,12 @@
 @layer theme, base, components, utilities;
 
 @import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
 @import "tailwindcss/utilities.css" layer(utilities);
+
+/* 语义 token 单一来源（明暗双套 + @theme inline 映射）。
+ * 必须处于本 Tailwind 入口的 @import 链内，bg-background 等语义工具类才会生成。 */
+@import "./styles/tokens.css";
 
 /* UI font family, size and zoom variables - applied to root */
 :root {
