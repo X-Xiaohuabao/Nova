@@ -39,6 +39,10 @@ import NotificationSettingsNext from "./NotificationSettingsNext";
 import DataManagementNext from "./DataManagementNext";
 import McpAccessNext from "./McpAccessNext";
 import AboutNext from "./AboutNext";
+import KeybindingsSettingsNext from "./KeybindingsSettingsNext";
+import RemoteAccessNext from "./RemoteAccessNext";
+import LlmProvidersNext from "./LlmProvidersNext";
+import ProfileManagementNext from "./ProfileManagementNext";
 
 /* ============ 页面注册表（按 design-ui-patterns 1.2 分组定稿） ============ */
 
@@ -58,7 +62,7 @@ const CLI_ITEM_KEYS = ["settings.model", "settings.quickCommands"];
 
 const PAGES: SettingsPageDef[] = [
   { key: "general", groupKey: "groupGeneral", labelKey: "settings.pageGeneral", render: (h) => <GeneralSettingsNext highlightKey={h} />, itemKeys: ["settings.theme", "settings.uiZoom", "settings.uiFont", "settings.language"] },
-  { key: "keybindings", groupKey: "groupGeneral", labelKey: "settings.pageKeybindings", migrating: true },
+  { key: "keybindings", groupKey: "groupGeneral", labelKey: "settings.pageKeybindings", render: () => <KeybindingsSettingsNext />, itemKeys: ["settings.keybindings.showHide", "settings.keybindings.copy", "settings.keybindings.undo", "settings.keybindings.openSettings"] },
   { key: "terminal", groupKey: "groupCli", labelKey: "settings.pageTerminal", render: (h) => <TerminalSettingsNext highlightKey={h} />, itemKeys: ["settings.shell", "settings.terminalFont", "settings.terminalFontSize", "settings.colorTheme", "settings.cursorStyle", "settings.scrollback", "settings.bell", "settings.envVars"] },
   { key: "claude", groupKey: "groupCli", labelKey: "settings.pageClaude", render: () => <ClaudeSettingsNext />, itemKeys: [...CLI_ITEM_KEYS, "settings.claude.autoSubmit", "settings.claude.permissionMode", "settings.claude.maxOutputLength", "settings.claude.customInstructions"] },
   { key: "codex", groupKey: "groupCli", labelKey: "settings.pageCodex", render: () => <CodexSettingsNext />, itemKeys: [...CLI_ITEM_KEYS, "settings.codex.autoApprove", "settings.codex.sandboxMode"] },
@@ -67,10 +71,10 @@ const PAGES: SettingsPageDef[] = [
   { key: "antigravity", groupKey: "groupCli", labelKey: "settings.pageAntigravity", render: () => <AntigravitySettingsNext />, itemKeys: [...CLI_ITEM_KEYS, "settings.antigravity.apiKey", "settings.antigravity.endpoint", "settings.antigravity.autoCommit"] },
   { key: "clishell", groupKey: "groupCli", labelKey: "settings.pageCliShell", render: () => <CliShellSettingsNext toolType="terminal" />, itemKeys: ["settings.cliShellEnvVars", "settings.quickCommands"] },
   { key: "mcp", groupKey: "groupCli", labelKey: "settings.pageMcp", render: () => <McpAccessNext />, itemKeys: ["settings.mcp.servers"] },
-  { key: "llm-providers", groupKey: "groupProviders", labelKey: "settings.pageLlmProviders", migrating: true },
-  { key: "profile-management", groupKey: "groupProviders", labelKey: "settings.pageProfileManagement", migrating: true },
+  { key: "llm-providers", groupKey: "groupProviders", labelKey: "settings.pageLlmProviders", render: () => <LlmProvidersNext />, itemKeys: ["settings.providers.newCustom", "settings.providers.fromPreset"] },
+  { key: "profile-management", groupKey: "groupProviders", labelKey: "settings.pageProfileManagement", render: () => <ProfileManagementNext />, itemKeys: ["settings.profiles.new", "settings.profiles.toolType"] },
   { key: "network", groupKey: "groupNetwork", labelKey: "settings.pageNetwork", render: () => <NetworkSettingsNext />, itemKeys: ["settings.net.enableProxy", "settings.net.proxyAddress", "settings.net.timeout", "settings.net.sslVerify"] },
-  { key: "remote-access", groupKey: "groupNetwork", labelKey: "settings.pageRemoteAccess", migrating: true },
+  { key: "remote-access", groupKey: "groupNetwork", labelKey: "settings.pageRemoteAccess", render: () => <RemoteAccessNext />, itemKeys: ["settings.remote.enabled", "settings.remote.port", "settings.remote.pairingCode"] },
   { key: "notification", groupKey: "groupSystem", labelKey: "settings.pageNotification", render: () => <NotificationSettingsNext />, itemKeys: ["settings.notif.desktop", "settings.notif.sessionComplete", "settings.notif.costWarning", "settings.notif.versionUpdate"] },
   { key: "data-management", groupKey: "groupSystem", labelKey: "settings.pageDataManagement", render: () => <DataManagementNext />, itemKeys: ["settings.data.directory", "settings.data.export", "settings.data.clearCache", "settings.data.clearAll"] },
   { key: "about", groupKey: "groupAbout", labelKey: "settings.pageAbout", render: () => <AboutNext />, itemKeys: ["settings.about.version", "settings.about.channel"] },

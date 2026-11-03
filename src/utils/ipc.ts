@@ -178,15 +178,25 @@ export async function listProfiles(toolType?: string): Promise<Profile[]> {
   return invoke<Profile[]>("list_profiles", { toolType });
 }
 
+/**
+ * Profile 凭据通道：后端 update_profile 从 updates 读取 apiKey/oauthToken/
+ * oauthRefreshToken 键并写入系统 Keychain（不落库），故入参类型显式包含。
+ */
+type ProfileCredentialKeys = {
+  apiKey?: string;
+  oauthToken?: string;
+  oauthRefreshToken?: string;
+};
+
 export async function createProfile(
-  profile: Omit<Profile, "id" | "createdAt" | "updatedAt">,
+  profile: Omit<Profile, "id" | "createdAt" | "updatedAt"> & ProfileCredentialKeys,
 ): Promise<Profile> {
   return invoke<Profile>("create_profile", { profile });
 }
 
 export async function updateProfile(
   id: string,
-  updates: Partial<Profile>,
+  updates: Partial<Profile> & ProfileCredentialKeys,
 ): Promise<Profile> {
   return invoke<Profile>("update_profile", { id, updates });
 }
