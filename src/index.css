@@ -50,6 +50,8 @@
 html {
   font-family: var(--ui-font-family);
   font-size: var(--ui-font-size);
+  /* 文字继承色跟随主题：md-body 等依赖继承的正文在深色下不再是浏览器默认黑色 */
+  color: var(--foreground);
 }
 
 /* Apply zoom to html element */
@@ -82,31 +84,6 @@ html, body, #root {
 }
 
 /* 窗口控制按钮 */
-.window-control-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 46px;
-  height: 26px;
-  border: none;
-  background: transparent;
-  color: #999999;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-  --control-bg: #212123;
-}
-
-.window-control-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #e0e0e0;
-}
-
-.window-control-close:hover {
-  background: #e81123;
-  color: #ffffff;
-  height: 26px;
-}
-
 /* xterm.js 滚动条对齐全局细条观感（xterm 滑条自带内联样式，需 !important 覆盖） */
 .xterm .xterm-scrollable-element .scrollbar {
   width: 8px !important;
