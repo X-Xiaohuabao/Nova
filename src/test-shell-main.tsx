@@ -1,7 +1,11 @@
-import { StrictMode, useEffect } from "react";
+import { StrictMode, useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { useTranslation } from "react-i18next";
 import ChatPlaceholder from "@/components/chat/ChatPlaceholder";
+import ResponsiveDialog from "@/components/common/ResponsiveDialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import WindowFrame from "@/components/shell/WindowFrame";
 import { changeLanguage, SUPPORTED_LANGUAGES } from "@/i18n";
 import type { Language } from "@/i18n";
@@ -30,6 +34,8 @@ function ShellPreview() {
   const { t, i18n } = useTranslation();
   const mode = themeStore((s) => s.mode);
   const resolved = themeStore((s) => s.resolved);
+  // 组件演示（T5 验证用：ResponsiveDialog 双壳 + 最小组件集）
+  const [demoOpen, setDemoOpen] = useState(false);
   const runtime: RuntimeKind =
     new URLSearchParams(window.location.search).get("platform") === "mobile"
       ? "web-remote"
@@ -65,6 +71,42 @@ function ShellPreview() {
         <ChatPlaceholder />
       </WindowFrame>
 
+      {/* 预览专用：组件集演示（T5 验证用） */}
+      <button
+        type="button"
+        onClick={() => setDemoOpen(true)}
+        className="fixed top-3 left-3 z-50 rounded-md border border-white/20 bg-black/50 px-2 py-1 text-xs text-white/80 backdrop-blur transition-colors hover:bg-black/70"
+      >
+        {t("shell.demoComponents")}
+      </button>
+      <ResponsiveDialog
+        open={demoOpen}
+        onOpenChange={setDemoOpen}
+        title={t("shell.demoComponents")}
+        description={t("shell.demoDesc")}
+        footer={
+          <Button variant="outline" onClick={() => setDemoOpen(false)}>
+            {t("common.close")}
+          </Button>
+        }
+      >
+        <div className="flex flex-col gap-3 py-1">
+          <Input placeholder={t("common.search")} />
+          <Separator />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm">{t("shell.newSession")}</Button>
+            <Button size="sm" variant="secondary">
+              {t("theme.light")}
+            </Button>
+            <Button size="xs" variant="ghost">
+              {t("theme.system")}
+            </Button>
+            <Button size="icon-sm" variant="destructive" aria-label={t("common.close")}>
+              <span aria-hidden className="text-xs">✕</span>
+            </Button>
+          </div>
+        </div>
+      </ResponsiveDialog>
       {/* 预览专用：三态主题切换演示（正式入口在设置页，见 T9） */}
       <button
         type="button"

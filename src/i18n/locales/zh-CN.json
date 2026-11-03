@@ -1,6 +1,7 @@
 {
   "common": {
-    "search": "搜索"
+    "search": "搜索",
+    "close": "关闭"
   },
   "shell": {
     "groupProjects": "项目",
@@ -24,7 +25,9 @@
     "cardPlaceholder": "占位卡片",
     "bridgeTauri": "Tauri IPC 桥",
     "bridgeWs": "WebSocket 桥",
-    "skeletonBadge": "骨架预览"
+    "skeletonBadge": "骨架预览",
+    "demoComponents": "组件演示",
+    "demoDesc": "最小组件集与响应式弹层预览"
   },
   "chat": {
     "title": "聊天视图挂载点",

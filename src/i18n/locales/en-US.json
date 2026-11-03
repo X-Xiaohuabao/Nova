@@ -1,6 +1,7 @@
 {
   "common": {
-    "search": "Search"
+    "search": "Search",
+    "close": "Close"
   },
   "shell": {
     "groupProjects": "Projects",
@@ -24,7 +25,9 @@
     "cardPlaceholder": "Placeholder",
     "bridgeTauri": "Tauri IPC bridge",
     "bridgeWs": "WebSocket bridge",
-    "skeletonBadge": "Skeleton"
+    "skeletonBadge": "Skeleton",
+    "demoComponents": "Component demo",
+    "demoDesc": "Minimal UI set & responsive dialog preview"
   },
   "chat": {
     "title": "Chat View Mount Point",

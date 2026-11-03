@@ -31,7 +31,7 @@
   - 验收: `--background/--foreground/--primary/--muted/--border` 等语义变量明暗双套齐全，Tailwind 4 `@theme` 映射完成；深/浅/跟随系统三态切换即时生效并持久化；旧主题 key 归一映射（暗色系→dark、浅色系→light）
   - 涉及: src/styles/、src/stores/、src/themes/
   - 依赖: T3
-- [ ] T5 落地最小组件集（骨架所需）
+- [x] T5 落地最小组件集（骨架所需）（完成于 2026-11-03，提交 006d6a6，做了什么：shadcn add 8 组件（含 sheet）进 src/components/ui/；修正 CLI 误加的陌生 cn 依赖→统一 @/lib/utils；macOS 密度定制（button 32/28px 档、input 32px、dialog p-5+max-w 560、标题 15px）；基件 sr-only/Close 文案 i18n 化；ResponsiveDialog 落 src/components/common/（双壳+把手下拉 80px 关闭+85vh 内滚）；预览台组件演示按钮）
   - 验收: button / input / dropdown-menu / tooltip / dialog / separator / scroll-area 落地 `src/components/ui/` 并按 macOS 观感定制（8px 圆角、紧凑密度、SF 字体栈）；**ResponsiveDialog 封装落地**（≥768px Dialog / <768px 底部 Sheet，见 doc/design-ui-patterns.md 第 2 章）；`tsc --noEmit` 通过
   - 涉及: src/components/ui/
   - 依赖: T4
