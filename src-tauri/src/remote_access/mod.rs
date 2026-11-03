@@ -7,6 +7,7 @@
 //! - 配对鉴权（RA4）：握手首帧 auth + 会话令牌
 
 pub mod frames;
+pub mod pairing;
 pub mod server;
 
 use crate::storage::AppDatabase;

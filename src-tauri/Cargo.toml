@@ -26,6 +26,8 @@ serde_json = "1"
 tokio = { version = "1", features = ["full"] }
 axum = { version = "0.8", features = ["ws"] }
 tower-http = { version = "0.6", default-features = false, features = ["fs"] } # 远程访问静态资源兜底（RA3）
+rand = "0.9" # 远程访问配对码随机生成（RA4）
+sha2 = "0.10" # 远程访问会话令牌仅存哈希（RA4）
 rusqlite = { version = "0.35", features = ["bundled"] }
 portable-pty = "0.8"
 keyring = "3"

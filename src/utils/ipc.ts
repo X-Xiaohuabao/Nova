@@ -581,6 +581,18 @@ export async function remoteSetConfig(config: RemoteAccessConfig): Promise<void>
   return invoke("remote_set_config", { config });
 }
 
+/** 配对码视图（本机 UI 展示；明文仅经此通道给前台，日志不落码值） */
+export interface RemotePairingCode {
+  code: string;
+  /** 剩余有效秒数 */
+  expiresInSecs: number;
+}
+
+/** 获取当前配对码；无有效码时现场生成新码（RA4） */
+export async function remoteGetPairingCode(): Promise<RemotePairingCode> {
+  return invoke<RemotePairingCode>("remote_get_pairing_code");
+}
+
 export async function getLlmProviderApiKey(providerId: string): Promise<string | null> {
   return invoke<string | null>("llm_provider_get_api_key", { providerId });
 }

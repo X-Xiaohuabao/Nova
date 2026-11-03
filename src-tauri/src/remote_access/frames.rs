@@ -35,13 +35,35 @@ pub enum WsFrame {
         #[serde(default, skip_serializing_if = "String::is_empty")]
         error: String,
     },
-    /// 本地 → 手机端：事件单向推送
+    /// 手机端 → 本地：事件单向推送（服务端收到即忽略）
     #[serde(rename = "event")]
     Event {
         /// 事件名，与 Tauri event 同名
         event: String,
         /// 事件负载
         payload: Value,
+    },
+    /// 手机端 → 本地：握手认证帧（RA4；首帧必须 auth，配对码或既往令牌二选一）
+    #[serde(rename = "auth")]
+    Auth {
+        /// 6 位配对码
+        #[serde(default)]
+        code: String,
+        /// 既往会话令牌（断线重连免配对）
+        #[serde(default)]
+        token: String,
+    },
+    /// 本地 → 手机端：认证通过（携带会话令牌，客户端须保存供重连）
+    #[serde(rename = "auth_ok")]
+    AuthOk {
+        /// 会话令牌（明文仅出现在本帧，服务端只存哈希）
+        token: String,
+    },
+    /// 本地 → 手机端：认证失败（未认证前其它帧一律拒绝）
+    #[serde(rename = "auth_err")]
+    AuthErr {
+        /// 失败原因（不含配对码/令牌内容）
+        error: String,
     },
 }
 
@@ -107,5 +129,23 @@ mod tests {
             }
             _ => panic!("应解析为 event 帧"),
         }
+    }
+
+    #[test]
+    fn auth帧双向形状一致() {
+        // 客户端 → 服务端：配对码认证
+        let frame: WsFrame =
+            serde_json::from_str(r#"{"type":"auth","code":"123456"}"#).expect("解析失败");
+        assert!(matches!(frame, WsFrame::Auth { code, token } if code == "123456" && token.is_empty()));
+        // 客户端 → 服务端：令牌重连
+        let frame: WsFrame =
+            serde_json::from_str(r#"{"type":"auth","token":"t-1"}"#).expect("解析失败");
+        assert!(matches!(frame, WsFrame::Auth { code, token } if code.is_empty() && token == "t-1"));
+        // 服务端 → 客户端：auth_ok / auth_err
+        let ok = serde_json::to_string(&WsFrame::AuthOk { token: "t-2".to_string() }).expect("序列化失败");
+        assert_eq!(ok, r#"{"type":"auth_ok","token":"t-2"}"#);
+        let err = serde_json::to_string(&WsFrame::AuthErr { error: "配对码或令牌无效".to_string() })
+            .expect("序列化失败");
+        assert!(err.contains(r#""type":"auth_err""#));
     }
 }

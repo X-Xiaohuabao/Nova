@@ -51,4 +51,27 @@ export interface WsEventFrame {
   payload: unknown;
 }
 
-export type WsFrame = WsInvokeFrame | WsResultFrame | WsEventFrame;
+export type WsFrame = WsInvokeFrame | WsResultFrame | WsEventFrame | WsAuthFrame | WsAuthOkFrame | WsAuthErrFrame;
+
+/* ============ 握手认证（RA4）：连接后首帧必须 auth，认证通过前其它帧被拒 ============ */
+
+/** 手机端 → 本地：认证帧（配对码或既往令牌二选一；令牌用于断线重连免配对） */
+export interface WsAuthFrame {
+  type: "auth";
+  /** 6 位配对码（远程访问面板展示，5 分钟有效） */
+  code?: string;
+  /** 既往会话令牌 */
+  token?: string;
+}
+
+/** 本地 → 手机端：认证通过（token 必须保存供重连轮换） */
+export interface WsAuthOkFrame {
+  type: "auth_ok";
+  token: string;
+}
+
+/** 本地 → 手机端：认证失败（错误 3 次断连并冷却 30 秒） */
+export interface WsAuthErrFrame {
+  type: "auth_err";
+  error: string;
+}

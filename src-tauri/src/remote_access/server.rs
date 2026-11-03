@@ -21,6 +21,7 @@ use tokio::sync::mpsc;
 use tower_http::services::ServeDir;
 
 use super::frames::WsFrame;
+use super::pairing::{self, CooldownGuard, MAX_AUTH_ATTEMPTS};
 use super::RemoteAccessConfig;
 
 /// 远程命令处理器：入参为 invoke.args，返回 result.data 或错误信息
@@ -110,10 +111,86 @@ async fn ws_upgrade(upgrade: WebSocketUpgrade) -> Response {
     upgrade.on_upgrade(ws_bridge)
 }
 
-/// 单连接帧循环：invoke → 白名单分发 → result（id 匹配）。
-/// 顺序处理即可满足当前白名单（remote_ping 立即返回）；引入耗时命令时再升级为
-/// 写端任务化，避免慢命令阻塞读循环。
+/// 发送一帧文本
+async fn send_frame(socket: &mut WebSocket, frame: &WsFrame) -> bool {
+    let Ok(text) = serde_json::to_string(frame) else {
+        return false;
+    };
+    socket.send(Message::text(text)).await.is_ok()
+}
+
+/// 单连接生命周期：冷却检查 → 握手认证（首帧必须 auth）→ 业务帧循环。
+/// 认证失败累计达上限：断连并触发全局冷却 30 秒。
+/// 🔴 日志脱敏：全程不打印配对码/令牌明文。
 async fn ws_bridge(mut socket: WebSocket) {
+    // 冷却中的新连接直接拒绝（不区分来源：局域网阶段单设备场景）
+    if let CooldownGuard::Cooling { remaining_secs } = pairing::cooldown_state() {
+        let _ = send_frame(
+            &mut socket,
+            &WsFrame::AuthErr {
+                error: format!("认证冷却中，请约 {remaining_secs} 秒后重试"),
+            },
+        )
+        .await;
+        return;
+    }
+
+    let mut failures: u8 = 0;
+
+    // 握手认证循环：通过即产出本轮签发的会话令牌
+    let session_token: String = loop {
+        let Some(Ok(Message::Text(text))) = socket.recv().await else {
+            return;
+        };
+        match serde_json::from_str::<WsFrame>(&text) {
+            Ok(WsFrame::Auth { code, token }) => {
+                // 既往令牌优先（重连免配对；命中后轮换新令牌）
+                let verified = if !token.is_empty() && pairing::verify_session_token(&token) {
+                    pairing::revoke_session_token(&token);
+                    Some(pairing::issue_session_token())
+                } else if !code.is_empty() && pairing::verify_pairing_code(&code) {
+                    Some(pairing::issue_session_token())
+                } else {
+                    None
+                };
+                match verified {
+                    Some(fresh) => {
+                        let _ = send_frame(&mut socket, &WsFrame::AuthOk { token: fresh.clone() }).await;
+                        break fresh;
+                    }
+                    None => {
+                        failures += 1;
+                        let _ = send_frame(
+                            &mut socket,
+                            &WsFrame::AuthErr { error: "配对码或令牌无效".to_string() },
+                        )
+                        .await;
+                        if failures >= MAX_AUTH_ATTEMPTS {
+                            pairing::trigger_cooldown();
+                            return;
+                        }
+                    }
+                }
+            }
+            _ => {
+                // 未认证时的其它帧一律拒绝
+                failures += 1;
+                let _ = send_frame(
+                    &mut socket,
+                    &WsFrame::AuthErr { error: "需要先完成配对认证".to_string() },
+                )
+                .await;
+                if failures >= MAX_AUTH_ATTEMPTS {
+                    pairing::trigger_cooldown();
+                    return;
+                }
+            }
+        }
+    };
+
+    // 业务帧循环：invoke → 白名单分发 → result（id 匹配）。
+    // 顺序处理即可满足当前白名单（remote_ping 立即返回）；引入耗时命令时再升级为
+    // 写端任务化，避免慢命令阻塞读循环。
     while let Some(Ok(msg)) = socket.recv().await {
         let Message::Text(text) = msg else {
             continue;
@@ -127,13 +204,13 @@ async fn ws_bridge(mut socket: WebSocket) {
             Ok(data) => WsFrame::Result { id, ok: true, data, error: String::new() },
             Err(error) => WsFrame::Result { id, ok: false, data: Value::Null, error },
         };
-        let Ok(text) = serde_json::to_string(&reply) else {
-            continue;
-        };
-        if socket.send(Message::text(text)).await.is_err() {
+        if !send_frame(&mut socket, &reply).await {
             break;
         }
     }
+
+    // 连接结束：撤销会话令牌（哈希表惰性过期兜底）
+    pairing::revoke_session_token(&session_token);
 }
 
 /// 启动 WS 服务并监听 `0.0.0.0:<port>`
@@ -188,6 +265,8 @@ pub async fn sync(config: &RemoteAccessConfig) -> Result<(), String> {
     }
     if let Some(port) = start_port {
         let server = start(port).await?;
+        // 服务开启即（重新）生成配对码：5 分钟内有效，过期可经 IPC 现场取新码
+        pairing::generate_pairing_code();
         *guard = Some(server);
     }
     Ok(())

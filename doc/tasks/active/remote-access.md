@@ -18,8 +18,8 @@
   - 验收: enabled=true 时监听 0.0.0.0:port，false 时端口不监听（set_config 联动启停，端口变更先停再启）；invoke/result 帧收发正确（id 匹配，单测）；命令白名单注册表就位（仅 remote_ping）；`GET /` 服务前端静态资源；clippy + test 通过（RA 相关 10 测试全绿）
   - 涉及: src-tauri/src/remote_access/
   - 依赖: RA2
-- [ ] RA4 配对鉴权
-  - 验收: 握手首帧必须 auth（6 位配对码，5 分钟有效，开启时重新生成）；通过后签发会话令牌（存哈希）回 auth_ok；错误 3 次断连冷却 30 秒；`remote_get_pairing_code` 命令可用；日志无明文码/令牌；clippy + test 通过
+- [x] RA4 配对鉴权（完成于 2026-11-04，做了什么：remote_access/pairing.rs——6 位随机配对码（rand）5 分钟 TTL、开启时 sync 现场生成、过期/消费作废；会话令牌 uuid 明文仅进 auth_ok 帧与 remote_get_pairing_code IPC、服务端只存 SHA-256 哈希（sha2）、24h TTL 惰性清理、断连撤销、重连令牌轮换；全局冷却 30 秒（3 次失败触发，剩余秒数回传拒绝消息）；frames.rs 增 auth/auth_ok/auth_err 帧（5 单测锁定与 types.ts 形状一致）；server.rs ws_bridge 改认证状态机（冷却检查→首帧必须 auth→业务帧循环）；remote_get_pairing_code 命令注册 + ipc.ts remoteGetPairingCode 封装；日志全程不落码值/令牌）
+  - 验收: 握手首帧必须 auth（6 位配对码，5 分钟有效，开启时重新生成）；通过后签发会话令牌（存哈希）回 auth_ok；错误 3 次断连冷却 30 秒；`remote_get_pairing_code` 命令可用；日志无明文码/令牌；clippy + test 通过（RA 相关 15 测试全绿）
   - 涉及: src-tauri/src/remote_access/
   - 依赖: RA3
 - [ ] RA5 设置面板功能落地（随 UI 重构 T10 排期）

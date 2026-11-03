@@ -161,6 +161,7 @@ pub fn run() {
             commands::project::project_delete,
             commands::project::project_reorder,
             commands::remote_access::remote_get_config,
+            commands::remote_access::remote_get_pairing_code,
             commands::remote_access::remote_set_config,
             commands::session::session_list,
             commands::session::session_create,
