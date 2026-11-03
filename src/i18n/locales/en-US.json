@@ -430,6 +430,10 @@
     "ssh.identityFile": "PublicKey path (e.g. ~/.ssh/id_rsa)",
     "ssh.togglePassword": "Show/hide password",
     "ssh.test": "Test connection",
-    "ssh.testing": "Testing…"
+    "ssh.testing": "Testing…",
+    "sessionMissing": "Session not found",
+    "sshReconnectHint": "Connection params saved; the live connection still uses the old ones — close and reopen the tab to apply",
+    "saved": "Session saved",
+    "saveFailed": "Failed to save session"
   }
 }

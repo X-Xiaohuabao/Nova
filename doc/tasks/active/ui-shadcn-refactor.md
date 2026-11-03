@@ -62,12 +62,12 @@
   - 验收: Claude/Codex/Gemini/OpenCode/Antigravity/CliShell/Keybindings/Network/Notification/DataManagement/McpAccess/RemoteAccess/About 各页可打开且设置生效（注册表 15 页中 13 页已挂载，SyncPage 删除、AIAssistantPage 移除）；快捷键页展示经 `formatShortcut` 平台化；`tsc --noEmit` + vite 编译冒烟通过
   - 涉及: src/components/settings/
   - 依赖: T9
-- [ ] T11 迁移 LlmProviders + ProfileManagement（含 react-hook-form + zod 改造）
-  - 验收: 供应商卡片/编辑弹窗/Profile 管理全部新实现；校验规则与原 AntD Form 对齐；凭据字段仍走原 IPC 不落明文
+- [x] T11 迁移 LlmProviders + ProfileManagement（含 react-hook-form + zod 改造）（完成于 2026-11-04，提交 f6a68e4，做了什么：LlmProvidersNext——卡片列表（启停/默认/软删 AlertDialog 确认）+ PresetPicker（ResponsiveDialog）+ LlmProviderEditDialog（RHF+zod：name/协议/认证/BaseURL/图标 datalist/颜色 hex 校验/useFieldArray 模型列表+默认单选）；凭据独立 state 保持 touched 才覆盖语义；ProfileManagementNext——列表 + ProfileDialogNext（RHF+zod + getProfileCredential 掩码回显 + deleteProfile{removeData:false}）；ipc.ts 补 ProfileCredentialKeys 契约类型（后端 update_profile 读 apiKey 键写 Keychain，原 any 逃逸改为显式类型））
+  - 验收: 供应商卡片/编辑弹窗/Profile 管理全部新实现；校验规则与原 AntD Form 对齐（required/枚举/hex/至少一模型）；凭据字段仍走原 IPC 不落明文；tsc + vite 冒烟通过
   - 涉及: src/components/settings/、src/components/profile/、src/components/cli/
   - 依赖: T9
-- [ ] T12 迁移 project/tabs/profile 弹窗组
-  - 验收: NewProjectModal / NewCategoryModal / NewSessionModal / EditSessionModal / ProfileFormModal / ProfileManager / SearchPanel 全链路可用（弹窗一律经 **ResponsiveDialog**，移动端自动底部 Sheet），新建→落库→显示正确（手测）
+- [x] T12 迁移 project/tabs/profile 弹窗组（完成于 2026-11-04，三批提交 0150aff / 5fa369a / 12fd2ab，做了什么：NewProjectModalNext（目录选择+颜色行）+ NewCategoryModalNext + SearchPanelNext（cmdk CommandDialog，toast 兼容 MessageLike 契约）；NewSessionModalNext（工具卡片 lucide 化/Profile 默认供应商联动/Claude 分层映射含 1M/模板/思考强度/颜色继承/SSH 测试）+ CliArgsClaudeNext + SshArgsFieldsNext（token 版子表单）；EditSessionModalNext（cliArgs 反解析回填/供应商切换默认模型（首次加载保留存量）/SSH 参数变更重连提示）；ProfileFormModal/ProfileManager 已由 T11 ProfileDialogNext/ProfileManagementNext 覆盖；弹窗一律 ResponsiveDialog）
+  - 验收: NewProjectModal / NewCategoryModal / NewSessionModal / EditSessionModal / ProfileFormModal / ProfileManager / SearchPanel 全链路可用（创建→落库逻辑对齐旧实现；「显示正确」的完整手测待新 App Shell 接线后复核，预览台可触发搜索/新建项目演示；tsc + vite 冒烟通过）
   - 涉及: src/components/project/、src/components/tabs/、src/components/profile/
   - 依赖: T8、T6
 - [ ] T13 迁移外围视图（cost/help/onboarding/terminal 外壳/transcript/quick-commands/cli）

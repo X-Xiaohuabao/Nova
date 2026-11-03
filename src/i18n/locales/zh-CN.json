@@ -430,6 +430,10 @@
     "ssh.identityFile": "PublicKey 路径（如 ~/.ssh/id_rsa）",
     "ssh.togglePassword": "显示/隐藏密码",
     "ssh.test": "测试连接",
-    "ssh.testing": "测试中…"
+    "ssh.testing": "测试中…",
+    "sessionMissing": "会话不存在",
+    "sshReconnectHint": "连接参数已保存，当前连接仍使用旧参数，请关闭并重新打开该标签页生效",
+    "saved": "已保存会话信息",
+    "saveFailed": "保存会话失败"
   }
 }
