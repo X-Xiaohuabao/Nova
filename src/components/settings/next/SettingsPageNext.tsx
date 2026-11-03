@@ -26,6 +26,14 @@ import {
 import { cn } from "@/lib/utils";
 import GeneralSettingsNext from "./GeneralSettingsNext";
 import TerminalSettingsNext from "./TerminalSettingsNext";
+import {
+  ClaudeSettingsNext,
+  CodexSettingsNext,
+  GeminiSettingsNext,
+  OpenCodeSettingsNext,
+  AntigravitySettingsNext,
+  CliShellSettingsNext,
+} from "./CliSettingsPages";
 
 /* ============ 页面注册表（按 design-ui-patterns 1.2 分组定稿） ============ */
 
@@ -33,7 +41,7 @@ interface SettingsPageDef {
   key: string;
   groupKey: string;
   labelKey: string;
-  /** 未迁移页（T10~T13 批次挂载后移除标记） */
+  /** 未迁移页（批次挂载后移除标记） */
   migrating?: boolean;
   /** 已迁移页面组件（接收搜索高亮锚点） */
   render?: (highlightKey?: string) => ReactNode;
@@ -41,16 +49,18 @@ interface SettingsPageDef {
   itemKeys?: string[];
 }
 
+const CLI_ITEM_KEYS = ["settings.model", "settings.quickCommands"];
+
 const PAGES: SettingsPageDef[] = [
   { key: "general", groupKey: "groupGeneral", labelKey: "settings.pageGeneral", render: (h) => <GeneralSettingsNext highlightKey={h} />, itemKeys: ["settings.theme", "settings.uiZoom", "settings.uiFont", "settings.language"] },
   { key: "keybindings", groupKey: "groupGeneral", labelKey: "settings.pageKeybindings", migrating: true },
   { key: "terminal", groupKey: "groupCli", labelKey: "settings.pageTerminal", render: (h) => <TerminalSettingsNext highlightKey={h} />, itemKeys: ["settings.shell", "settings.terminalFont", "settings.terminalFontSize", "settings.colorTheme", "settings.cursorStyle", "settings.scrollback", "settings.bell", "settings.envVars"] },
-  { key: "claude", groupKey: "groupCli", labelKey: "settings.pageClaude", migrating: true },
-  { key: "codex", groupKey: "groupCli", labelKey: "settings.pageCodex", migrating: true },
-  { key: "gemini", groupKey: "groupCli", labelKey: "settings.pageGemini", migrating: true },
-  { key: "opencode", groupKey: "groupCli", labelKey: "settings.pageOpenCode", migrating: true },
-  { key: "antigravity", groupKey: "groupCli", labelKey: "settings.pageAntigravity", migrating: true },
-  { key: "clishell", groupKey: "groupCli", labelKey: "settings.pageCliShell", migrating: true },
+  { key: "claude", groupKey: "groupCli", labelKey: "settings.pageClaude", render: () => <ClaudeSettingsNext />, itemKeys: [...CLI_ITEM_KEYS, "settings.claude.autoSubmit", "settings.claude.permissionMode", "settings.claude.maxOutputLength", "settings.claude.customInstructions"] },
+  { key: "codex", groupKey: "groupCli", labelKey: "settings.pageCodex", render: () => <CodexSettingsNext />, itemKeys: [...CLI_ITEM_KEYS, "settings.codex.autoApprove", "settings.codex.sandboxMode"] },
+  { key: "gemini", groupKey: "groupCli", labelKey: "settings.pageGemini", render: () => <GeminiSettingsNext />, itemKeys: [...CLI_ITEM_KEYS, "settings.gemini.autoExecute", "settings.gemini.safetyLevel"] },
+  { key: "opencode", groupKey: "groupCli", labelKey: "settings.pageOpenCode", render: () => <OpenCodeSettingsNext />, itemKeys: [...CLI_ITEM_KEYS, "settings.opencode.autoExecute"] },
+  { key: "antigravity", groupKey: "groupCli", labelKey: "settings.pageAntigravity", render: () => <AntigravitySettingsNext />, itemKeys: [...CLI_ITEM_KEYS, "settings.antigravity.apiKey", "settings.antigravity.endpoint", "settings.antigravity.autoCommit"] },
+  { key: "clishell", groupKey: "groupCli", labelKey: "settings.pageCliShell", render: () => <CliShellSettingsNext toolType="terminal" />, itemKeys: ["settings.cliShellEnvVars", "settings.quickCommands"] },
   { key: "mcp", groupKey: "groupCli", labelKey: "settings.pageMcp", migrating: true },
   { key: "llm-providers", groupKey: "groupProviders", labelKey: "settings.pageLlmProviders", migrating: true },
   { key: "profile-management", groupKey: "groupProviders", labelKey: "settings.pageProfileManagement", migrating: true },
