@@ -19,7 +19,10 @@ import {
   PieChart,
   CircleHelp,
 } from "lucide-react";
-import { detectCliTools, listProfiles, pollCosts } from "@/utils/ipc";
+import { detectCliTools, getSessionCost, listProfiles, pollCosts } from "@/utils/ipc";
+import { listen } from "@tauri-apps/api/event";
+import { TOOL_DISPLAY_NAMES } from "@/types";
+import type { SessionCost } from "@/types";
 import { useAppStore } from "@/stores/appStore";
 import { themeStore, initTheme } from "@/stores/themeStore";
 import { shellStore, SIDEBAR_COLLAPSED_WIDTH } from "@/stores/shellStore";
@@ -27,6 +30,7 @@ import useKeyboardShortcuts from "@/hooks/useKeyboardShortcuts";
 import { useOnboarding, AgreementModalNext, OnboardingGuideNext } from "@/components/onboarding/OnboardingFlowNext";
 import WindowFrame from "@/components/shell/WindowFrame";
 import StatusBarShell from "@/components/shell/StatusBarShell";
+import { toolVisual } from "@/components/tabs/tabVisuals";
 import PaneViewNext from "@/components/panes/PaneViewNext";
 import PaneSplitter from "@/components/panes/PaneSplitter";
 import SettingsPageNext from "@/components/settings/next/SettingsPageNext";
@@ -158,6 +162,33 @@ export default function AppNext() {
   const [expandedProjects, setExpandedProjects] = useState<ReadonlySet<string>>(() => new Set());
   const panesHostRef = useRef<HTMLDivElement | null>(null);
   const onboarding = useOnboarding();
+
+  // 状态栏会话信息：活动会话的凭据/模型概览 + Token 费用（cost:updated 触发拉取）
+  const profilesAll = useAppStore((s) => s.profiles);
+  const llmProvidersAll = useAppStore((s) => s.llmProviders);
+  const activeSession = sessions.find((s) => s.id === activeTabId);
+  const [activeCost, setActiveCost] = useState<SessionCost | null>(null);
+
+  useEffect(() => {
+    if (!activeSession) {
+      setActiveCost(null);
+      return;
+    }
+    let cancelled = false;
+    const load = () => {
+      getSessionCost(activeSession.id)
+        .then((cost) => {
+          if (!cancelled) setActiveCost(cost);
+        })
+        .catch(() => {});
+    };
+    load();
+    const unlisten = listen<{ scanned: number }>("cost:updated", () => load());
+    return () => {
+      cancelled = true;
+      void unlisten.then((fn) => fn()).catch(() => {});
+    };
+  }, [activeSession]);
 
   useKeyboardShortcuts();
 
@@ -394,7 +425,32 @@ export default function AppNext() {
         )}
       </div>
 
-      <StatusBarShell runtime="tauri-desktop" />
+      <StatusBarShell
+        runtime="tauri-desktop"
+        leftText={
+          activeSession ? (
+            <span className="flex items-center gap-1.5">
+              <ActiveSessionBadge
+                toolType={activeSession.toolType}
+                profileName={
+                  activeSession.profileId
+                    ? profilesAll.find((p) => p.id === activeSession.profileId)?.name
+                    : undefined
+                }
+                providerName={
+                  activeSession.llmProviderId
+                    ? llmProvidersAll.find((p) => p.id === activeSession.llmProviderId)?.name
+                    : undefined
+                }
+                modelName={activeSession.modelName}
+                costUsd={activeCost?.costUsd}
+              />
+            </span>
+          ) : (
+            t("shell.ready")
+          )
+        }
+      />
 
       {/* 全局弹窗组 */}
       <NewProjectModalNext open={newProjectModalOpen} onClose={() => setNewProjectModalOpen(false)} />
@@ -423,5 +479,38 @@ export default function AppNext() {
         onSkip={onboarding.skipGuide}
       />
     </WindowFrame>
+  );
+}
+
+/** 状态栏活动会话徽标：工具图标/名称 + Profile + 供应商·模型 + 估算费用 */
+function ActiveSessionBadge({
+  toolType,
+  profileName,
+  providerName,
+  modelName,
+  costUsd,
+}: {
+  toolType: string;
+  profileName?: string;
+  providerName?: string;
+  modelName?: string | null;
+  costUsd?: number;
+}) {
+  const visual = toolVisual(toolType as Parameters<typeof toolVisual>[0]);
+  const parts = [
+    profileName,
+    providerName && modelName ? `${providerName} · ${modelName}` : (providerName ?? modelName ?? undefined),
+  ].filter(Boolean);
+  return (
+    <>
+      <span aria-hidden style={{ color: visual.color }}>
+        <visual.Icon size={12} />
+      </span>
+      <span className="font-medium text-foreground/80">{TOOL_DISPLAY_NAMES[toolType as keyof typeof TOOL_DISPLAY_NAMES] ?? toolType}</span>
+      {parts.length > 0 && <span className="text-muted-foreground/70">{parts.join(" · ")}</span>}
+      {typeof costUsd === "number" && costUsd > 0 && (
+        <span className="tabular-nums text-muted-foreground/70">${costUsd.toFixed(4)}</span>
+      )}
+    </>
   );
 }

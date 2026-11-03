@@ -7,12 +7,13 @@
  */
 
 import { useTranslation } from "react-i18next";
+import type { ReactNode } from "react";
 import type { RuntimeKind } from "@/lib/bridge";
 import { runtimeKind } from "@/lib/bridge";
 
 interface StatusBarShellProps {
-  /** 左侧状态文本 */
-  leftText?: string;
+  /** 左侧状态内容（文本或会话信息徽标） */
+  leftText?: ReactNode;
   /** 右侧状态文本；缺省显示运行时与桥接通道 */
   rightText?: string;
   /** 运行时形态；缺省自动检测（预览页应由 WindowFrame 覆盖传入） */
