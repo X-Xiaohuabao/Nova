@@ -540,6 +540,7 @@
     "deleteTitle.session": "Delete session \"{name}\"?",
     "deleteProjectDesc": "All categories and sessions under this project will be deleted. This cannot be undone.",
     "deleteCategoryDesc": "Sessions in this category will be moved out of it (sessions are kept).",
-    "deleteSessionDesc": "The session record will be permanently deleted. This cannot be undone."
+    "deleteSessionDesc": "The session record will be permanently deleted. This cannot be undone.",
+    "projects": "Projects"
   }
 }

@@ -194,6 +194,7 @@ export default function SidebarTreeNext({
       {favoriteSessions.length > 0 && (
         <div className="mb-2">
           <div className="px-2 pb-1 pt-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">
+            <Star size={10} className="mr-0.5 inline-block" />
             {t("tree.favorites")}
           </div>
           {favoriteSessions.map((s) =>
@@ -204,6 +205,9 @@ export default function SidebarTreeNext({
 
       {/* 项目树 */}
       <nav className="flex-1 overflow-y-auto px-2 pb-2">
+        <div className="px-2 pb-1 pt-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">
+          {t("tree.projects")}
+        </div>
         {projects.map((project) => {
           const expanded = expandedProjects.has(project.id);
           const projectSessions = sessions.filter((s) => s.projectId === project.id);

@@ -540,6 +540,7 @@
     "deleteTitle.session": "删除会话「{name}」？",
     "deleteProjectDesc": "将删除该项目的全部分类与会话记录，此操作不可撤销。",
     "deleteCategoryDesc": "该分类下的会话将移出分类（会话本身保留）。",
-    "deleteSessionDesc": "会话记录将被永久删除，此操作不可撤销。"
+    "deleteSessionDesc": "会话记录将被永久删除，此操作不可撤销。",
+    "projects": "项目"
   }
 }
