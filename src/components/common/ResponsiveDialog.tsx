@@ -39,7 +39,7 @@ const DRAG_CLOSE_THRESHOLD = 80;
 interface ResponsiveDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  title: string;
+  title: ReactNode;
   description?: string;
   /** 内容主体（超高内部滚动） */
   children: ReactNode;
@@ -47,6 +47,8 @@ interface ResponsiveDialogProps {
   footer?: ReactNode;
   /** 桌面 Dialog 宽度档位，默认 md（560px） */
   size?: "sm" | "md" | "lg";
+  /** 追加到桌面 Dialog 内容容器的类（如自定义宽度档） */
+  contentClassName?: string;
 }
 
 /** ≥768px 断点（响应式，横竖屏/窗口调整即时跟随） */
@@ -74,6 +76,7 @@ export default function ResponsiveDialog({
   children,
   footer,
   size = "md",
+  contentClassName,
 }: ResponsiveDialogProps) {
   const isDesktop = useDesktopBreakpoint();
 
@@ -86,7 +89,7 @@ export default function ResponsiveDialog({
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
-          className={`flex max-h-[85vh] flex-col gap-0 overflow-hidden ${SIZE_CLASS[size]}`}
+          className={`flex max-h-[85vh] flex-col gap-0 overflow-hidden ${SIZE_CLASS[size]} ${contentClassName ?? ""}`}
         >
           <DialogHeader className="pb-3">
             <DialogTitle>{title}</DialogTitle>
