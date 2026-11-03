@@ -7,6 +7,7 @@ pub mod llm_provider;
 mod profile;
 mod project;
 mod pty;
+mod remote_access;
 mod session;
 mod session_category;
 mod session_message;
@@ -159,6 +160,8 @@ pub fn run() {
             commands::project::project_update,
             commands::project::project_delete,
             commands::project::project_reorder,
+            commands::remote_access::remote_get_config,
+            commands::remote_access::remote_set_config,
             commands::session::session_list,
             commands::session::session_create,
             commands::session::session_update,

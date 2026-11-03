@@ -797,6 +797,14 @@ export interface PresetProviderView {
   models: string[];
 }
 
+/** 远程访问配置（对应 Rust remote_access::RemoteAccessConfig） */
+export interface RemoteAccessConfig {
+  /** 是否启用远程访问 WS 服务；默认 false（红线要求） */
+  enabled: boolean;
+  /** WS 监听端口 */
+  port: number;
+}
+
 /** CLI 工具兼容的 provider_kind 映射 */
 export const TOOL_PROVIDER_KIND_MAP: Record<
   string,

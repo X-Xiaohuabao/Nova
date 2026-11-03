@@ -5,6 +5,7 @@ pub mod fs;
 pub mod llm_provider;
 pub mod profile;
 pub mod project;
+pub mod remote_access;
 pub mod pty;
 pub mod session;
 pub mod session_category;

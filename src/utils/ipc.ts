@@ -14,6 +14,7 @@ import type {
   CreateLlmProviderInput,
   UpdateLlmProviderInput,
   PresetProviderView,
+  RemoteAccessConfig,
   TranscriptEntry,
   SshTarget,
   TransferSummary,
@@ -563,6 +564,21 @@ export async function setDefaultLlmProvider(providerId: string): Promise<void> {
 
 export async function hasLlmProviderApiKey(providerId: string): Promise<boolean> {
   return invoke<boolean>("llm_provider_has_api_key", { providerId });
+}
+
+// Remote Access IPC
+
+/** 读取远程访问配置（缺失键回落默认：关闭 + 默认端口） */
+export async function remoteGetConfig(): Promise<RemoteAccessConfig> {
+  return invoke<RemoteAccessConfig>("remote_get_config");
+}
+
+/**
+ * 写入远程访问配置。
+ * RA3 起后端将联动 WS 服务启停；凭据类命令永不进入远程白名单。
+ */
+export async function remoteSetConfig(config: RemoteAccessConfig): Promise<void> {
+  return invoke("remote_set_config", { config });
 }
 
 export async function getLlmProviderApiKey(providerId: string): Promise<string | null> {
