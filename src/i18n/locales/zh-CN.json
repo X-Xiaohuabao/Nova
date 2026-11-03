@@ -510,5 +510,10 @@
     "step3.description": "在项目下「新建会话」，选择「CLI工具」（Claude Code/ Codex/ Gemini CLI/ OpenCode），再选择「LLM供应商」和模型。",
     "step3.tipEntry": "项目卡片右下角 ＋按钮",
     "step3.tipRequired": "会话名 · CLI 工具 · LLM 供应商 · 模型"
+  },
+  "cli": {
+    "unknownVersion": "未知版本",
+    "notInstalled": "未安装",
+    "redetect": "重新检测"
   }
 }

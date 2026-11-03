@@ -2,16 +2,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Terminal } from "@xterm/xterm";
 import {
-  MessageOutlined,
-  AimOutlined,
-  ReloadOutlined,
-  CloseOutlined,
-  ToolOutlined,
-  SearchOutlined,
-  FullscreenOutlined,
-  FullscreenExitOutlined,
-} from "@ant-design/icons";
-import { Input, Tooltip } from "antd";
+  MessageSquare,
+  Crosshair,
+  RotateCw,
+  X,
+  Wrench,
+  Search,
+  Maximize2,
+  Minimize2,
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { claudeTranscriptRead } from "../../utils/ipc";
 import { MarkdownBody } from "./MarkdownBody";
 import { tokenizeQuery } from "./markdownHighlight";
@@ -325,26 +325,26 @@ const load = useCallback(async (background = false) => {
 
   return (
     <>
-      <Tooltip title="会话记录" placement="left">
-        <button
+      <button
           ref={buttonRef}
+          title="会话记录"
+          aria-label="会话记录"
           onClick={() => setOpen((v) => !v)}
           className="flex items-center justify-center rounded-full transition-all"
           style={{
             width: 32,
             height: 32,
             backgroundColor: open
-              ? "var(--ant-color-primary)"
-              : "var(--ant-color-bg-elevated)",
-            border: "1px solid var(--ant-color-border-secondary)",
+              ? "var(--color-primary)"
+              : "var(--color-card)",
+            border: "1px solid var(--color-border)",
             boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
             cursor: "pointer",
-            color: open ? "#fff" : "var(--ant-color-text-secondary)",
+            color: open ? "#fff" : "var(--color-muted-foreground)",
           }}
         >
-          <MessageOutlined style={{ fontSize: 14 }} />
+          <MessageSquare size={14} />
         </button>
-      </Tooltip>
 
       {open && panelHostRef.current && createPortal(
         <div
@@ -354,8 +354,8 @@ const load = useCallback(async (background = false) => {
             width: maximized ? "100%" : 500,
             // 相对终端容器高度(panelHostRef)解析,不是视口高度。
             maxHeight: maximized ? "100%" : "78%",
-            background: "var(--ant-color-bg-elevated)",
-            border: "1px solid var(--ant-color-border-secondary)",
+            background: "var(--color-card)",
+            border: "1px solid var(--color-border)",
             borderRadius: 8,
             boxShadow: "0 6px 24px rgba(0,0,0,0.28)",
             overflow: "hidden",
@@ -366,74 +366,71 @@ const load = useCallback(async (background = false) => {
             className="grid items-center gap-2 px-3 py-2"
             style={{
               gridTemplateColumns: "1fr minmax(0, 260px) 1fr",
-              borderBottom: "1px solid var(--ant-color-border-secondary)",
+              borderBottom: "1px solid var(--color-border)",
             }}
           >
             <span className="text-sm font-medium" style={{ justifySelf: "start" }}>
               会话记录
             </span>
 
-            <Input
-              size="small"
-              allowClear
-              aria-label="搜索本会话记录"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="搜索本会话记录"
-              prefix={
-                <SearchOutlined style={{ color: "var(--ant-color-text-tertiary)", fontSize: 12 }} />
-              }
-              style={{ padding: "0 6px", fontSize: 12 }}
-            />
+            <div className="relative">
+              <Search size={12} className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground/60" />
+              <Input
+                className="h-7 pl-7 text-xs"
+                aria-label="搜索本会话记录"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="搜索本会话记录"
+              />
+            </div>
 
             <div className="flex items-center gap-1" style={{ justifySelf: "end" }}>
-              <Tooltip title={toolFilter ? `已隐藏 ${toolCount} 条工具调用` : "显示工具调用"}>
-                <button
+              <button
+                  title={toolFilter ? `已隐藏 ${toolCount} 条工具调用` : "显示工具调用"}
+                  aria-label={toolFilter ? `已隐藏 ${toolCount} 条工具调用` : "显示工具调用"}
                   onClick={() => setToolFilter((v) => !v)}
                   style={{
                     background: "transparent",
                     border: "none",
                     cursor: "pointer",
                     color: toolFilter
-                      ? "var(--ant-color-text-tertiary)"
-                      : "var(--ant-color-primary)",
+                      ? "var(--color-muted-foreground)"
+                      : "var(--color-primary)",
                     padding: 2,
                   }}
                 >
-                  <ToolOutlined style={{ fontSize: 13 }} />
+                  <Wrench size={13} />
                 </button>
-              </Tooltip>
               <button
                 onClick={() => void load()}
                 style={{
                   background: "transparent",
                   border: "none",
                   cursor: "pointer",
-                  color: "var(--ant-color-text-secondary)",
+                  color: "var(--color-muted-foreground)",
                   padding: 2,
                 }}
               >
-                <ReloadOutlined style={{ fontSize: 13 }} />
+                <RotateCw size={13} />
               </button>
-              <Tooltip title={maximized ? "恢复默认大小" : "最大化"}>
-                <button
+              <button
+                  title={maximized ? "恢复默认大小" : "最大化"}
                   onClick={() => setMaximized((v) => !v)}
                   aria-label={maximized ? "恢复默认大小" : "最大化"}
                   style={{
                     background: "transparent",
                     border: "none",
                     cursor: "pointer",
-                    color: "var(--ant-color-text-secondary)",
+                    color: "var(--color-muted-foreground)",
                     padding: 2,
                   }}
                 >
                   {maximized ? (
-                    <FullscreenExitOutlined style={{ fontSize: 13 }} />
+                    <Minimize2 size={13} />
                   ) : (
-                    <FullscreenOutlined style={{ fontSize: 13 }} />
+                    <Maximize2 size={13} />
                   )}
                 </button>
-              </Tooltip>
               <button
                 onClick={() => setOpen(false)}
                 aria-label="关闭"
@@ -441,11 +438,11 @@ const load = useCallback(async (background = false) => {
                   background: "transparent",
                   border: "none",
                   cursor: "pointer",
-                  color: "var(--ant-color-text-secondary)",
+                  color: "var(--color-muted-foreground)",
                   padding: 2,
                 }}
               >
-                <CloseOutlined style={{ fontSize: 13 }} />
+                <X size={13} />
               </button>
             </div>
           </div>
@@ -454,17 +451,17 @@ const load = useCallback(async (background = false) => {
             跳转定位时会把内容左侧带出可视区。只留纵向滚动。 */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-2">
             {state === "loading" && (
-              <div className="text-xs text-[var(--ant-color-text-secondary)] py-4 text-center">
+              <div className="text-xs text-[var(--color-muted-foreground)] py-4 text-center">
                 读取中…
               </div>
             )}
             {(state === "missing" || state === "error") && (
-              <div className="text-xs text-[var(--ant-color-text-secondary)] py-4 text-center">
+              <div className="text-xs text-[var(--color-muted-foreground)] py-4 text-center">
                 {hint || "未找到记录"}
               </div>
             )}
             {state === "ready" && threads.length === 0 && (
-              <div className="text-xs text-[var(--ant-color-text-secondary)] py-4 text-center">
+              <div className="text-xs text-[var(--color-muted-foreground)] py-4 text-center">
                 本次会话暂无提问
               </div>
             )}
@@ -499,7 +496,7 @@ const load = useCallback(async (background = false) => {
                           background: "transparent",
                           border: "none",
                           cursor: "pointer",
-                          color: "var(--ant-color-text-tertiary)",
+                          color: "var(--color-muted-foreground)",
                           padding: 0,
                           marginTop: 2,
                           width: 14,
@@ -525,7 +522,7 @@ const load = useCallback(async (background = false) => {
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-[var(--ant-color-text-tertiary)]">
+                          <span className="text-xs text-[var(--color-muted-foreground)]">
                             你
                             {t.prompt.timestamp > 0 &&
                               ` · ${new Date(t.prompt.timestamp).toLocaleTimeString("zh-CN", {
@@ -534,7 +531,7 @@ const load = useCallback(async (background = false) => {
                               })}`}
                           </span>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-[var(--ant-color-text-tertiary)]">
+                            <span className="text-xs text-[var(--color-muted-foreground)]">
                               {replies.length > 0
                                 ? expanded
                                   ? "收起"
@@ -548,12 +545,12 @@ const load = useCallback(async (background = false) => {
                                 background: "transparent",
                                 border: "none",
                                 cursor: "pointer",
-                                color: "var(--ant-color-text-secondary)",
+                                color: "var(--color-muted-foreground)",
                                 padding: 0,
                               }}
                               title="定位到终端"
                             >
-                              <AimOutlined style={{ fontSize: 12 }} />
+                              <Crosshair size={12} />
                             </button>
                           </div>
                         </div>
@@ -576,12 +573,12 @@ const load = useCallback(async (background = false) => {
                                 borderRadius: 6,
                                 borderLeft: isTool
                                   ? "2px solid var(--ant-color-border)"
-                                  : "2px solid var(--ant-color-border-secondary)",
+                                  : "2px solid var(--color-border)",
                                 opacity: isTool ? 0.75 : 1,
                               }}
                             >
                               <div className="flex items-center justify-between mb-1">
-                                <span className="text-xs text-[var(--ant-color-text-tertiary)]">
+                                <span className="text-xs text-[var(--color-muted-foreground)]">
                                   {isTool ? `⎿ ${r.toolName ?? "工具"}` : "● Claude"}
                                   {r.timestamp > 0 &&
                                     ` · ${new Date(r.timestamp).toLocaleTimeString("zh-CN", {
@@ -597,12 +594,12 @@ const load = useCallback(async (background = false) => {
                                       background: "transparent",
                                       border: "none",
                                       cursor: "pointer",
-                                      color: "var(--ant-color-text-secondary)",
+                                      color: "var(--color-muted-foreground)",
                                       padding: 0,
                                     }}
                                     title="定位到终端"
                                   >
-                                    <AimOutlined style={{ fontSize: 12 }} />
+                                    <Crosshair size={12} />
                                   </button>
                                 )}
                               </div>
@@ -624,7 +621,7 @@ const load = useCallback(async (background = false) => {
               className="text-xs px-3 py-1"
               style={{
                 color: "var(--ant-color-warning)",
-                borderTop: "1px solid var(--ant-color-border-secondary)",
+                borderTop: "1px solid var(--color-border)",
               }}
             >
               {hint}
@@ -634,17 +631,17 @@ const load = useCallback(async (background = false) => {
           {state === "ready" && (
             <div
               className="text-xs px-3 py-1"
-              style={{ borderTop: "1px solid var(--ant-color-border-secondary)" }}
+              style={{ borderTop: "1px solid var(--color-border)" }}
             >
-              <span className="text-[var(--ant-color-text-tertiary)]">
+              <span className="text-[var(--color-muted-foreground)]">
                 共 {threads.length} 个提问
                 {searching && (
                   <span
                     style={{
                       color:
                         matchedKeys.size > 0
-                          ? "var(--ant-color-primary)"
-                          : "var(--ant-color-text-tertiary)",
+                          ? "var(--color-primary)"
+                          : "var(--color-muted-foreground)",
                     }}
                   >
                     {" · "}

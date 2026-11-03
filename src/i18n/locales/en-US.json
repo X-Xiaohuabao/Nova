@@ -510,5 +510,10 @@
     "step3.description": "Under a project, \"New Session\", pick a CLI tool (Claude Code / Codex / Gemini CLI / OpenCode), then choose the provider and model.",
     "step3.tipEntry": "＋ button at the project card corner",
     "step3.tipRequired": "Title · CLI tool · Provider · Model"
+  },
+  "cli": {
+    "unknownVersion": "unknown version",
+    "notInstalled": "not installed",
+    "redetect": "Re-detect"
   }
 }
