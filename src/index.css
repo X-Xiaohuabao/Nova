@@ -8,6 +8,37 @@
  * 必须处于本 Tailwind 入口的 @import 链内，bg-background 等语义工具类才会生成。 */
 @import "./styles/tokens.css";
 
+/* macOS 观感辅助类（毛玻璃/交通灯/呼吸点，壳层组件依赖） */
+@import "./styles/observance.css";
+
+/* ============ 滚动条统一（macOS 细条观感，跟随明暗主题） ============ */
+/* 8px 槽位含 2px 透明边框（background-clip: padding-box），视觉为 4px 圆角细条 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--muted-foreground) 35%, transparent) transparent;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted-foreground) 35%, transparent);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--muted-foreground) 60%, transparent);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 /* UI font family, size and zoom variables - applied to root */
 :root {
   --ui-font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Sarasa Sans SC", sans-serif;
@@ -76,11 +107,18 @@ html, body, #root {
   height: 26px;
 }
 
-/* xterm.js 滚动条优化 - 增大滚动条尺寸（覆盖内联样式） */
-.xterm .xterm-scrollable-element .scrollbar,
+/* xterm.js 滚动条对齐全局细条观感（xterm 滑条自带内联样式，需 !important 覆盖） */
+.xterm .xterm-scrollable-element .scrollbar {
+  width: 8px !important;
+  min-width: 8px !important;
+  background: transparent !important;
+}
 .xterm .xterm-scrollable-element .scrollbar .slider {
-  width: 16px !important;
-  min-width: 16px !important;
+  border-radius: 9999px !important;
+  background: color-mix(in srgb, var(--muted-foreground) 35%, transparent) !important;
+}
+.xterm .xterm-scrollable-element .scrollbar:hover .slider {
+  background: color-mix(in srgb, var(--muted-foreground) 60%, transparent) !important;
 }
 
 /*
@@ -178,17 +216,6 @@ html, body, #root {
 }
 /* 块级代码的 code 复用行内样式会叠一层底色,外层 pre 已经提供底色 */
 .md-body pre code { background: transparent; padding: 0; border-radius: 0; }
-
-/* 横向滚动条默认 15px 高,在 500px 宽的面板里太占地方 */
-.md-body pre::-webkit-scrollbar,
-.md-table-wrap::-webkit-scrollbar { height: 6px; }
-.md-body pre::-webkit-scrollbar-thumb,
-.md-table-wrap::-webkit-scrollbar-thumb {
-  background: var(--color-muted);
-  border-radius: 3px;
-}
-.md-body pre::-webkit-scrollbar-track,
-.md-table-wrap::-webkit-scrollbar-track { background: transparent; }
 
 .md-body a { color: var(--color-primary); text-decoration: underline; }
 
@@ -295,46 +322,4 @@ html, body, #root {
   right: 20px;
   z-index: 3;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.16);
-}
-
-/* 传输日志表：行高压到 18px，一屏能看更多条记录。
-   AntD 的 small 尺寸行高约 30px，传输日志动辄几十条，太占地方。
-
-   必须加 !important：AntD 6 的样式是运行时注入的 CSS-in-JS，注入时机在
-   index.css 之后，同特异性下它会赢。 */
-.transfer-log-table .ant-table-thead > tr > th,
-.transfer-log-table .ant-table-tbody > tr > td {
-  padding: 0 8px !important;
-  height: 18px !important;
-  line-height: 18px !important;
-}
-/* 表头文字居中 */
-.transfer-log-table .ant-table-thead > tr > th { text-align: center !important; }
-/* 进度条塞进 18px 的行里要收窄，否则行高被它撑开 */
-.transfer-log-table .ant-progress-inner { height: 6px !important; }
-.transfer-log-table .ant-progress-text { font-size: 11px; }
-/* 单元格里的进度条不撑行高 */
-.transfer-log-table .ant-progress { line-height: 1 !important; }
-/* 滚动条常驻：日志多了才知道下面还有内容 */
-.transfer-log-table .ant-table-body::-webkit-scrollbar { width: 8px; }
-.transfer-log-table .ant-table-body::-webkit-scrollbar-thumb {
-  background: var(--color-muted);
-  border-radius: 4px;
-}
-.transfer-log-table .ant-table-body::-webkit-scrollbar-track { background: transparent; }
-
-/* AntD 固定表头时会在表体顶部插一行测量行（aria-hidden），它本不该占位。
-   但我们给所有单元格设了 18px 行高，会把它顶成一条空行 —— 这里压回 0。
-   用属性选择器而不是类名，不依赖 AntD 的前缀类名。 */
-.transfer-log-table tr[aria-hidden="true"] > td {
-  height: 0 !important;
-  padding: 0 !important;
-  line-height: 0 !important;
-  border: none !important;
-}
-
-/* 传输日志表的字号比正文小 2px：一屏能多看几行，也把「进度」列让给进度条 */
-.transfer-log-table .ant-table-thead > tr > th,
-.transfer-log-table .ant-table-tbody > tr > td {
-  font-size: 12px !important;
 }
