@@ -27,5 +27,10 @@
   "chat": {
     "title": "Chat View Mount Point",
     "desc": "Agent unified access (separate feature) mounts chat UI here"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   }
 }

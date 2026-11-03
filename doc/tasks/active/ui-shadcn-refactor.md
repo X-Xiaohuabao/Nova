@@ -27,7 +27,7 @@
 
 ### 阶段 1 · 骨架确定（最高优先级）
 
-- [ ] T4 实现 macOS 语义 token 与三态主题系统
+- [x] T4 实现 macOS 语义 token 与三态主题系统（完成于 2026-11-03，提交 f6a4b32，做了什么：src/themes/legacy.ts 旧 key 归一映射（按 BUILT_IN_THEMES.algorithm，表外按命名兜底）；src/stores/themeStore.ts 三态 store（zustand persist + prefers-color-scheme 监听 + merge 校验重算 resolved）；预览台接三态循环切换；i18n 增 theme 命名空间两语言）
   - 验收: `--background/--foreground/--primary/--muted/--border` 等语义变量明暗双套齐全，Tailwind 4 `@theme` 映射完成；深/浅/跟随系统三态切换即时生效并持久化；旧主题 key 归一映射（暗色系→dark、浅色系→light）
   - 涉及: src/styles/、src/stores/、src/themes/
   - 依赖: T3

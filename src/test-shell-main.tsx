@@ -1,4 +1,4 @@
-import { StrictMode, useState } from "react";
+import { StrictMode, useEffect } from "react";
 import ReactDOM from "react-dom/client";
 import { useTranslation } from "react-i18next";
 import ChatPlaceholder from "@/components/chat/ChatPlaceholder";
@@ -6,6 +6,8 @@ import WindowFrame from "@/components/shell/WindowFrame";
 import { changeLanguage, SUPPORTED_LANGUAGES } from "@/i18n";
 import type { Language } from "@/i18n";
 import type { RuntimeKind } from "@/lib/bridge";
+import { themeStore, initTheme } from "@/stores/themeStore";
+import type { ThemeMode } from "@/stores/themeStore";
 import "./i18n";
 import "./styles/shell.css";
 
@@ -16,55 +18,70 @@ import "./styles/shell.css";
  * 状态条/语义 token 明暗两套）。内容区通过 children 插槽挂载 ChatPlaceholder；
  * 窗口控制经 lib/tauri/window 封装，预览环境自动降级 no-op。
  *
+ * 主题走 themeStore 三态（浅色/深色/跟随系统），左下角浮动按钮循环切换，
+ * 切换即时生效并持久化（localStorage），刷新保持。
+ *
  * 预览开关（URL 参数）：
- * - ?theme=light|dark  初始主题
+ * - ?theme=light|dark  覆盖初始主题（演示用）
  * - ?platform=mobile   按 web-remote 形态渲染（隐藏交通灯、WS 桥标识）
  * 左下角浮动按钮切换中/EN，验证 i18n 通道。
  */
 function ShellPreview() {
   const { t, i18n } = useTranslation();
-  const [dark, setDark] = useState(() => {
-    const theme = new URLSearchParams(window.location.search).get("theme");
-    return theme !== "light";
-  });
-  const [runtime] = useState<RuntimeKind>(() => {
-    const platform = new URLSearchParams(window.location.search).get("platform");
-    return platform === "mobile" ? "web-remote" : "tauri-desktop";
-  });
+  const mode = themeStore((s) => s.mode);
+  const resolved = themeStore((s) => s.resolved);
+  const runtime: RuntimeKind =
+    new URLSearchParams(window.location.search).get("platform") === "mobile"
+      ? "web-remote"
+      : "tauri-desktop";
 
-  const toggleTheme = () => {
-    setDark((prev) => {
-      const next = !prev;
-      const root = document.documentElement;
-      root.classList.toggle("dark", next);
-      root.classList.toggle("light", !next);
-      return next;
-    });
-  };
+  useEffect(() => {
+    const override = new URLSearchParams(window.location.search).get("theme");
+    if (override === "light" || override === "dark") {
+      themeStore.getState().setMode(override);
+    }
+  }, []);
 
   const toggleLanguage = () => {
     const next: Language = i18n.language === "zh-CN" ? "en-US" : "zh-CN";
     changeLanguage(next);
   };
 
+  // 三态循环：浅色 → 深色 → 跟随系统
+  const cycleTheme = () => {
+    const next: ThemeMode =
+      mode === "light" ? "dark" : mode === "dark" ? "system" : "light";
+    themeStore.getState().setMode(next);
+  };
+
   return (
     <div className="relative flex h-full w-full items-center justify-center">
       <WindowFrame
         title="TeaCoder"
-        dark={dark}
-        onToggleTheme={toggleTheme}
+        dark={resolved === "dark"}
+        onToggleTheme={cycleTheme}
         runtime={runtime}
       >
         <ChatPlaceholder />
       </WindowFrame>
 
+      {/* 预览专用：三态主题切换演示（正式入口在设置页，见 T9） */}
+      <button
+        type="button"
+        onClick={cycleTheme}
+        aria-label={t("shell.toggleThemePreview")}
+        className="fixed bottom-3 left-3 z-50 rounded-md border border-white/20 bg-black/50 px-2 py-1 text-xs text-white/80 backdrop-blur transition-colors hover:bg-black/70"
+      >
+        {t("theme.light")} / {t("theme.dark")} / {t("theme.system")} ·{" "}
+        {t(`theme.${mode}`)}
+      </button>
       {/* 预览专用：语言切换演示（正式入口在设置页，见 I3） */}
       <button
         type="button"
         onClick={toggleLanguage}
-        className="fixed bottom-3 left-3 z-50 rounded-md border border-white/20 bg-black/50 px-2 py-1 text-xs text-white/80 backdrop-blur transition-colors hover:bg-black/70"
+        className="fixed bottom-12 left-3 z-50 rounded-md border border-white/20 bg-black/50 px-2 py-1 text-xs text-white/80 backdrop-blur transition-colors hover:bg-black/70"
       >
-        {i18n.language === "zh-CN" ? "中 / EN" : "EN / 中"} · {t("shell.ready")}
+        {i18n.language === "zh-CN" ? "中 / EN" : "EN / 中"}
       </button>
       <span className="fixed bottom-3 right-3 z-50 text-[10px] text-white/40">
         {SUPPORTED_LANGUAGES.join(" · ")}
@@ -73,10 +90,8 @@ function ShellPreview() {
   );
 }
 
-// 默认深色；?theme=light 时初始为浅色（与 ShellPreview 初始状态一致）
-if (new URLSearchParams(window.location.search).get("theme") !== "light") {
-  document.documentElement.classList.add("dark");
-}
+// 主题初始化：应用持久化档位并绑定系统偏好监听（幂等）
+initTheme();
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <StrictMode>
