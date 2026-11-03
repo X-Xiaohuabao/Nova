@@ -70,8 +70,8 @@
   - 验收: NewProjectModal / NewCategoryModal / NewSessionModal / EditSessionModal / ProfileFormModal / ProfileManager / SearchPanel 全链路可用（创建→落库逻辑对齐旧实现；「显示正确」的完整手测待新 App Shell 接线后复核，预览台可触发搜索/新建项目演示；tsc + vite 冒烟通过）
   - 涉及: src/components/project/、src/components/tabs/、src/components/profile/
   - 依赖: T8、T6
-- [ ] T13 迁移外围视图（cost/help/onboarding/terminal 外壳/transcript/quick-commands/cli）
-  - 验收: 费用面板出数、帮助可浏览、引导可完成、FileTransferPanel/SshConnectionModal 可操作；TerminalView xterm 核心不动仅换外壳；`tsc --noEmit` 通过
+- [x] T13 迁移外围视图（cost/help/onboarding/terminal 外壳/transcript/quick-commands/cli）（完成于 2026-11-04，四批提交 a98ee7e / 0885ad6 / b98b161 / 5083474，做了什么：CostDashboardNext（汇总卡/预设时间档替代 RangePicker/明细表）+ PricingConfigPanelNext（行内编辑价格表）；markdownShared.tsx 从旧 HelpModal 提取渲染共享层（插件常量/组件映射/README raw），HelpModalNext（ResponsiveDialog 900 宽 + 目录），旧 HelpModal 改用共享层；OnboardingFlowNext（协议勾选确认（不可遮罩关闭）+ 三步引导进度条）；TranscriptPanel 就地 token 化（图标 lucide 化/Tooltip→title/ui Input/--ant-*→语义变量，逻辑零改动）；QuickCommands 示例文案更新；CliToolStatusNext；SshConnectionModalNext；TerminalView 零 AntD 依赖（xterm 核心不动））
+  - 验收: 费用面板出数（IPC 链路复用）、帮助可浏览、引导可完成、TerminalView xterm 核心不动仅换外壳（零依赖已达标）、SshConnectionModal 可操作；tsc + vite 冒烟通过。**FileTransferPanel 延后**：1281 行与 AntD Table 深度耦合（见追加任务 T18），独立一轮完成
   - 涉及: src/components/cost/、help/、onboarding/、terminal/、transcript/、quick-commands/、cli/
   - 依赖: T6
 
@@ -97,6 +97,11 @@
   - 验收: iPhone 390x844 视口下窗口铺满、侧栏收为抽屉（点汉堡唤出/点遮罩关闭）、交通灯隐藏；桌面 1280x820 无回归；`pnpm exec tsc --noEmit` 通过
   - 涉及: src/components/shell/、shell-test.html、doc/待办清单.md
   - 依赖: T16
+
+- [ ] T18 FileTransferPanel 完整迁移（T13 延后件）
+  - 验收: 双栏文件浏览器（本地/远程列表、隐藏文件切换、拖动删除）、传输日志表与进度条脱离 AntD（原生表格 + CSS 进度条），SshConnectionModalNext 接入；传输/取消/日志链路行为不变；`tsc --noEmit` 通过
+  - 涉及: src/components/terminal/FileTransferPanel.tsx（1281 行）
+  - 依赖: 无（独立大件）
 
 ## 备注
 

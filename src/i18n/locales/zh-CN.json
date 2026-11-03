@@ -515,5 +515,10 @@
     "unknownVersion": "未知版本",
     "notInstalled": "未安装",
     "redetect": "重新检测"
+  },
+  "ssh": {
+    "modalTitle": "输入 SSH 连接参数",
+    "modalHint": "本次会话是本地终端，不会从会话里取到远程连接信息，因此需要手动填写。密码和私钥都留空时，走 SSH Agent 或默认密钥。",
+    "startTransfer": "开始传输"
   }
 }

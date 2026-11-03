@@ -515,5 +515,10 @@
     "unknownVersion": "unknown version",
     "notInstalled": "not installed",
     "redetect": "Re-detect"
+  },
+  "ssh": {
+    "modalTitle": "SSH connection",
+    "modalHint": "This session is a local terminal, so remote details cannot be derived from it — fill them in manually. Leave password and key empty to use the SSH agent or default key.",
+    "startTransfer": "Start transfer"
   }
 }
