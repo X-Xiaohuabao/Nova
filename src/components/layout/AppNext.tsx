@@ -215,6 +215,8 @@ export default function AppNext() {
         themeStore.getState().setMode(resolved === "dark" ? "light" : "dark");
       }}
       fullscreen
+      showDefaultSidebar={false}
+      onToggleSidebar={() => shellStore.getState().setSidebarCollapsed(!collapsed)}
     >
       <div className="relative flex min-h-0 flex-1">
         {/* 桌面侧栏（真实数据） */}

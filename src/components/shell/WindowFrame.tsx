@@ -37,6 +37,10 @@ interface WindowFrameProps {
   runtime?: RuntimeKind;
   /** 正式应用形态：铺满真实窗口（预览台为居中卡片演示） */
   fullscreen?: boolean;
+  /** 内置骨架侧栏（静态假数据，预览台用）；正式应用传 false 并在 children 自行渲染真实侧栏 */
+  showDefaultSidebar?: boolean;
+  /** showDefaultSidebar=false 时接管标题栏侧栏按钮（折叠/抽屉语义由调用方定义） */
+  onToggleSidebar?: () => void;
   /** 内容区插槽；缺省渲染静态占位 */
   children?: ReactNode;
 }
@@ -84,6 +88,8 @@ export default function WindowFrame({
   onToggleTheme,
   runtime,
   fullscreen = false,
+  showDefaultSidebar = true,
+  onToggleSidebar,
   children,
 }: WindowFrameProps) {
   const kind = runtime ?? runtimeKind();
@@ -105,8 +111,13 @@ export default function WindowFrame({
     typeof window !== "undefined" &&
     window.matchMedia("(max-width: 767px)").matches;
 
-  // 标题栏侧栏按钮：<768px 开合抽屉，桌面切换折叠态
+  // 标题栏侧栏按钮：<768px 开合抽屉，桌面切换折叠态；
+  // 骨架侧栏关闭（正式应用）时完全让位给调用方回调
   const toggleSidebar = () => {
+    if (!showDefaultSidebar) {
+      onToggleSidebar?.();
+      return;
+    }
     if (isMobileViewport()) {
       setDrawerOpen((prev) => !prev);
       return;
@@ -135,7 +146,8 @@ export default function WindowFrame({
       />
 
       <div className="relative flex min-h-0 flex-1">
-        {/* 桌面侧栏：≥768px 常驻；折叠态收为图标窄条，右缘可拖拽调宽 */}
+        {/* 桌面侧栏：≥768px 常驻；折叠态收为图标窄条，右缘可拖拽调宽（骨架侧栏） */}
+        {showDefaultSidebar && (
         <div className="relative hidden md:flex">
           <SidebarShell width={desktopWidth} collapsed={collapsed} />
           {!collapsed && (
@@ -149,8 +161,10 @@ export default function WindowFrame({
             />
           )}
         </div>
+        )}
 
-        {/* 移动端抽屉：<768px 由汉堡按钮唤出，滑入 + 遮罩 */}
+        {/* 移动端抽屉：<768px 由汉堡按钮唤出，滑入 + 遮罩（骨架侧栏） */}
+        {showDefaultSidebar && (
         <div
           className={`fixed inset-0 z-40 md:hidden ${drawerOpen ? "" : "pointer-events-none"}`}
           aria-hidden={!drawerOpen}
@@ -170,6 +184,7 @@ export default function WindowFrame({
             <SidebarShell width={260} />
           </div>
         </div>
+        )}
 
         {children ?? <DefaultContentPlaceholder />}
       </div>
