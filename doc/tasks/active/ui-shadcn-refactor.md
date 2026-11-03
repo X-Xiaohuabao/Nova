@@ -47,15 +47,15 @@
 
 ### 阶段 2 · 组件库补全
 
-- [ ] T8 补全表单与命令组件
-  - 验收: select / switch / checkbox / slider / badge / popover / tabs / alert-dialog / command(cmdk) / form(react-hook-form 集成) / sonner 落地 `src/components/ui/`；`tsc --noEmit` 通过
+- [x] T8 补全表单与命令组件（完成于 2026-11-04，提交 94a47b9，做了什么：shadcn add 12 组件（select/switch/checkbox/slider/badge/popover/tabs/alert-dialog/command/form/sonner + label 随 form）进 src/components/ui/；依赖补装 sonner/react-hook-form/zod/cmdk；sonner.tsx 主题档位改接 themeStore（移除 CLI 默认的 next-themes）；CLI 误加 cn 依赖二次清除、cn 导入统一 @/lib/utils；预览台挂 Toaster + toast 演示）
+  - 验收: select / switch / checkbox / slider / badge / popover / tabs / alert-dialog / command(cmdk) / form(react-hook-form 集成) / sonner 落地 `src/components/ui/`；`tsc --noEmit` 通过（vite 编译冒烟过）
   - 涉及: src/components/ui/
   - 依赖: T5
 
 ### 阶段 3 · 功能点迁移（以 T0 功能点清单为准，清单若调整则同步台账）
 
-- [ ] T9 迁移 Settings 框架与通用件（SettingsPage + SearchBar/SettingRow/SectionHeader）
-  - 验收: 设置中心按 **doc/design-ui-patterns.md 第 1 章**实现（左分类导航 6 组 + 右内容面板 max-w 640 + 搜索定位 + 移动端下拉切换）；SettingRow 窄屏上下堆叠；General + Terminal 两页先迁移完成且设置读写生效（含语言三态选择，i18n I3 一并落地）
+- [x] T9 迁移 Settings 框架与通用件（SettingsPage + SearchBar/SettingRow/SectionHeader）（完成于 2026-11-04，提交随本条，做了什么：settings/next/ 新目录——SettingsPageNext 框架（左导航 6 组 200px + 右面板 max-w 640 独立滚动 + 搜索静态索引（页名+设置项标签，t() 渲染期取当前语言）→ 点击切页/滚动定位/高亮 1.5s + 移动端 <768px Select 切页 + 17 页注册表（未迁移页 Badge 禁用态））；SettingRow（36px 行高、窄屏上下堆叠、id 锚点+高亮）；SectionHeader；GeneralSettingsNext（语言三态/主题三态/界面缩放 slider/界面字体系统枚举）；TerminalSettingsNext（全键迁移：Shell/字体 FontPicker(Popover+Command 可搜索)/字号/行高/配色/光标/回滚/行为开关/环境变量 Textarea）；缩放与字体在框架层即时生效（--ui-zoom/--ui-font）；预览台加聊天/设置视图切换）；i18n 增 settings 命名空间两语言全量键 + textarea 组件 + resetLanguageToSystem）
+  - 验收: 设置中心按 **doc/design-ui-patterns.md 第 1 章**实现（左分类导航 6 组 + 右内容面板 max-w 640 + 搜索定位 + 移动端下拉切换）；SettingRow 窄屏上下堆叠；General + Terminal 两页先迁移完成且设置读写生效（复用 appStore 偏好/terminalSettings 持久化链路；含语言三态选择，i18n I3 一并落地）；tsc + vite 编译冒烟通过
   - 涉及: src/components/settings/
   - 依赖: T6、T8
 - [ ] T10 迁移 Settings 其余页面（分批）

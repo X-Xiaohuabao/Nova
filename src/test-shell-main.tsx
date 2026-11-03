@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import ChatPlaceholder from "@/components/chat/ChatPlaceholder";
 import ResponsiveDialog from "@/components/common/ResponsiveDialog";
+import SettingsPageNext from "@/components/settings/next/SettingsPageNext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -38,6 +39,8 @@ function ShellPreview() {
   const resolved = themeStore((s) => s.resolved);
   // 组件演示（T5 验证用：ResponsiveDialog 双壳 + 最小组件集）
   const [demoOpen, setDemoOpen] = useState(false);
+  // 内容区视图切换：聊天占位 / 设置中心（T9 验证用）
+  const [view, setView] = useState<"chat" | "settings">("chat");
   const runtime: RuntimeKind =
     new URLSearchParams(window.location.search).get("platform") === "mobile"
       ? "web-remote"
@@ -70,9 +73,17 @@ function ShellPreview() {
         onToggleTheme={cycleTheme}
         runtime={runtime}
       >
-        <ChatPlaceholder />
+        {view === "chat" ? <ChatPlaceholder /> : <SettingsPageNext />}
       </WindowFrame>
 
+      {/* 预览专用：内容区视图切换（T9 验证用） */}
+      <button
+        type="button"
+        onClick={() => setView((v) => (v === "chat" ? "settings" : "chat"))}
+        className="fixed top-3 left-3 z-50 rounded-md border border-white/20 bg-black/50 px-2 py-1 text-xs text-white/80 backdrop-blur transition-colors hover:bg-black/70"
+      >
+        {view === "chat" ? t("shell.viewSettings") : t("shell.viewChat")}
+      </button>
       {/* 预览专用：组件集演示（T5 验证用） */}
       <button
         type="button"

@@ -56,6 +56,18 @@ export function changeLanguage(lang: Language): void {
   document.documentElement.lang = lang;
 }
 
+/** 重置为跟随系统：清除显式偏好，按决策链重新检测（I3 语言三态用） */
+export function resetLanguageToSystem(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // 清除失败不阻塞
+  }
+  const detected = detectLanguage();
+  void i18n.changeLanguage(detected);
+  document.documentElement.lang = detected;
+}
+
 // 首次加载同步 html lang 属性
 document.documentElement.lang = i18n.language;
 
