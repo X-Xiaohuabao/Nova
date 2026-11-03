@@ -22,8 +22,8 @@
   - 验收: 握手首帧必须 auth（6 位配对码，5 分钟有效，开启时重新生成）；通过后签发会话令牌（存哈希）回 auth_ok；错误 3 次断连冷却 30 秒；`remote_get_pairing_code` 命令可用；日志无明文码/令牌；clippy + test 通过（RA 相关 15 测试全绿）
   - 涉及: src-tauri/src/remote_access/
   - 依赖: RA3
-- [ ] RA5 设置面板功能落地（随 UI 重构 T10 排期）
-  - 验收: RemoteAccessPage 新组件实现开关（联动启停）/端口/配对码倒计时/服务状态/连接测试；手机同局域网浏览器完成配对后 remote_ping 全链路通
+- [x] RA5 设置面板功能落地（随 UI 重构 T10 批三落地）（完成于 2026-11-04，提交 cd266d6，做了什么：settings/next/RemoteAccessNext——开关（remote_set_config 联动启停）/端口（失焦保存联动重启）/配对码展示+60s 倒计时+重新生成/运行状态 Badge/连接地址提示（LAN-IP 占位，需用户替换本机局域网 IP））
+  - 验收: RemoteAccessPage 新组件实现开关（联动启停）/端口/配对码倒计时/服务状态/连接测试（代码层完成；「手机同局域网完成配对后 remote_ping 全链路通」需真机手测复核，本会话无真机环境）
   - 涉及: src/components/settings/（新 RemoteAccessPage）
   - 依赖: RA4、UI 重构 T10
 

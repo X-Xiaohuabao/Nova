@@ -58,8 +58,8 @@
   - 验收: 设置中心按 **doc/design-ui-patterns.md 第 1 章**实现（左分类导航 6 组 + 右内容面板 max-w 640 + 搜索定位 + 移动端下拉切换）；SettingRow 窄屏上下堆叠；General + Terminal 两页先迁移完成且设置读写生效（复用 appStore 偏好/terminalSettings 持久化链路；含语言三态选择，i18n I3 一并落地）；tsc + vite 编译冒烟通过
   - 涉及: src/components/settings/
   - 依赖: T6、T8
-- [ ] T10 迁移 Settings 其余页面（分批）
-  - 验收: Claude/Codex/Gemini/OpenCode/Antigravity/CliShell/Keybindings/Network/Notification/DataManagement/McpAccess/RemoteAccess/About 各页可打开且设置生效（**SyncPage 删除、AIAssistantPage 移除**——功能点清单 G9/G10 拍板）；快捷键页展示经 `formatShortcut` 平台化；`tsc --noEmit` 通过
+- [x] T10 迁移 Settings 其余页面（分批）（完成于 2026-11-04，三批提交 672073c / a3a6027 / cd266d6，做了什么：批一 CLI 六页——ToolSettingsPageNext 声明式字段配置（tool_settings 顶层列+settingsJson 拆分与旧一致，Antigravity apiKey 沿用原存储链路不落日志）+ QuickCommandsEditorNext；批二 Network/Notification（useLocalStorageSettings 防抖静默持久化，同键兼容）/DataManagement（占位保持 G7 拍板，清除经 AlertDialog）/McpAccess（列表 CRUD）/About（技术栈标签更新 shadcn/ui）；批三 Keybindings（KeyCaptureInput 录制 + src/lib/shortcut.ts getPlatform/formatShortcut 平台化 + 应用内固定键只读区，3.2/3.3 规范）+ RemoteAccessNext（RA5 面板）；SyncPage/AIAssistantPage 未迁移（G9/G10 拍板））
+  - 验收: Claude/Codex/Gemini/OpenCode/Antigravity/CliShell/Keybindings/Network/Notification/DataManagement/McpAccess/RemoteAccess/About 各页可打开且设置生效（注册表 15 页中 13 页已挂载，SyncPage 删除、AIAssistantPage 移除）；快捷键页展示经 `formatShortcut` 平台化；`tsc --noEmit` + vite 编译冒烟通过
   - 涉及: src/components/settings/
   - 依赖: T9
 - [ ] T11 迁移 LlmProviders + ProfileManagement（含 react-hook-form + zod 改造）
