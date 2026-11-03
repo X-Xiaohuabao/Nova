@@ -2,8 +2,12 @@
 //!
 //! 红线约束（AGENTS.md）：服务默认**关闭**；仅当用户显式开启后方可绑定
 //! 非回环地址，且必须强制配对鉴权（RA4）；日志与导出脱敏。
-//! 本文件（RA2 阶段）仅含配置持久化，配置存于 app_settings 键值表；
-//! WS 服务本体由 RA3 交付，配对鉴权由 RA4 交付。
+//! - 配置持久化（RA2）：app_settings 键值表
+//! - WS 服务骨架（RA3）：[`server`] 监听/启停联动 + [`frames`] 帧协议 + 白名单
+//! - 配对鉴权（RA4）：握手首帧 auth + 会话令牌
+
+pub mod frames;
+pub mod server;
 
 use crate::storage::AppDatabase;
 use serde::{Deserialize, Serialize};

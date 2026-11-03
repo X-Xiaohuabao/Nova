@@ -14,8 +14,8 @@
   - 验收: ~~迁移 v{N}_remote_access_config.sql~~ 复用 app_settings（enabled 默认 false / port 默认 47001）；`remote_get_config` / `remote_set_config` 命令注册且读写持久化生效；clippy + test 通过（3 passed）
   - 涉及: src-tauri/src/remote_access/、storage/（复用 app_settings）、commands/、src/types/、src/utils/ipc.ts
   - 依赖: RA1
-- [ ] RA3 WS 服务骨架（帧协议）
-  - 验收: enabled=true 时监听 0.0.0.0:port，false 时端口不监听（set_config 联动启停）；invoke/result 帧收发正确（id 匹配）；命令白名单注册表就位（仅 remote_ping）；`GET /` 服务前端静态资源；clippy + test 通过
+- [x] RA3 WS 服务骨架（帧协议）（完成于 2026-11-04，提交 f64c4fe，做了什么：remote_access/frames.rs 帧协议（serde tag=type，与 bridge/types.ts 逐字段对齐，4 单测锁定）；remote_access/server.rs——axum 0.8 ws 升级 /ws 路由、invoke→白名单分发→result（id 匹配）、OnceLock 白名单注册表（仅 remote_ping，凭据类拒绝有单测）、ServeDir 静态兜底（tower-http fs，exe 同级/上级 dist 探测）、RunningServer 优雅停机（mpsc 信号+3s 超时兜底）、decide_action 纯函数启停决策（5 分支单测）、全局 RUNNING tokio Mutex；remote_set_config 改 async 联动 sync；Cargo.toml axum +ws feature、新增 tower-http fs（静态资源唯一用途））
+  - 验收: enabled=true 时监听 0.0.0.0:port，false 时端口不监听（set_config 联动启停，端口变更先停再启）；invoke/result 帧收发正确（id 匹配，单测）；命令白名单注册表就位（仅 remote_ping）；`GET /` 服务前端静态资源；clippy + test 通过（RA 相关 10 测试全绿）
   - 涉及: src-tauri/src/remote_access/
   - 依赖: RA2
 - [ ] RA4 配对鉴权
