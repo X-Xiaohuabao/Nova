@@ -1,0 +1,567 @@
+/**
+ * 新建会话弹窗（新骨架，B1/B2 / T12）。
+ *
+ * 逻辑与旧 NewSessionModal 对齐：工具选择（可用性排序）、Profile 模型默认值
+ * （tool_settings.defaultLlmProviderId → 全局默认 Provider 回退）、Claude 分层
+ * 模型映射（含 1M 标记）、模板、思考强度、颜色继承（分类→项目）、SSH 参数与
+ * 连接测试。弹层经 ResponsiveDialog；受控 state 表单（动态条件字段多，不套 RHF）。
+ */
+
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import { useAppStore } from "@/stores/appStore";
+import { detectCliTools, testSshConnection, getToolSettings } from "@/utils/ipc";
+import { CLAUDE_TIER_ENTRIES } from "@/utils/claudeModels";
+import { BUILTIN_SESSION_TEMPLATES, TOOL_PROVIDER_KIND_MAP } from "@/types";
+import type { ToolType, CliTool, LlmProvider, SshArgs } from "@/types";
+import { EMPTY_SSH_ARGS, serializeSshArgs } from "@/utils/sshArgs";
+import { CLI_TOOLS, sortCliToolsByAvailability, isCliToolAvailable, type CliToolMeta } from "@/components/cli/cliTools";
+import CliArgsClaudeNext from "@/components/cli/CliArgsClaudeNext";
+import SshArgsFieldsNext from "@/components/cli/SshArgsFieldsNext";
+import { toolVisual } from "@/components/tabs/tabVisuals";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import ResponsiveDialog from "@/components/common/ResponsiveDialog";
+import { ColorPickerRow } from "./NewProjectModalNext";
+
+const COLOR_PRESETS = ["#722ed1", "#1890ff", "#1677ff", "#fa8c16", "#52c41a", "#13c2c2", "#eb2f96", "#ff4d4f"];
+
+const THINKING_LEVELS = [
+  { value: "low", labelKey: "sessions.thinkingLow", color: "var(--color-success)" },
+  { value: "medium", labelKey: "sessions.thinkingMedium", color: "var(--color-primary)" },
+  { value: "high", labelKey: "sessions.thinkingHigh", color: "#722ed1" },
+];
+
+interface NewSessionModalNextProps {
+  open: boolean;
+  projectId: string | null;
+  categoryId?: string | null;
+  onClose: () => void;
+}
+
+function buildCliArgs(toolType: ToolType, params: Record<string, unknown>): string {
+  const args: string[] = [];
+
+  if (toolType === "claude") {
+    if (params.dangerouslySkipPermissions) args.push("--dangerously-skip-permissions");
+    if (params.verbose) args.push("--verbose");
+    if (params.maxTurns) args.push("--max-turns", String(params.maxTurns));
+    if (params.appendSystemPrompt) args.push("--append-system-prompt", String(params.appendSystemPrompt));
+    if (params.mcpConfig) args.push("--mcp-config", String(params.mcpConfig));
+    const allowed = params.allowedTools as string[] | undefined;
+    if (allowed?.length) args.push("--allowedTools", allowed.join(","));
+    const disallowed = params.disallowedTools as string[] | undefined;
+    if (disallowed?.length) args.push("--disallowedTools", disallowed.join(","));
+  }
+
+  return args.length > 0 ? JSON.stringify(args) : "";
+}
+
+function buildDefaultClaudeModels(provider: LlmProvider) {
+  const defModel =
+    provider.models.find((m) => m.isDefault)?.modelName ?? provider.models[0]?.modelName;
+  if (!defModel) return {};
+  return { sonnet: defModel, opus: defModel, haiku: defModel, fable: defModel, subagent: defModel };
+}
+
+type ClaudeModelsState = {
+  sonnet?: string;
+  opus?: string;
+  haiku?: string;
+  fable?: string;
+  subagent?: string;
+  sonnet1M?: boolean;
+  opus1M?: boolean;
+  haiku1M?: boolean;
+  fable1M?: boolean;
+  subagent1M?: boolean;
+};
+
+export default function NewSessionModalNext({ open: isOpen, projectId, categoryId, onClose }: NewSessionModalNextProps) {
+  const { t } = useTranslation();
+  const createSession = useAppStore((s) => s.createSession);
+  const cliTools = useAppStore((s) => s.cliTools);
+  const setCliTools = useAppStore((s) => s.setCliTools);
+  const globalThinkingIntensity = useAppStore((s) => s.globalThinkingIntensity);
+  const projects = useAppStore((s) => s.projects);
+  const categories = useAppStore((s) => s.categories);
+  const llmProviders = useAppStore((s) => s.llmProviders);
+  const loadLlmProviders = useAppStore((s) => s.loadLlmProviders);
+
+  const [selectedTool, setSelectedTool] = useState<ToolType | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string>(COLOR_PRESETS[0]);
+  const [title, setTitle] = useState("");
+  const [thinkingIntensity, setThinkingIntensity] = useState(globalThinkingIntensity);
+  const [templateId, setTemplateId] = useState<string | undefined>();
+  const [envVars, setEnvVars] = useState("");
+  const [cliParams, setCliParams] = useState<Record<string, unknown>>({});
+  const [sessionCategoryId, setSessionCategoryId] = useState<string | undefined>(undefined);
+  const [llmProviderId, setLlmProviderId] = useState<string | undefined>();
+  const [modelName, setModelName] = useState<string | undefined>();
+  const [claudeModels, setClaudeModels] = useState<ClaudeModelsState>({});
+  const [profileLlmDefaults, setProfileLlmDefaults] = useState<{ defaultLlmProviderId?: string }>({});
+  const [sshArgs, setSshArgs] = useState<SshArgs>(EMPTY_SSH_ARGS);
+  const [testingConnection, setTestingConnection] = useState(false);
+
+  const project = projects.find((p) => p.id === projectId);
+  const filteredCategories = projectId ? categories.filter((c) => c.projectId === projectId) : [];
+
+  const compatibleProviders = (toolType: ToolType | null): LlmProvider[] => {
+    if (!toolType) return [];
+    const allowedKinds = TOOL_PROVIDER_KIND_MAP[toolType] ?? [];
+    return llmProviders.filter((p) => p.isActive && allowedKinds.includes(p.providerKind));
+  };
+
+  useEffect(() => {
+    if (isOpen && cliTools.length === 0) {
+      detectCliTools().then(setCliTools).catch(() => {});
+    }
+  }, [isOpen, cliTools.length, setCliTools]);
+
+  useEffect(() => {
+    if (isOpen && llmProviders.length === 0) {
+      loadLlmProviders().catch(() => {});
+    }
+  }, [isOpen, llmProviders.length, loadLlmProviders]);
+
+  // 打开时重置（颜色继承项目）
+  useEffect(() => {
+    if (!isOpen) return;
+    setSelectedTool(null);
+    setSelectedColor(project?.color || COLOR_PRESETS[0]);
+    setTitle("");
+    setThinkingIntensity(globalThinkingIntensity);
+    setTemplateId(undefined);
+    setEnvVars("");
+    setCliParams({});
+    setSshArgs(EMPTY_SSH_ARGS);
+    setSessionCategoryId(categoryId || undefined);
+    setLlmProviderId(undefined);
+    setModelName(undefined);
+    setClaudeModels({});
+    setProfileLlmDefaults({});
+  }, [isOpen, globalThinkingIntensity, categoryId, project?.color]);
+
+  // 颜色继承：分类 → 项目
+  useEffect(() => {
+    if (!isOpen) return;
+    if (sessionCategoryId) {
+      const cat = categories.find((c) => c.id === sessionCategoryId);
+      if (cat?.color) setSelectedColor(cat.color);
+    } else if (project?.color) {
+      setSelectedColor(project.color);
+    }
+  }, [isOpen, sessionCategoryId, project?.color, categories]);
+
+  // Profile 的默认供应商偏好在 pickTool 时读取（工具→Profile→tool_settings）；
+  // 弹窗重置由上方 open effect 清空。
+
+  // 默认供应商联动（Profile 偏好 → 全局默认回退）
+  useEffect(() => {
+    if (!selectedTool) return;
+    const defId = profileLlmDefaults.defaultLlmProviderId;
+    const applyProvider = (provider: LlmProvider) => {
+      setLlmProviderId(provider.id);
+      if (selectedTool === "claude") {
+        setClaudeModels(buildDefaultClaudeModels(provider));
+        setModelName(undefined);
+      } else {
+        setModelName(provider.models.find((m) => m.isDefault)?.modelName);
+        setClaudeModels({});
+      }
+    };
+    const provider = defId ? llmProviders.find((p) => p.id === defId) : undefined;
+    if (provider?.isActive && compatibleProviders(selectedTool).some((cp) => cp.id === provider.id)) {
+      applyProvider(provider);
+      return;
+    }
+    const globalDef = llmProviders.find((p) => p.isDefault && p.isActive);
+    if (globalDef && compatibleProviders(selectedTool).some((cp) => cp.id === globalDef.id)) {
+      applyProvider(globalDef);
+      return;
+    }
+    setLlmProviderId(undefined);
+    setModelName(undefined);
+    // eslint 判定 compatibleProviders 为稳定调用（依赖 llmProviders/selectedTool）
+  }, [profileLlmDefaults.defaultLlmProviderId, llmProviders, selectedTool]);
+
+  // 非 claude 工具清空分层映射
+  useEffect(() => {
+    if (selectedTool !== "claude") {
+      setClaudeModels({});
+    }
+  }, [selectedTool]);
+
+  const sortedTools = sortCliToolsByAvailability(CLI_TOOLS, cliTools);
+  const getToolInfo = (toolType: ToolType): CliTool | undefined =>
+    cliTools.find((tool) => tool.toolType === toolType);
+
+  const pickTool = async (meta: CliToolMeta, available: boolean) => {
+    if (!available) return;
+    setSelectedTool(meta.id);
+    setCliParams(meta.id === "claude" ? { dangerouslySkipPermissions: true } : {});
+    // 工具对应的第一个 Profile → 读其默认供应商偏好
+    if (meta.id !== "ssh" && meta.id !== "terminal") {
+      const profile = useAppStore.getState().profiles.find((p) => p.toolType === meta.id);
+      if (profile) {
+        try {
+          const toolSettings = await getToolSettings(profile.id);
+          const parsed = toolSettings?.settingsJson
+            ? (JSON.parse(toolSettings.settingsJson) as Record<string, unknown>)
+            : {};
+          setProfileLlmDefaults({
+            defaultLlmProviderId: typeof parsed.defaultLlmProviderId === "string" ? parsed.defaultLlmProviderId : undefined,
+          });
+        } catch {
+          setProfileLlmDefaults({});
+        }
+      } else {
+        setProfileLlmDefaults({});
+      }
+    }
+  };
+
+  const handleTestSsh = async () => {
+    if (!sshArgs.hostname.trim()) {
+      toast.warning(t("sessions.sshHostnameRequired"));
+      return;
+    }
+    setTestingConnection(true);
+    try {
+      const result = await testSshConnection({
+        hostname: sshArgs.hostname,
+        port: sshArgs.port,
+        username: sshArgs.username,
+        password: sshArgs.password || undefined,
+        identity_file: sshArgs.identityFile || undefined,
+      });
+      toast.success(result);
+    } catch (err) {
+      toast.error(`${t("sessions.sshTestFailed")}: ${String(err)}`);
+    } finally {
+      setTestingConnection(false);
+    }
+  };
+
+  const submit = async () => {
+    if (!selectedTool) {
+      toast.warning(t("sessions.toolRequired"));
+      return;
+    }
+    if (!projectId) {
+      toast.warning(t("sessions.projectRequired"));
+      return;
+    }
+    if (selectedTool === "ssh" && !sshArgs.hostname.trim()) {
+      toast.warning(t("sessions.sshHostnameRequired"));
+      return;
+    }
+
+    const finalCliArgs =
+      selectedTool === "ssh"
+        ? serializeSshArgs(sshArgs)
+        : buildCliArgs(selectedTool, cliParams) || undefined;
+
+    try {
+      await createSession({
+        projectId,
+        toolType: selectedTool,
+        title: title.trim() || undefined,
+        color: selectedColor,
+        thinkingIntensity,
+        templateId,
+        cliArgs: finalCliArgs,
+        envVars: envVars.trim() || undefined,
+        categoryId: sessionCategoryId,
+        llmProviderId,
+        modelName,
+        // store 边界处统一序列化为字符串；弹窗始终以对象形态操作
+        claudeModels: selectedTool === "claude" ? claudeModels : undefined,
+      });
+      onClose();
+    } catch (err) {
+      toast.error(`${t("sessions.createSessionFailed")}: ${String(err)}`);
+    }
+  };
+
+  const provider = llmProviders.find((p) => p.id === llmProviderId);
+
+  return (
+    <ResponsiveDialog
+      open={isOpen}
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+      title={`${t("sessions.newSession")}${project ? ` — ${project.name}` : ""}`}
+      size="sm"
+      footer={
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onClose}>{t("common.cancel")}</Button>
+          <Button onClick={() => void submit()} disabled={!selectedTool || !projectId}>
+            {t("common.create")}
+          </Button>
+        </div>
+      }
+    >
+      <div className="flex flex-col gap-3 py-1">
+        {/* 所属分类 */}
+        <div>
+          <label className="mb-1 block text-xs text-muted-foreground">{t("sessions.category")}</label>
+          <Select value={sessionCategoryId ?? ""} onValueChange={(v) => setSessionCategoryId(v || undefined)}>
+            <SelectTrigger className="w-full"><SelectValue placeholder={t("sessions.categoryPlaceholder")} /></SelectTrigger>
+            <SelectContent>
+              {filteredCategories.map((c) => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* 会话名称 */}
+        <div>
+          <label className="mb-1 block text-xs text-muted-foreground">{t("sessions.sessionTitle")}</label>
+          <Input
+            className="h-7"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder={t("sessions.sessionTitlePlaceholder")}
+          />
+        </div>
+
+        {/* CLI 工具选择 */}
+        <div>
+          <label className="mb-1.5 block text-xs text-muted-foreground">
+            {t("sessions.cliTool")} <span className="text-destructive">*</span>
+            <span className="ml-1.5 text-[10px] text-muted-foreground/50">{t("sessions.cliToolHint")}</span>
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {sortedTools.map((meta) => {
+              const toolInfo = getToolInfo(meta.id);
+              const available = isCliToolAvailable(meta, cliTools);
+              const isSelected = selectedTool === meta.id;
+              const visual = toolVisual(meta.id);
+              return (
+                <button
+                  key={meta.id}
+                  type="button"
+                  title={`${meta.desc}${toolInfo?.version ? ` · v${toolInfo.version}` : ""}${available ? "" : ` · ${t("sessions.notInstalled")}`}`}
+                  onClick={() => void pickTool(meta, available)}
+                  className="flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs transition-colors"
+                  style={{
+                    cursor: available ? "pointer" : "default",
+                    backgroundColor: isSelected ? meta.color : "transparent",
+                    borderColor: isSelected ? meta.color : "var(--color-border)",
+                    opacity: available ? 1 : 0.4,
+                    color: isSelected ? "#ffffff" : "var(--color-foreground)",
+                  }}
+                >
+                  <visual.Icon size={14} />
+                  <span>{meta.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* LLM 供应商（非 ssh/terminal） */}
+        {selectedTool !== "ssh" && selectedTool !== "terminal" && (
+          <div>
+            <label className="mb-1 block text-xs text-muted-foreground">{t("sessions.llmProvider")}</label>
+            <Select
+              value={llmProviderId ?? ""}
+              onValueChange={(id) => {
+                setLlmProviderId(id || undefined);
+                const next = llmProviders.find((p) => p.id === id);
+                if (selectedTool === "claude" && next) {
+                  setClaudeModels(buildDefaultClaudeModels(next));
+                  setModelName(undefined);
+                } else if (next) {
+                  setModelName(next.models.find((m) => m.isDefault)?.modelName);
+                  setClaudeModels({});
+                } else {
+                  setModelName(undefined);
+                  setClaudeModels({});
+                }
+              }}
+            >
+              <SelectTrigger className="w-full"><SelectValue placeholder={t("sessions.llmProviderPlaceholder")} /></SelectTrigger>
+              <SelectContent>
+                {compatibleProviders(selectedTool).map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.name}（{p.providerKind}）</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* 模型（选中供应商后） */}
+        {selectedTool !== "ssh" && selectedTool !== "terminal" && llmProviderId && (
+          <div>
+            {selectedTool === "claude" ? (
+              <>
+                <label className="mb-1.5 block text-xs text-muted-foreground">{t("sessions.claudeModelMapping")}</label>
+                {CLAUDE_TIER_ENTRIES.map(({ modelKey, oneMKey, label }) => {
+                  const tierModel = claudeModels[modelKey];
+                  const oneM = claudeModels[oneMKey] ?? false;
+                  return (
+                    <div key={modelKey} className="mb-2">
+                      <div className="mb-0.5 flex items-baseline justify-between">
+                        <span className="text-[11px] text-muted-foreground">{label}</span>
+                        <span className="text-[11px] text-muted-foreground/60">{t("sessions.oneM")}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Select
+                          value={tierModel ?? ""}
+                          onValueChange={(v) => setClaudeModels({ ...claudeModels, [modelKey]: v || undefined })}
+                        >
+                          <SelectTrigger className="h-7 flex-1 text-xs"><SelectValue placeholder={t("sessions.modelPlaceholder")} /></SelectTrigger>
+                          <SelectContent>
+                            {(provider?.models ?? []).map((m) => (
+                              <SelectItem key={m.id} value={m.modelName}>
+                                {m.modelName}
+                                {m.isDefault && (
+                                  <span className="ml-2 text-[10px] text-muted-foreground/50">{t("sessions.defaultModelTag")}</span>
+                                )}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Checkbox
+                          checked={oneM}
+                          onCheckedChange={(checked) =>
+                            setClaudeModels({ ...claudeModels, [oneMKey]: checked === true })
+                          }
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            ) : (
+              <>
+                <label className="mb-1 block text-xs text-muted-foreground">{t("sessions.model")}</label>
+                <Select value={modelName ?? ""} onValueChange={(v) => setModelName(v || undefined)}>
+                  <SelectTrigger className="w-full"><SelectValue placeholder={t("sessions.modelPlaceholder")} /></SelectTrigger>
+                  <SelectContent>
+                    {(provider?.models ?? []).map((m) => (
+                      <SelectItem key={m.id} value={m.modelName}>
+                        {m.modelName}
+                        {m.isDefault && (
+                          <span className="ml-2 text-[10px] text-muted-foreground/50">{t("sessions.defaultModelTag")}</span>
+                        )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* 颜色标记（未选分类时） */}
+        {!sessionCategoryId && (
+          <ColorPickerRow label={t("sessions.colorMark")} colors={COLOR_PRESETS} value={selectedColor} onChange={setSelectedColor} />
+        )}
+
+        {/* 思考强度（非 ssh） */}
+        {selectedTool !== "ssh" && (
+          <div>
+            <label className="mb-1.5 block text-xs text-muted-foreground">{t("sessions.thinkingIntensity")}</label>
+            <div className="flex gap-2">
+              {THINKING_LEVELS.map((level) => {
+                const isSelected = thinkingIntensity === level.value;
+                return (
+                  <button
+                    key={level.value}
+                    type="button"
+                    onClick={() => setThinkingIntensity(level.value)}
+                    className="flex items-center gap-1.5 rounded-md border px-3.5 py-1.5 text-xs transition-colors"
+                    style={{
+                      borderColor: isSelected ? level.color : "var(--color-border)",
+                      background: isSelected ? "var(--color-accent)" : "transparent",
+                      color: isSelected ? level.color : "var(--color-muted-foreground)",
+                      fontWeight: isSelected ? 600 : 400,
+                    }}
+                  >
+                    <span
+                      aria-hidden
+                      className="h-1.5 w-1.5 rounded-full"
+                      style={{ background: isSelected ? level.color : "var(--color-muted-foreground)" }}
+                    />
+                    {t(level.labelKey)}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* 会话模板（非 ssh） */}
+        {selectedTool !== "ssh" && (
+          <div>
+            <label className="mb-1 block text-xs text-muted-foreground">{t("sessions.template")}</label>
+            <Select value={templateId ?? ""} onValueChange={(v) => setTemplateId(v || undefined)}>
+              <SelectTrigger className="w-full"><SelectValue placeholder={t("sessions.templatePlaceholder")} /></SelectTrigger>
+              <SelectContent>
+                {BUILTIN_SESSION_TEMPLATES.map((tmpl) => (
+                  <SelectItem key={tmpl.id} value={tmpl.id}>
+                    {tmpl.name}
+                    {tmpl.description && (
+                      <span className="ml-2 text-[10px] text-muted-foreground/50">{tmpl.description}</span>
+                    )}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* Claude Code 参数 */}
+        {selectedTool === "claude" && (
+          <div className="border-t border-border/60 pt-2">
+            <label className="mb-1.5 block text-xs text-muted-foreground">{t("sessions.claudeArgs")}</label>
+            <CliArgsClaudeNext value={cliParams} onChange={setCliParams} />
+          </div>
+        )}
+
+        {/* SSH 参数 */}
+        {selectedTool === "ssh" && (
+          <div className="border-t border-border/60 pt-2">
+            <label className="mb-1.5 block text-xs text-muted-foreground">{t("sessions.sshArgs")}</label>
+            <SshArgsFieldsNext
+              value={sshArgs}
+              onChange={setSshArgs}
+              onTest={() => void handleTestSsh()}
+              testing={testingConnection}
+            />
+          </div>
+        )}
+
+        {/* 环境变量 */}
+        <div className="border-t border-border/60 pt-2">
+          <label className="mb-1 block text-xs text-muted-foreground">
+            {t("sessions.envVarsLabel")}
+            <span className="ml-1 text-[10px] text-muted-foreground/50">{t("sessions.envVarsLineHint")}</span>
+          </label>
+          <Textarea
+            className="min-h-12 font-mono text-xs"
+            rows={2}
+            placeholder={t("sessions.envVarsPlaceholder")}
+            value={envVars}
+            onChange={(e) => setEnvVars(e.target.value)}
+          />
+        </div>
+      </div>
+    </ResponsiveDialog>
+  );
+}
