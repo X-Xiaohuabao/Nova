@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import { message } from "antd";
+import { toast } from "sonner";
 import type { Terminal } from "@xterm/xterm";
 import { listen } from "@tauri-apps/api/event";
 import { sessionMessageCreate } from "../../utils/ipc";
@@ -158,7 +158,7 @@ export function useUserMessageCapture({
         clearTimeout(sensitiveTimeoutRef.current);
         sensitiveTimeoutRef.current = null;
       }
-      message.info("已识别密码输入，该行未记录");
+      toast.info("已识别密码输入，该行未记录");
       return;
     }
     if (!cleaned) return;

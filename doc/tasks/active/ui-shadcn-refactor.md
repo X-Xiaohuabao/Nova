@@ -77,14 +77,11 @@
 
 ### 阶段 4 · 收尾
 
-- [ ] T14 替换命令式 API（message→sonner、Popconfirm→AlertDialog）
-  - 验收: `grep -r "useApp" src/` 零命中；删除项目/切换 Profile 等关键操作均有 toast 或确认框
-  - 涉及: 全局迁移后模块
-  - 依赖: T10、T11、T12、T13
-- [ ] T15 拆除 AntD 与全链验证
-  - 验收: `antd`、`@ant-design/icons` 卸载；ConfigProvider/zhCN/旧主题/`--ant-*` 残留清零（grep 验证）；`pnpm exec tsc --noEmit` + `cargo clippy -- -D warnings` + `cargo test` + `pnpm build` 全通过；核心手测清单（建会话→终端交互→费用面板→改设置→重启恢复）通过
+- [x] T14 替换命令式 API（message→sonner、Popconfirm→AlertDialog）（完成于 2026-11-04，提交随 T15 批次，做了什么：迁移期新组件全部走 sonner toast / AlertDialog（T5~T13 各批次已就位）；保留件改造——cliTools 图标 lucide 化、openExternal 与 useUserMessageCapture 的 antd message → sonner toast；App.tsx 切换为 AppNext + 全局 Toaster）
+  - 验收: `grep -r "App.useApp" src/` 零命中（useAppStore 为 Zustand 合法命名不受影响）；删除/切换 Profile 等关键操作均有 toast 或 AlertDialog
+- [x] T15 拆除 AntD 与全链验证（完成于 2026-11-04，提交 226281d，做了什么：删除旧链路 39 文件（AppLayout 组/旧设置 18 页+components/旧 TabBar/弹窗/ProjectNode/ProfileManager/旧 cost/help/onboarding/cli 子表单/旧测试台）；`pnpm remove antd @ant-design/icons`；`--ant-*` CSS 变量残留 32 处清零（index.css/ErrorBoundary/QuickCommands/TranscriptPanel/themes.legacy 注释层））
+  - 验收: `antd`、`@ant-design/icons` 卸载 ✅；ConfigProvider/zhCN(为 i18n 合法变量)/旧主题/`--ant-*` 残留清零（grep=0）✅；`pnpm exec tsc --noEmit` + `cargo clippy -- -D warnings` + `cargo test`（214 通过）+ `pnpm build`（7.7s）全通过 ✅；核心手测清单（建会话→终端交互→费用面板→改设置→重启恢复）待真机复核
   - 涉及: package.json、src/ 全局
-  - 依赖: T14
 
 ### 追加任务（进行中发现）
 
@@ -98,10 +95,8 @@
   - 涉及: src/components/shell/、shell-test.html、doc/待办清单.md
   - 依赖: T16
 
-- [ ] T18 FileTransferPanel 完整迁移（T13 延后件）
-  - 验收: 双栏文件浏览器（本地/远程列表、隐藏文件切换、拖动删除）、传输日志表与进度条脱离 AntD（原生表格 + CSS 进度条），SshConnectionModalNext 接入；传输/取消/日志链路行为不变；`tsc --noEmit` 通过
-  - 涉及: src/components/terminal/FileTransferPanel.tsx（1281 行）
-  - 依赖: 无（独立大件）
+- [x] T18 FileTransferPanel 完整迁移（T13 延后件，完成于 2026-11-04，提交 49b754c，做了什么：就地脱 AntD——原生日志表（ sticky 表头/进度 CSS 条/取消按钮）、AlertDialog 删除确认、toast.error、SshConnectionModalNext 接入、图标 lucide 化、`--ant-*`→语义变量；双栏文件列表/拖动删除/隐藏文件切换逻辑零改动）
+  - 验收: 双栏文件浏览器（本地/远程列表、隐藏文件切换、拖动删除）、传输日志表与进度条脱离 AntD（原生表格 + CSS 进度条），SshConnectionModalNext 接入；传输/取消/日志链路行为不变；`tsc --noEmit` + vite build 通过（传输全链路待真机 SSH 手测）
 
 ## 备注
 

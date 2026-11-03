@@ -1,4 +1,4 @@
-import { CodeOutlined, DesktopOutlined, CloudOutlined } from "@ant-design/icons";
+import { Code2, Cloud, SquareTerminal } from "lucide-react";
 import type { ReactNode } from "react";
 import type { CliTool, ToolType } from "../../types";
 
@@ -19,8 +19,8 @@ export const CLI_TOOLS: CliToolMeta[] = [
   { id: "gemini", name: "Gemini CLI", icon: "/gemini.png", color: "#1677ff", desc: "Google Gemini CLI", inSettingsGroup: true },
   { id: "antigravity", name: "Antigravity", color: "#52c41a", desc: "Antigravity CLI", alwaysAvailable: true, inSettingsGroup: true },
   { id: "opencode", name: "OpenCode", icon: "/opencode.png", color: "#fa8c16", desc: "开源编码助手", inSettingsGroup: true },
-  { id: "terminal", name: "终端", iconComponent: <DesktopOutlined />, color: "#52c41a", desc: "本机系统 Shell", alwaysAvailable: true, inSettingsGroup: true },
-  { id: "ssh", name: "SSH", iconComponent: <CloudOutlined />, color: "#1677ff", desc: "SSH 远程连接", alwaysAvailable: true, inSettingsGroup: true },
+  { id: "terminal", name: "终端", iconComponent: <SquareTerminal size={14} />, color: "#52c41a", desc: "本机系统 Shell", alwaysAvailable: true, inSettingsGroup: true },
+  { id: "ssh", name: "SSH", iconComponent: <Cloud size={14} />, color: "#1677ff", desc: "SSH 远程连接", alwaysAvailable: true, inSettingsGroup: true },
 ];
 
 export const CLI_TOOLS_IN_SETTINGS_GROUP: CliToolMeta[] =
@@ -32,7 +32,7 @@ export function getCliToolMeta(id: ToolType): CliToolMeta | undefined {
 
 export function getCliToolIcon(id: ToolType): ReactNode {
   const meta = getCliToolMeta(id);
-  if (!meta) return <CodeOutlined />;
+  if (!meta) return <Code2 size={14} />;
   if (meta.icon) {
     return (
       <span
@@ -50,7 +50,7 @@ export function getCliToolIcon(id: ToolType): ReactNode {
       </span>
     );
   }
-  return meta.iconComponent ?? <CodeOutlined style={{ color: meta.color }} />;
+  return meta.iconComponent ?? <Code2 size={14} style={{ color: meta.color }} />;
 }
 
 export function sortCliToolsByAvailability(

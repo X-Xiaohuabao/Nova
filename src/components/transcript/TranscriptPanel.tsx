@@ -485,7 +485,7 @@ const load = useCallback(async (background = false) => {
                       className="flex items-start gap-1"
                       style={{
                         padding: "6px 8px",
-                        background: "var(--ant-color-primary-bg)",
+                        background: "var(--color-accent)",
                       }}
                     >
                       <button
@@ -572,7 +572,7 @@ const load = useCallback(async (background = false) => {
                                 padding: "5px 8px",
                                 borderRadius: 6,
                                 borderLeft: isTool
-                                  ? "2px solid var(--ant-color-border)"
+                                  ? "2px solid var(--color-border)"
                                   : "2px solid var(--color-border)",
                                 opacity: isTool ? 0.75 : 1,
                               }}
@@ -620,7 +620,7 @@ const load = useCallback(async (background = false) => {
             <div
               className="text-xs px-3 py-1"
               style={{
-                color: "var(--ant-color-warning)",
+                color: "var(--color-warning)",
                 borderTop: "1px solid var(--color-border)",
               }}
             >

@@ -1,5 +1,5 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { message } from "antd";
+import { toast } from "sonner";
 
 /**
  * 在系统浏览器中打开链接。
@@ -13,17 +13,17 @@ export async function openExternal(href: string | undefined): Promise<void> {
   try {
     url = new URL(href);
   } catch {
-    message.warning("链接格式无效，已跳过");
+    toast.warning("链接格式无效，已跳过");
     return;
   }
   if (url.protocol !== "http:" && url.protocol !== "https:") {
-    message.warning("已阻止打开非 http(s) 链接");
+    toast.warning("已阻止打开非 http(s) 链接");
     return;
   }
   try {
     await openUrl(url.toString());
   } catch {
-    message.warning("无法在系统浏览器中打开该链接");
+    toast.warning("无法在系统浏览器中打开该链接");
   }
 }
 
@@ -36,6 +36,6 @@ export async function openMailto(href: string): Promise<void> {
   try {
     await openUrl(href);
   } catch {
-    message.warning("无法打开邮件客户端");
+    toast.warning("无法打开邮件客户端");
   }
 }

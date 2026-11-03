@@ -24,17 +24,17 @@ export default class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: 40, color: "var(--ant-color-text)", background: "var(--ant-color-bg-layout)", minHeight: "100vh" }}>
-          <h2 style={{ color: "var(--ant-color-error)" }}>渲染错误</h2>
-          <pre style={{ fontSize: 12, color: "var(--ant-color-text-secondary)", whiteSpace: "pre-wrap" }}>
+        <div style={{ padding: 40, color: "var(--color-foreground)", background: "var(--color-background)", minHeight: "100vh" }}>
+          <h2 style={{ color: "var(--color-destructive)" }}>渲染错误</h2>
+          <pre style={{ fontSize: 12, color: "var(--color-muted-foreground)", whiteSpace: "pre-wrap" }}>
             {this.state.error?.message}
           </pre>
-          <pre style={{ fontSize: 11, color: "var(--ant-color-text-tertiary)", whiteSpace: "pre-wrap" }}>
+          <pre style={{ fontSize: 11, color: "var(--color-muted-foreground)", whiteSpace: "pre-wrap" }}>
             {this.state.error?.stack}
           </pre>
           <button
             onClick={() => this.setState({ hasError: false, error: null })}
-            style={{ marginTop: 16, padding: "8px 16px", background: "var(--ant-color-primary)", color: "var(--ant-color-bg-container)", border: "none", borderRadius: 6, cursor: "pointer" }}
+            style={{ marginTop: 16, padding: "8px 16px", background: "var(--color-primary)", color: "var(--color-card)", border: "none", borderRadius: 6, cursor: "pointer" }}
           >
             重试
           </button>

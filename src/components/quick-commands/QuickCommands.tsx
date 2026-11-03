@@ -76,7 +76,7 @@ export default function QuickCommands({ visible, onClose, anchorRef }: QuickComm
   return (
     <div
       ref={panelRef}
-      className="absolute bottom-full mb-1 right-0 z-50 bg-[var(--ant-color-bg-elevated)] border border-[var(--ant-color-border)] rounded-lg shadow-lg min-w-[200px] py-1"
+      className="absolute bottom-full mb-1 right-0 z-50 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg shadow-lg min-w-[200px] py-1"
       style={{ boxShadow: "0 6px 16px 0 rgba(0, 0, 0, 0.16)" }}
     >
       {commands.map((cmd, idx) => {
@@ -87,7 +87,7 @@ export default function QuickCommands({ visible, onClose, anchorRef }: QuickComm
               className="my-1 mx-2"
               style={{
                 height: 1,
-                backgroundColor: "var(--ant-color-border-secondary)",
+                backgroundColor: "var(--color-border)",
               }}
             />
           );
@@ -97,10 +97,10 @@ export default function QuickCommands({ visible, onClose, anchorRef }: QuickComm
             key={`${cmd}-${idx}`}
             className="px-3 py-1.5 text-xs cursor-pointer transition-colors whitespace-nowrap"
             style={{
-              color: "var(--ant-color-text)",
+              color: "var(--color-foreground)",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--ant-color-primary-bg)";
+              e.currentTarget.style.backgroundColor = "var(--color-accent)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = "transparent";
