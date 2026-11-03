@@ -2,32 +2,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { listen } from "@tauri-apps/api/event";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
+import { toast } from "sonner";
 import {
-  Button,
-  Empty,
-  Input,
-  Modal,
-  Progress,
-  Switch,
-  Table,
-  Tooltip,
-} from "antd";
-import type { ColumnsType } from "antd/es/table";
-import {
-  CloseOutlined,
-  CloudDownloadOutlined,
-  CloudUploadOutlined,
-  DeleteOutlined,
-  EyeInvisibleOutlined,
-  EyeOutlined,
-  FileOutlined,
-  FolderOutlined,
-  FolderOpenOutlined,
-  FullscreenExitOutlined,
-  FullscreenOutlined,
-  SnippetsOutlined,
-  StopOutlined,
-} from "@ant-design/icons";
+  CloudDownload,
+  CloudUpload,
+  Eye,
+  EyeOff,
+  File as FileIcon,
+  Folder,
+  FolderOpen,
+  Maximize2,
+  Minimize2,
+  NotebookText,
+  SquareX,
+  X,
+} from "lucide-react";
 import {
   fsDelete,
   fsListDir,
@@ -41,7 +30,20 @@ import {
   writeToPty,
 } from "../../utils/ipc";
 import { formatBytes, shellQuote } from "../../utils/shellQuote";
-import SshConnectionModal from "./SshConnectionModal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import SshConnectionModalNext from "./SshConnectionModalNext";
 import type {
   DirEntry,
   SshArgs,
@@ -63,59 +65,13 @@ interface FileTransferPanelProps {
 }
 
 
-/**
- * 日志表的紧凑渲染。
- *
- * 用 AntD Table 的 `components` 覆盖行/单元格，而不是写 CSS：
- * AntD 6 的表格样式是运行时注入的 CSS-in-JS，注入时机在 index.css 之后，
- * 同特异性下它赢 —— 外部 CSS 压不住它的单元格 padding。行内样式优先级最高，
- * 不受影响。
- */
-const COMPACT_TABLE = {
-  header: {
-    row: (props: React.HTMLAttributes<HTMLTableRowElement>) => (
-      <tr {...props} style={{ ...props.style, height: 18 }} />
-    ),
-    cell: (props: React.ThHTMLAttributes<HTMLTableCellElement>) => (
-      <th
-        {...props}
-        style={{
-          ...props.style,
-          padding: "0 8px",
-          height: 18,
-          lineHeight: "18px",
-          textAlign: "center",
-        }}
-      />
-    ),
-  },
-  body: {
-    row: (props: React.HTMLAttributes<HTMLTableRowElement>) => {
-      // AntD 插的测量行不占位，别给它 18px 行高
-      const hidden = (props as { "aria-hidden"?: string })["aria-hidden"] === "true";
-      return <tr {...props} style={{ ...props.style, height: hidden ? 0 : 18 }} />;
-    },
-    cell: (props: React.TdHTMLAttributes<HTMLTableCellElement>) => (
-      <td
-        {...props}
-        style={{
-          ...props.style,
-          padding: "0 8px",
-          height: 18,
-          lineHeight: "18px",
-        }}
-      />
-    ),
-  },
-};
-
 /** 头部几个图标按钮的统一样式。去掉 outline：点过之后 WebKit 会留下一个
  *  聚焦框，看着像按钮自带边框。 */
 const ICON_BTN_STYLE = {
   background: "transparent",
   border: "none",
   cursor: "pointer",
-  color: "var(--ant-color-text-secondary)",
+  color: "var(--color-muted-foreground)",
   padding: 2,
   outline: "none",
 } as const;
@@ -124,8 +80,8 @@ const PANEL_STYLE = {
   width: 760,
   // 跟随终端区域高度：写死数值会在矮终端里被裁掉顶部
   maxHeight: "calc(100% - 2.5rem)",
-  background: "var(--ant-color-bg-elevated)",
-  border: "1px solid var(--ant-color-border-secondary)",
+  background: "var(--color-card)",
+  border: "1px solid var(--color-border)",
   borderRadius: 8,
   boxShadow: "0 6px 24px rgba(0,0,0,0.28)",
   overflow: "hidden",
@@ -170,12 +126,6 @@ function formatClock(ms: number): string {
   const d = new Date(ms);
   const p = (n: number) => String(n).padStart(2, "0");
   return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
-}
-
-/** 表格行 = 库里的行 + 内存里的实时进度。 */
-interface LogRowView extends TransferLogRow {
-  liveBytes: number | null;
-  liveTotal: number | null;
 }
 
 export default function FileTransferPanel({
@@ -538,10 +488,7 @@ export default function FileTransferPanel({
         refreshLocal();
       }
     } catch (e) {
-      Modal.error({
-        title: "删除失败",
-        content: typeof e === "string" ? e : "删除失败",
-      });
+      toast.error(typeof e === "string" ? e : "删除失败");
     }
   };
 
@@ -571,146 +518,12 @@ export default function FileTransferPanel({
     };
   });
 
-  const columns: ColumnsType<LogRowView> = [
-    {
-      title: "方式",
-      dataIndex: "kind",
-      width: 52,
-      align: "center",
-      render: (kind: TransferLogRow["kind"], row) => {
-        const label =
-          kind === "upload" ? "上传" : kind === "download" ? "下载" : "删除";
-        const tip =
-          kind === "delete"
-            ? `${label}（${row.side === "local" ? "本地" : "远程"}）`
-            : label;
-        return (
-          <Tooltip title={tip} placement="left">
-            {kind === "upload" ? (
-              <CloudUploadOutlined style={{ color: "var(--ant-color-blue)" }} />
-            ) : kind === "download" ? (
-              <CloudDownloadOutlined style={{ color: "var(--ant-color-green)" }} />
-            ) : (
-              <DeleteOutlined style={{ color: "var(--ant-color-error)" }} />
-            )}
-          </Tooltip>
-        );
-      },
-    },
-    {
-      title: "文件名",
-      dataIndex: "name",
-      ellipsis: true,
-      render: (name: string, row) => (
-        <Tooltip title={row.path ?? name} placement="left">
-          {name}
-        </Tooltip>
-      ),
-    },
-    {
-      title: "大小",
-      dataIndex: "bytes",
-      width: 92,
-      align: "center",
-      render: (b: number | null) => (b === null ? "—" : formatBytes(b)),
-    },
-    {
-      title: "开始时间",
-      dataIndex: "createdAt",
-      width: 88,
-      align: "center",
-      render: (t: number) => formatClock(t),
-    },
-    {
-      title: "状态/进度",
-      dataIndex: "liveBytes",
-      width: 168,
-      align: "center",
-      render: (_, row) => {
-        if (row.state === "error") {
-          return (
-            <span
-              style={{ color: "var(--ant-color-error)", fontSize: 10 }}
-              title={row.error ?? undefined}
-            >
-              {row.error ?? "失败"}
-            </span>
-          );
-        }
-        // 删除是瞬时操作，没有进度可言
-        if (row.kind === "delete") {
-          return (
-            <span
-              style={{
-                color: "var(--ant-color-text-secondary)",
-                fontSize: 10,
-              }}
-            >
-              已删除
-            </span>
-          );
-        }
-        const bytes = row.liveBytes ?? row.bytes ?? 0;
-        // 下载方向后端给不出总量（要另开连接问），用列表里看到的文件大小兜底
-        const total = row.liveTotal ?? row.bytes ?? 0;
-        if (total <= 0) {
-          // 拿不到总量就不编造百分比，只报已传字节
-          return (
-            <span
-              style={{
-                color: "var(--ant-color-text-secondary)",
-                fontSize: 10,
-              }}
-            >
-              {row.state === "running" ? `已传 ${formatBytes(bytes)}` : "已完成"}
-            </span>
-          );
-        }
-        const percent = Math.min(100, Math.round((bytes / total) * 100));
-        return (
-          <div className="flex items-center gap-1">
-            {row.state === "running" ? (
-              <Progress
-                size="small"
-                percent={percent}
-                status="active"
-                style={{ flex: 1, marginBottom: 0, lineHeight: 1 }}
-              />
-            ) : (
-              // 完成的行也显示 100%，而不是 AntD 的对勾图标 ——
-              // status="success" 会把百分比文字换成对勾，得自己给 format
-              <Progress
-                size="small"
-                percent={100}
-                strokeColor="var(--ant-color-success)"
-                format={() => "100%"}
-                style={{ flex: 1, marginBottom: 0, lineHeight: 1 }}
-              />
-            )}
-            {row.state === "running" && (
-              <Tooltip title="取消">
-                <Button
-                  size="small"
-                  type="text"
-                  icon={<StopOutlined />}
-                  onClick={() => void cancelRow(row.requestId)}
-                />
-              </Tooltip>
-            )}
-          </div>
-        );
-      },
-    },
-  ];
-
   return (
     <>
-      <Tooltip
+      <button
+        ref={buttonRef}
         title={isSsh ? "文件传输" : "本地文件 / 传文件"}
-        placement="left"
-      >
-        <button
-          ref={buttonRef}
+        aria-label={isSsh ? "文件传输" : "本地文件 / 传文件"}
           onClick={() => {
             setOpen((v) => !v);
           }}
@@ -719,41 +532,50 @@ export default function FileTransferPanel({
             width: 32,
             height: 32,
             backgroundColor: open
-              ? "var(--ant-color-primary)"
-              : "var(--ant-color-bg-elevated)",
-            border: "1px solid var(--ant-color-border-secondary)",
+              ? "var(--color-primary)"
+              : "var(--color-card)",
+            border: "1px solid var(--color-border)",
             boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
             cursor: "pointer",
-            color: open ? "#fff" : "var(--ant-color-text-secondary)",
+            color: open ? "#fff" : "var(--color-muted-foreground)",
           }}
         >
           {isSsh ? (
-            <CloudUploadOutlined style={{ fontSize: 14 }} />
+            <CloudUpload size={14} />
           ) : (
-            <SnippetsOutlined style={{ fontSize: 14 }} />
+            <NotebookText size={14} />
           )}
         </button>
-      </Tooltip>
 
-      <Modal
+      <AlertDialog
         open={deleteTarget !== null}
-        title={`删除 ${deleteTarget?.entry.name ?? ""}？`}
-        okText="删除"
-        okButtonProps={{ danger: true }}
-        cancelText="取消"
-        // 点遮罩不关：免得误触把确认框和面板一起弄没了
-        maskClosable={false}
-        onOk={() => void confirmDelete()}
-        onCancel={() => setDeleteTarget(null)}
+        onOpenChange={(o) => {
+          // 点遮罩不关：免得误触把确认框和面板一起弄没了
+          if (!o) setDeleteTarget(null);
+        }}
       >
-        <p className="text-sm">
-          {deleteTarget?.entry.isDir
-            ? "该文件夹及其全部内容都会被永久删除，此操作不可撤销。"
-            : "该文件会被永久删除，此操作不可撤销。"}
-        </p>
-      </Modal>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>删除 {deleteTarget?.entry.name ?? ""}？</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget?.entry.isDir
+                ? "该文件夹及其全部内容都会被永久删除，此操作不可撤销。"
+                : "该文件会被永久删除，此操作不可撤销。"}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90"
+              onClick={() => void confirmDelete()}
+            >
+              删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      <SshConnectionModal
+      <SshConnectionModalNext
         open={connModalOpen}
         onClose={() => setConnModalOpen(false)}
         onConfirm={(args) => {
@@ -781,41 +603,27 @@ export default function FileTransferPanel({
           >
             <div
               className="flex items-center gap-2 px-3 py-2"
-              style={{ borderBottom: "1px solid var(--ant-color-border-secondary)" }}
+              style={{ borderBottom: "1px solid var(--color-border)" }}
             >
               <span className="text-sm font-medium flex-1">文件传输</span>
-              <Tooltip title={showHidden ? "不显示隐藏文件" : "显示隐藏文件"}>
-                <button
-                  onClick={() => setShowHidden((v) => !v)}
-                  aria-label={showHidden ? "不显示隐藏文件" : "显示隐藏文件"}
-                  style={ICON_BTN_STYLE}
-                >
-                  {showHidden ? (
-                    <EyeOutlined style={{ fontSize: 13 }} />
-                  ) : (
-                    <EyeInvisibleOutlined style={{ fontSize: 13 }} />
-                  )}
-                </button>
-              </Tooltip>
-              <Tooltip title={maximized ? "恢复默认大小" : "最大化"}>
-                <button
-                  onClick={() => setMaximized((v) => !v)}
-                  aria-label={maximized ? "恢复默认大小" : "最大化"}
-                  style={ICON_BTN_STYLE}
-                >
-                  {maximized ? (
-                    <FullscreenExitOutlined style={{ fontSize: 13 }} />
-                  ) : (
-                    <FullscreenOutlined style={{ fontSize: 13 }} />
-                  )}
-                </button>
-              </Tooltip>
               <button
-                onClick={() => setOpen(false)}
-                aria-label="关闭"
+                onClick={() => setShowHidden((v) => !v)}
+                aria-label={showHidden ? "不显示隐藏文件" : "显示隐藏文件"}
+                title={showHidden ? "不显示隐藏文件" : "显示隐藏文件"}
                 style={ICON_BTN_STYLE}
               >
-                <CloseOutlined style={{ fontSize: 13 }} />
+                {showHidden ? <Eye size={13} /> : <EyeOff size={13} />}
+              </button>
+              <button
+                onClick={() => setMaximized((v) => !v)}
+                aria-label={maximized ? "恢复默认大小" : "最大化"}
+                title={maximized ? "恢复默认大小" : "最大化"}
+                style={ICON_BTN_STYLE}
+              >
+                {maximized ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+              </button>
+              <button onClick={() => setOpen(false)} aria-label="关闭" style={ICON_BTN_STYLE}>
+                <X size={13} />
               </button>
             </div>
 
@@ -859,7 +667,7 @@ export default function FileTransferPanel({
                 }
                 extra={
                   !isSsh && !targetKey ? (
-                    <Button size="small" onClick={() => setConnModalOpen(true)}>
+                    <Button size="xs" variant="outline" onClick={() => setConnModalOpen(true)}>
                       填写参数
                     </Button>
                   ) : null
@@ -869,8 +677,9 @@ export default function FileTransferPanel({
                 className="flex flex-col items-center justify-center"
                 style={{ width: 30, gap: 50 }}
               >
-                <Tooltip title="上传到远程（本地 → 远程）" placement="left">
-                  <button
+                <button
+                  title="上传到远程（本地 → 远程）"
+                  aria-label="上传到远程（本地 → 远程）"
                     onClick={() =>
                       startUploads(
                         localEntries.filter(
@@ -883,20 +692,20 @@ export default function FileTransferPanel({
                       width: 28,
                       padding: "3px 0",
                       gap: 1,
-                      background: "var(--ant-color-bg-elevated)",
-                      border: "1px solid var(--ant-color-border-secondary)",
+                      background: "var(--color-card)",
+                      border: "1px solid var(--color-border)",
                       cursor: "pointer",
-                      color: "var(--ant-color-text-secondary)",
+                      color: "var(--color-muted-foreground)",
                       fontSize: 10,
                       lineHeight: "10px",
                     }}
                   >
-                    <CloudUploadOutlined style={{ fontSize: 13 }} />
+                    <CloudUpload size={13} />
                     <span>&lt;&lt;</span>
                   </button>
-                </Tooltip>
-                <Tooltip title="从远程下载（远程 → 本地）" placement="right">
-                  <button
+                <button
+                  title="从远程下载（远程 → 本地）"
+                  aria-label="从远程下载（远程 → 本地）"
                     onClick={() =>
                       startDownloads(
                         remoteEntries.filter(
@@ -909,18 +718,17 @@ export default function FileTransferPanel({
                       width: 28,
                       padding: "3px 0",
                       gap: 1,
-                      background: "var(--ant-color-bg-elevated)",
-                      border: "1px solid var(--ant-color-border-secondary)",
+                      background: "var(--color-card)",
+                      border: "1px solid var(--color-border)",
                       cursor: "pointer",
-                      color: "var(--ant-color-text-secondary)",
+                      color: "var(--color-muted-foreground)",
                       fontSize: 10,
                       lineHeight: "10px",
                     }}
                   >
-                    <CloudDownloadOutlined style={{ fontSize: 13 }} />
+                    <CloudDownload size={13} />
                     <span>&gt;&gt;</span>
                   </button>
-                </Tooltip>
               </div>
               <FilePane
                 title="本地文件目录"
@@ -945,14 +753,15 @@ export default function FileTransferPanel({
                 placeholder="本地目录，如 /home/me/proj"
                 extra={
                   !isSsh ? (
-                    <Tooltip title="插入本地路径到终端">
-                      <Button
-                        size="small"
-                        type="text"
-                        icon={<SnippetsOutlined />}
-                        onClick={() => void handleInsertPath()}
-                      />
-                    </Tooltip>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      aria-label="插入本地路径到终端"
+                      title="插入本地路径到终端"
+                      onClick={() => void handleInsertPath()}
+                    >
+                      <NotebookText size={12} />
+                    </Button>
                   ) : null
                 }
               />
@@ -961,7 +770,7 @@ export default function FileTransferPanel({
             <div
               className="px-3 pt-2"
               style={{
-                borderTop: "1px solid var(--ant-color-border-secondary)",
+                borderTop: "1px solid var(--color-border)",
                 // 表格底边到面板底边的留白
                 paddingBottom: 5,
               }}
@@ -970,40 +779,109 @@ export default function FileTransferPanel({
                 <span className="text-xs font-medium flex-1 truncate">
                   同步进度和日志
                   <span
-                    className="ml-2 text-[var(--ant-color-text-tertiary)]"
+                    className="ml-2 text-[var(--color-muted-foreground)]"
                     style={{ fontSize: 10 }}
                   >
                     （上方的文件列表窗口中，左右拖动文件名即可
-                    <span style={{ color: "var(--ant-color-error)" }}>删除</span>
+                    <span style={{ color: "var(--color-destructive)" }}>删除</span>
                     文件）
                   </span>
                 </span>
-                <Tooltip title="切到全部会话的记录" placement="left">
-                  <Switch
-                    size="small"
-                    style={{ transform: "scale(0.85)" }}
-                    checked={showAllHistory}
-                    onChange={(v) => setShowAllHistory(v)}
-                  />
-                  <span
-                    className="ml-1 text-[var(--ant-color-text-secondary)]"
-                    style={{ fontSize: 10 }}
-                  >
-                    全部历史
-                  </span>
-                </Tooltip>
+                <label className="flex items-center gap-1" title="切到全部会话的记录">
+                  <Switch checked={showAllHistory} onCheckedChange={setShowAllHistory} />
+                  <span className="text-[10px] text-muted-foreground">全部历史</span>
+                </label>
               </div>
-              <Table<LogRowView>
-                className="transfer-log-table"
-                components={COMPACT_TABLE}
-                size="small"
-                columns={columns}
-                dataSource={tableRows}
-                rowKey="requestId"
-                pagination={false}
-                scroll={{ y: 132 }}
-                locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无传输记录" /> }}
-              />
+              <div className="max-h-[132px] overflow-y-auto rounded border border-border/60">
+                <table className="transfer-log-table w-full text-[10px]">
+                  <thead className="sticky top-0 bg-card">
+                    <tr>
+                      <th className="px-2 py-1 text-center font-medium">方式</th>
+                      <th className="px-2 py-1 text-left font-medium">文件名</th>
+                      <th className="px-2 py-1 text-center font-medium">大小</th>
+                      <th className="px-2 py-1 text-center font-medium">开始时间</th>
+                      <th className="px-2 py-1 text-center font-medium">状态/进度</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tableRows.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-2 py-6 text-center text-muted-foreground/60">
+                          暂无传输记录
+                        </td>
+                      </tr>
+                    )}
+                    {tableRows.map((row) => {
+                      const kindTip = row.kind === "delete"
+                        ? `删除（${row.side === "local" ? "本地" : "远程"}）`
+                        : row.kind === "upload"
+                          ? "上传"
+                          : "下载";
+                      const bytes = row.liveBytes ?? row.bytes ?? 0;
+                      const total = row.liveTotal ?? row.bytes ?? 0;
+                      const percent = total > 0 ? Math.min(100, Math.round((bytes / total) * 100)) : 0;
+                      return (
+                        <tr key={row.requestId} className="border-t border-border/40">
+                          <td className="px-2 py-0.5 text-center" title={kindTip}>
+                            {row.kind === "upload" ? (
+                              <CloudUpload size={12} className="mx-auto text-primary" />
+                            ) : row.kind === "download" ? (
+                              <CloudDownload size={12} className="mx-auto text-success" />
+                            ) : (
+                              <SquareX size={12} className="mx-auto text-destructive" />
+                            )}
+                          </td>
+                          <td className="max-w-0 truncate px-2 py-0.5" title={row.path ?? row.name}>
+                            {row.name}
+                          </td>
+                          <td className="px-2 py-0.5 text-center tabular-nums">
+                            {row.bytes === null ? "—" : formatBytes(row.bytes)}
+                          </td>
+                          <td className="px-2 py-0.5 text-center tabular-nums">{formatClock(row.createdAt)}</td>
+                          <td className="px-2 py-0.5 text-center">
+                            {row.state === "error" ? (
+                              <span className="text-[10px] text-destructive" title={row.error ?? undefined}>
+                                {row.error ?? "失败"}
+                              </span>
+                            ) : row.kind === "delete" ? (
+                              <span className="text-[10px] text-muted-foreground">已删除</span>
+                            ) : total <= 0 ? (
+                              <span className="text-[10px] text-muted-foreground">
+                                {row.state === "running" ? `已传 ${formatBytes(bytes)}` : "已完成"}
+                              </span>
+                            ) : (
+                              <div className="flex items-center gap-1">
+                                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                                  <div
+                                    className="h-full rounded-full transition-[width]"
+                                    style={{
+                                      width: row.state === "running" ? `${percent}%` : "100%",
+                                      background: row.state === "running" ? "var(--color-primary)" : "var(--color-success)",
+                                    }}
+                                  />
+                                </div>
+                                <span className="w-8 tabular-nums text-muted-foreground">
+                                  {row.state === "running" ? `${percent}%` : "100%"}
+                                </span>
+                                {row.state === "running" && (
+                                  <button
+                                    title="取消"
+                                    aria-label="取消"
+                                    className="text-muted-foreground hover:text-foreground"
+                                    onClick={() => void cancelRow(row.requestId)}
+                                  >
+                                    <SquareX size={12} />
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>,
           panelHostRef.current,
@@ -1159,12 +1037,13 @@ function FilePane({
           {title}:
         </span>
         <Input
-          size="small"
+          className="h-7 flex-1 text-xs"
           value={path}
           onChange={(e) => onPathChange(e.target.value)}
-          onPressEnter={onApply}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") onApply();
+          }}
           placeholder={placeholder}
-          style={{ flex: 1 }}
         />
         {extra}
       </div>
@@ -1175,7 +1054,7 @@ function FilePane({
           minHeight: 120,
           maxHeight: listMaxHeight ?? 300,
           overflowY: "auto",
-          border: "1px solid var(--ant-color-border-secondary)",
+          border: "1px solid var(--color-border)",
           borderRadius: 6,
           padding: 2,
         }}
@@ -1183,18 +1062,18 @@ function FilePane({
         {error && (
           <div
             className="text-xs px-2 py-1"
-            style={{ color: "var(--ant-color-error)" }}
+            style={{ color: "var(--color-destructive)" }}
           >
             {error}
           </div>
         )}
         {!error && loading && entries.length === 0 && (
-          <div className="text-xs px-2 py-1 text-[var(--ant-color-text-tertiary)]">
+          <div className="text-xs px-2 py-1 text-[var(--color-muted-foreground)]">
             读取中…
           </div>
         )}
         {!error && !loading && entries.length === 0 && (
-          <div className="text-xs px-2 py-1 text-[var(--ant-color-text-tertiary)]">
+          <div className="text-xs px-2 py-1 text-[var(--color-muted-foreground)]">
             {hint ?? (path.trim() ? "空目录" : "请填写目录路径")}
           </div>
         )}
@@ -1202,23 +1081,16 @@ function FilePane({
         {entries.map((e) => {
           const active = selectedSet.has(e.path);
           return (
-            <Tooltip
+            <div
               key={e.path}
-              placement="left"
-              title={
-                <div className="text-xs" style={{ lineHeight: "1.6" }}>
-                  <div style={{ wordBreak: "break-all" }}>{e.path}</div>
-                  <div>大小：{e.isDir ? "—" : formatBytes(e.size)}</div>
-                  <div>创建：{formatDateTime(e.created)}</div>
-                  <div>修改：{formatDateTime(e.modified)}</div>
-                </div>
-              }
+              title={`${e.path}｜大小：${e.isDir ? "—" : formatBytes(e.size)}｜创建：${formatDateTime(e.created)}｜修改：${formatDateTime(e.modified)}`}
+              style={{ lineHeight: "1.6" }}
             >
               <div
                 className="flex items-center gap-1 px-1 py-0.5 cursor-pointer rounded"
                 style={{
                   background: active
-                    ? "var(--ant-color-primary-bg)"
+                    ? "var(--color-accent)"
                     : "transparent",
                   fontSize: 10,
                   // 拖动删除时条目跟着鼠标走，并给出「松手即删」的提示色
@@ -1229,7 +1101,7 @@ function FilePane({
                   color:
                     dragOffset?.path === e.path &&
                     Math.abs(dragOffset.dx) >= DELETE_DRAG_THRESHOLD
-                      ? "var(--ant-color-error)"
+                      ? "var(--color-destructive)"
                       : undefined,
                 }}
                 onPointerDown={(ev) => onEntryPointerDown(ev, e)}
@@ -1241,18 +1113,18 @@ function FilePane({
                 }}
               >
                 {e.isDir ? (
-                  <FolderOutlined style={{ color: "var(--ant-color-text-tertiary)" }} />
+                  <Folder size={12} className="text-muted-foreground/70" />
                 ) : (
-                  <FileOutlined style={{ color: "var(--ant-color-text-tertiary)" }} />
+                  <FileIcon size={12} className="text-muted-foreground/70" />
                 )}
                 <span className="flex-1 truncate" style={{ fontSize: 12 }}>
                   {e.name}
                 </span>
-                <span style={{ color: "var(--ant-color-text-tertiary)" }}>
+                <span style={{ color: "var(--color-muted-foreground)" }}>
                   {formatDate(e.modified)}
                 </span>
               </div>
-            </Tooltip>
+            </div>
           );
         })}
       </div>
@@ -1274,7 +1146,7 @@ function ParentEntry({
       onClick={() => onNavigate(parentPath(path))}
       title="上一级"
     >
-      <FolderOpenOutlined style={{ color: "var(--ant-color-text-tertiary)" }} />
+      <FolderOpen size={12} className="text-muted-foreground/70" />
       <span className="flex-1 text-xs truncate">..</span>
     </div>
   );
