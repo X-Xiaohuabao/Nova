@@ -1,11 +1,13 @@
 import { StrictMode, useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import ChatPlaceholder from "@/components/chat/ChatPlaceholder";
 import ResponsiveDialog from "@/components/common/ResponsiveDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Toaster } from "@/components/ui/sonner";
 import WindowFrame from "@/components/shell/WindowFrame";
 import { changeLanguage, SUPPORTED_LANGUAGES } from "@/i18n";
 import type { Language } from "@/i18n";
@@ -95,8 +97,12 @@ function ShellPreview() {
           <Separator />
           <div className="flex flex-wrap items-center gap-2">
             <Button size="sm">{t("shell.newSession")}</Button>
-            <Button size="sm" variant="secondary">
-              {t("theme.light")}
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => toast.success(t("shell.demoToast"))}
+            >
+              {t("shell.demoToastTrigger")}
             </Button>
             <Button size="xs" variant="ghost">
               {t("theme.system")}
@@ -107,6 +113,7 @@ function ShellPreview() {
           </div>
         </div>
       </ResponsiveDialog>
+      <Toaster position="bottom-right" />
       {/* 预览专用：三态主题切换演示（正式入口在设置页，见 T9） */}
       <button
         type="button"

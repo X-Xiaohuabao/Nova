@@ -27,7 +27,9 @@
     "bridgeWs": "WebSocket bridge",
     "skeletonBadge": "Skeleton",
     "demoComponents": "Component demo",
-    "demoDesc": "Minimal UI set & responsive dialog preview"
+    "demoDesc": "Minimal UI set & responsive dialog preview",
+    "demoToastTrigger": "Fire a toast",
+    "demoToast": "T8 components verified"
   },
   "chat": {
     "title": "Chat View Mount Point",

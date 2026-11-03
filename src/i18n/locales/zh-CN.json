@@ -27,7 +27,9 @@
     "bridgeWs": "WebSocket 桥",
     "skeletonBadge": "骨架预览",
     "demoComponents": "组件演示",
-    "demoDesc": "最小组件集与响应式弹层预览"
+    "demoDesc": "最小组件集与响应式弹层预览",
+    "demoToastTrigger": "弹个 Toast",
+    "demoToast": "T8 组件验证通过"
   },
   "chat": {
     "title": "聊天视图挂载点",
