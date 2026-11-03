@@ -10,6 +10,8 @@
     "newSession": "New Session",
     "ready": "Ready",
     "openSidebar": "Open sidebar",
+    "toggleSidebar": "Toggle sidebar",
+    "resizeSidebar": "Resize sidebar",
     "toggleThemePreview": "Toggle theme preview",
     "close": "Close",
     "minimize": "Minimize",

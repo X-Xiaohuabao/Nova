@@ -35,8 +35,8 @@
   - 验收: button / input / dropdown-menu / tooltip / dialog / separator / scroll-area 落地 `src/components/ui/` 并按 macOS 观感定制（8px 圆角、紧凑密度、SF 字体栈）；**ResponsiveDialog 封装落地**（≥768px Dialog / <768px 底部 Sheet，见 doc/design-ui-patterns.md 第 2 章）；`tsc --noEmit` 通过
   - 涉及: src/components/ui/
   - 依赖: T4
-- [ ] T6 全新实现 App Shell 骨架（Layout/Header/Sidebar/StatusBar/交通灯 + 聊天接口位预留）
-  - 验收: 新骨架渲染正常；侧栏折叠/宽度拖拽可用；WindowControls 三平台统一交通灯且三键在 Windows 真实生效；Header/侧栏毛玻璃质感；窗口圆角与透明背景保持；聊天视图容器占位可挂载（空态），types 预留 `agent:*` 与 `AgentKind` 占位类型
+- [x] T6 全新实现 App Shell 骨架（Layout/Header/Sidebar/StatusBar/交通灯 + 聊天接口位预留）（完成于 2026-11-03，提交 17d0de3，做了什么：shellStore 侧栏折叠/宽度偏好持久化（200~320 clamp，localStorage）；SidebarShell 折叠形态（56px 图标窄条）；SidebarResizeHandle 指针捕获拖拽（松手落库、双击复位）；TitleBar 侧栏按钮全尺寸化（lucide PanelLeft，桌面切折叠/移动开抽屉）；WindowFrame 接线）
+  - 验收: 新骨架渲染正常；侧栏折叠/宽度拖拽可用（tsc+vite 编译冒烟通过；本会话无浏览器自动化工具，交互手测待复核）；WindowControls 三平台统一交通灯且三键在 Windows 真实生效（已接真实窗口调用，真机验证随 Tauri 启动复核）；Header/侧栏毛玻璃质感；窗口圆角与透明背景保持；聊天视图容器占位可挂载（空态），types 预留 `agent:*` 与 `AgentKind` 占位类型（689447d 已落）
   - 涉及: src/components/layout/、src/components/chat/（占位）、src/types/
   - 依赖: T5
 - [ ] T7 重做 TabBar 与 Panes 外壳（交互按 macos-hig 第 8 章标签页规范执行）

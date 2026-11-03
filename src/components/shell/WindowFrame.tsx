@@ -7,14 +7,21 @@
  *
  * 响应式：<768px 时自适应移动端形态——容器铺满视口（无圆角投影），
  * 侧栏收为抽屉（标题栏汉堡按钮唤出）；≥768px 恢复桌面窗口形态。
- * 文案走 i18n。
+ * 桌面侧栏支持折叠（收为图标窄条）与宽度拖拽（200~320px，双击复位），
+ * 偏好经 shellStore 持久化。文案走 i18n。
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { runtimeKind } from "@/lib/bridge";
 import type { RuntimeKind } from "@/lib/bridge";
+import {
+  SIDEBAR_COLLAPSED_WIDTH,
+  SIDEBAR_DEFAULT_WIDTH,
+  shellStore,
+} from "@/stores/shellStore";
+import SidebarResizeHandle from "./SidebarResizeHandle";
 import SidebarShell from "./SidebarShell";
 import StatusBarShell from "./StatusBarShell";
 import TitleBar from "./TitleBar";
@@ -26,8 +33,6 @@ interface WindowFrameProps {
   dark: boolean;
   /** 切换主题回调（预览切换用） */
   onToggleTheme: () => void;
-  /** 侧栏宽度（px），默认 200 */
-  sidebarWidth?: number;
   /** 运行时形态；缺省自动检测。预览页可用 ?platform=mobile 覆盖演示 web-remote 形态 */
   runtime?: RuntimeKind;
   /** 内容区插槽；缺省渲染静态占位 */
@@ -75,14 +80,40 @@ export default function WindowFrame({
   title,
   dark,
   onToggleTheme,
-  sidebarWidth = 200,
   runtime,
   children,
 }: WindowFrameProps) {
   const kind = runtime ?? runtimeKind();
   const isDesktop = kind === "tauri-desktop";
+
+  // 桌面侧栏折叠态与宽度（持久化）；拖拽中经本地态渲染，松手才落库
+  const collapsed = shellStore((s) => s.sidebarCollapsed);
+  const storedWidth = shellStore((s) => s.sidebarWidth);
+  const [dragWidth, setDragWidth] = useState<number | null>(null);
+
   // 移动端抽屉开合；桌面侧栏常驻，不受此状态影响
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const desktopWidth = collapsed
+    ? SIDEBAR_COLLAPSED_WIDTH
+    : dragWidth ?? storedWidth;
+
+  const isMobileViewport = () =>
+    typeof window !== "undefined" &&
+    window.matchMedia("(max-width: 767px)").matches;
+
+  // 标题栏侧栏按钮：<768px 开合抽屉，桌面切换折叠态
+  const toggleSidebar = () => {
+    if (isMobileViewport()) {
+      setDrawerOpen((prev) => !prev);
+      return;
+    }
+    shellStore.getState().setSidebarCollapsed(!collapsed);
+  };
+
+  useEffect(() => {
+    setDragWidth(null);
+  }, [storedWidth]);
 
   return (
     <div
@@ -93,13 +124,23 @@ export default function WindowFrame({
         dark={dark}
         onToggleTheme={onToggleTheme}
         showWindowControls={isDesktop}
-        onToggleSidebar={() => setDrawerOpen((prev) => !prev)}
+        onToggleSidebar={toggleSidebar}
       />
 
       <div className="relative flex min-h-0 flex-1">
-        {/* 桌面侧栏：≥768px 常驻 */}
-        <div className="hidden md:flex">
-          <SidebarShell width={sidebarWidth} />
+        {/* 桌面侧栏：≥768px 常驻；折叠态收为图标窄条，右缘可拖拽调宽 */}
+        <div className="relative hidden md:flex">
+          <SidebarShell width={desktopWidth} collapsed={collapsed} />
+          {!collapsed && (
+            <SidebarResizeHandle
+              width={desktopWidth}
+              onResize={setDragWidth}
+              onCommit={(width) => shellStore.getState().setSidebarWidth(width)}
+              onReset={() =>
+                shellStore.getState().setSidebarWidth(SIDEBAR_DEFAULT_WIDTH)
+              }
+            />
+          )}
         </div>
 
         {/* 移动端抽屉：<768px 由汉堡按钮唤出，滑入 + 遮罩 */}

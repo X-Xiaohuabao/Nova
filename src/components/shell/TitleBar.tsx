@@ -8,6 +8,7 @@
  */
 
 import { useTranslation } from "react-i18next";
+import { PanelLeft } from "lucide-react";
 import TrafficLights from "./TrafficLights";
 
 interface TitleBarProps {
@@ -19,7 +20,7 @@ interface TitleBarProps {
   onToggleTheme: () => void;
   /** 是否显示窗口控制按钮；web-remote 运行时应传 false */
   showWindowControls?: boolean;
-  /** 移动端侧栏抽屉开合回调；传入后渲染汉堡按钮（仅 <768px 显示） */
+  /** 侧栏开合回调；桌面切换折叠态，<768px 开合抽屉（按钮全尺寸显示） */
   onToggleSidebar?: () => void;
 }
 
@@ -37,18 +38,16 @@ export default function TitleBar({
       data-tauri-drag-region
       className="surface-blur relative flex h-[38px] flex-shrink-0 items-center border-b border-border/70 px-3"
     >
-      {/* 左：移动端汉堡按钮（<768px）+ 交通灯（仅桌面运行时） */}
+      {/* 左：侧栏开合按钮（全尺寸）+ 交通灯（仅桌面运行时） */}
       <div className="flex w-24 items-center gap-1">
         {onToggleSidebar && (
           <button
             type="button"
             onClick={onToggleSidebar}
-            aria-label={t("shell.openSidebar")}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground md:hidden"
+            aria-label={t("shell.toggleSidebar")}
+            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+            <PanelLeft size={16} strokeWidth={2} />
           </button>
         )}
         {showWindowControls && <TrafficLights />}

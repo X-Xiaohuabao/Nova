@@ -10,6 +10,8 @@
     "newSession": "新建会话",
     "ready": "就绪",
     "openSidebar": "打开侧栏",
+    "toggleSidebar": "切换侧栏",
+    "resizeSidebar": "调整侧栏宽度",
     "toggleThemePreview": "切换明暗主题预览",
     "close": "关闭",
     "minimize": "最小化",
