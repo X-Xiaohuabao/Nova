@@ -40,7 +40,9 @@
     "viewSettings": "Open settings",
     "viewChat": "Back to chat",
     "demoSearch": "Search (Ctrl+P)",
-    "demoNewProject": "New project"
+    "demoNewProject": "New project",
+    "emptyProjects": "No projects yet — click \"New Project\" above to start",
+    "viewPanes": "Sessions"
   },
   "chat": {
     "title": "Chat View Mount Point",

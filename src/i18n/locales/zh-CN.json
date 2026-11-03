@@ -40,7 +40,9 @@
     "viewSettings": "打开设置",
     "viewChat": "回到聊天",
     "demoSearch": "会话搜索(Ctrl+P)",
-    "demoNewProject": "新建项目"
+    "demoNewProject": "新建项目",
+    "emptyProjects": "还没有项目，点上方「新建项目」开始",
+    "viewPanes": "会话"
   },
   "chat": {
     "title": "聊天视图挂载点",

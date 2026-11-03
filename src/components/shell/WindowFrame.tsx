@@ -35,6 +35,8 @@ interface WindowFrameProps {
   onToggleTheme: () => void;
   /** 运行时形态；缺省自动检测。预览页可用 ?platform=mobile 覆盖演示 web-remote 形态 */
   runtime?: RuntimeKind;
+  /** 正式应用形态：铺满真实窗口（预览台为居中卡片演示） */
+  fullscreen?: boolean;
   /** 内容区插槽；缺省渲染静态占位 */
   children?: ReactNode;
 }
@@ -81,6 +83,7 @@ export default function WindowFrame({
   dark,
   onToggleTheme,
   runtime,
+  fullscreen = false,
   children,
 }: WindowFrameProps) {
   const kind = runtime ?? runtimeKind();
@@ -117,7 +120,11 @@ export default function WindowFrame({
 
   return (
     <div
-      className="flex h-full w-full flex-col overflow-hidden bg-background md:h-[680px] md:w-[1000px] md:rounded-[10px] md:border md:border-border/80 md:shadow-[0_24px_80px_rgba(0,0,0,0.45)]"
+      className={
+        fullscreen
+          ? "flex h-screen w-screen flex-col overflow-hidden bg-background"
+          : "flex h-full w-full flex-col overflow-hidden bg-background md:h-[680px] md:w-[1000px] md:rounded-[10px] md:border md:border-border/80 md:shadow-[0_24px_80px_rgba(0,0,0,0.45)]"
+      }
     >
       <TitleBar
         title={title}
