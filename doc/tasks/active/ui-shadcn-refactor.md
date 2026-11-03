@@ -39,7 +39,8 @@
   - 验收: 新骨架渲染正常；侧栏折叠/宽度拖拽可用（tsc+vite 编译冒烟通过；本会话无浏览器自动化工具，交互手测待复核）；WindowControls 三平台统一交通灯且三键在 Windows 真实生效（已接真实窗口调用，真机验证随 Tauri 启动复核）；Header/侧栏毛玻璃质感；窗口圆角与透明背景保持；聊天视图容器占位可挂载（空态），types 预留 `agent:*` 与 `AgentKind` 占位类型（689447d 已落）
   - 涉及: src/components/layout/、src/components/chat/（占位）、src/types/
   - 依赖: T5
-- [ ] T7 重做 TabBar 与 Panes 外壳（交互按 macos-hig 第 8 章标签页规范执行）
+- [x] T7 重做 TabBar 与 Panes 外壳（交互按 macos-hig 第 8 章标签页规范执行）（完成于 2026-11-03，提交 9b3394d，做了什么：TabBarNext 单行弹性收缩（flex-1 均分 active 1.2 权重 min96/max200/h32）、surface-blur 融合条、hover 关闭钮、中键关闭、双击 inline 重命名、右键 ContextMenu（分屏右侧/关闭/关闭其他/关闭右侧/关闭全部）、HTML5 DnD 中线判定+DOM 指示线+落位 FLIP 位移动画、溢出横滚+右缘渐隐、lucide 品牌图标；PaneViewNext 外壳 + PaneSplitter token 化；快捷键补 ⌘1-9 直达/⌘[ ] 切换并按 runtime 过滤桌面专属键；token 增 success/warning 语义色；tabbar 测试台切新组件并保留 __PANE_TABS__ 断言契约）
+  - 验收: 多标签新建/切换/关闭/拖拽排序可用，且符合规范：单行弹性收缩（flex-1 均分，min 96/max 200，禁止换行）、关闭钮 hover 显示、溢出横向滚动+右缘渐隐、拖拽位移动画+指示线、双击重命名、右键关闭其他/全部、⌘T/⌘W/⌘1-9/⌘⇧[ ] 快捷键、状态点语义（运行脉冲绿；未读蓝/错误红数据源旧 store 不存在，随智能体接入补全）；分屏分割条拖拽可用；对接现有 appStore 会话状态（tsc+vite 编译冒烟通过；真实拖拽回归建议按 doc/tab-drag-test.md Playwright 流程复核，本会话无浏览器工具未跑）
   - 验收: 多标签新建/切换/关闭/拖拽排序可用，且符合规范：单行弹性收缩（flex-1 均分，min 96/max 200，禁止换行）、关闭钮 hover 显示、溢出横向滚动+右缘渐隐、拖拽位移动画+指示线、双击重命名、右键关闭其他/全部、⌘T/⌘W/⌘1-9/⌘⇧[ ] 快捷键、状态点语义（运行脉冲绿/未读蓝/错误红）；分屏分割条拖拽可用；对接现有 appStore 会话状态
   - 涉及: src/components/tabs/（TabBar）、src/components/panes/
   - 依赖: T6

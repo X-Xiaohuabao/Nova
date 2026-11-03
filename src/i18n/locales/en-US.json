@@ -37,5 +37,19 @@
     "light": "Light",
     "dark": "Dark",
     "system": "System"
+  },
+  "tabs": {
+    "close": "Close",
+    "closeOthers": "Close other tabs",
+    "closeRight": "Close tabs to the right",
+    "closeAll": "Close all tabs",
+    "splitRight": "Split to the right",
+    "rename": "Rename",
+    "newTab": "New tab",
+    "emptyPane": "No active tab",
+    "contentPlaceholder": "Terminal content lands with peripheral views migration (T13)"
+  },
+  "panes": {
+    "resizeSplit": "Drag to resize split"
   }
 }

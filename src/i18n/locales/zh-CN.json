@@ -37,5 +37,19 @@
     "light": "浅色",
     "dark": "深色",
     "system": "跟随系统"
+  },
+  "tabs": {
+    "close": "关闭",
+    "closeOthers": "关闭其他标签",
+    "closeRight": "关闭右侧标签",
+    "closeAll": "关闭全部标签",
+    "splitRight": "分屏到右侧",
+    "rename": "重命名",
+    "newTab": "新建标签页",
+    "emptyPane": "无活动标签",
+    "contentPlaceholder": "终端内容随外围视图迁移接入（T13）"
+  },
+  "panes": {
+    "resizeSplit": "拖动调整分屏比例"
   }
 }

@@ -1,4 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { cn } from "@/lib/utils";
 
 interface PaneSplitterProps {
   /** 当前分屏比例，0~1 */
@@ -11,8 +13,10 @@ interface PaneSplitterProps {
 /**
  * 垂直拖动条：拖动后改变左侧面板宽度比例（0.2~0.8）。
  * 用 4px 透明 hit-area + 视觉 1px 中线的"双层"做法，方便用户命中。
+ * 样式走语义 token（macOS 骨架 T7 起）。
  */
 export default function PaneSplitter({ ratio, onRatioChange, containerRef }: PaneSplitterProps) {
+  const { t } = useTranslation();
   const [dragging, setDragging] = useState(false);
   const startX = useRef(0);
   const startRatio = useRef(ratio);
@@ -52,25 +56,26 @@ export default function PaneSplitter({ ratio, onRatioChange, containerRef }: Pan
   return (
     <div
       onMouseDown={onMouseDown}
-      className={`flex-shrink-0 relative cursor-col-resize group ${dragging ? "" : ""}`}
-      style={{
-        width: 4,
-        backgroundColor: dragging ? "var(--ant-color-primary)" : "var(--ant-color-border-secondary)",
-        transition: dragging ? "none" : "background-color 0.15s",
-      }}
-      title="拖动调整面板宽度"
+      role="separator"
+      aria-orientation="vertical"
+      aria-label={t("panes.resizeSplit")}
+      className={cn(
+        "relative flex-shrink-0 cursor-col-resize bg-border/60 transition-colors",
+        dragging && "bg-primary",
+      )}
+      style={{ width: 4 }}
     >
       {/* 加宽的命中区，避免 4px 太窄难命中 */}
       <div
         className="absolute inset-y-0"
         style={{ left: -4, right: -4, cursor: "col-resize" }}
       />
-      {/* 视觉中线（hover 时高亮） */}
+      {/* 视觉中线（拖拽时高亮） */}
       <div
-        className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 transition-colors"
-        style={{
-          backgroundColor: dragging ? "var(--ant-color-primary)" : "transparent",
-        }}
+        className={cn(
+          "absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 transition-colors",
+          dragging ? "bg-primary" : "bg-transparent",
+        )}
       />
     </div>
   );
