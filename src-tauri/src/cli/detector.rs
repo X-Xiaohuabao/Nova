@@ -41,23 +41,13 @@ pub fn detect_all() -> Vec<CliTool> {
     TOOL_DEFS
         .iter()
         .map(|def| {
-            let which_output = Command::new("which")
-                .arg(def.executable)
-                .output()
-                .ok();
+            // which crate 按 PATHEXT 解析，能找到 Windows 上 npm 安装生成的 .cmd shim
+            let path = which::which(def.executable)
+                .ok()
+                .map(|p| p.to_string_lossy().into_owned());
 
-            let path = which_output
-                .as_ref()
-                .and_then(|o| {
-                    if o.status.success() {
-                        String::from_utf8(o.stdout.trim_ascii().to_vec()).ok()
-                    } else {
-                        None
-                    }
-                });
-
-            let version = path.as_ref().and_then(|_| {
-                Command::new(def.executable)
+            let version = path.as_ref().and_then(|p| {
+                Command::new(p)
                     .arg(def.version_arg)
                     .output()
                     .ok()
