@@ -1,0 +1,72 @@
+/* ============================================================
+ * TeaCoder 设计系统 — 语义 token 单一来源（正式层）
+ * 明暗双套，Tailwind 4 经由 @theme inline 映射为工具类。
+ * 设计参数依据见 .zcode/skills/macos-hig/SKILL.md
+ * ============================================================ */
+
+/* ============ 语义 token：浅色（macOS Light） ============ */
+:root,
+:root.light {
+  --background: #f5f5f7;
+  --foreground: #1d1d1f;
+  --card: #ffffff;
+  --popover: #ffffff;
+  --primary: #007aff;
+  --primary-foreground: #ffffff;
+  --secondary: #e9e9eb;
+  --secondary-foreground: #3a3a3c;
+  --muted: #f2f2f4;
+  --muted-foreground: #6e6e73;
+  --accent: #e4e4e8;
+  --accent-foreground: #1d1d1f;
+  --destructive: #ff3b30;
+  --border: #d9d9de;
+  --input: #d2d2d7;
+  --ring: rgba(0, 122, 255, 0.4);
+  --radius: 8px;
+}
+
+/* ============ 语义 token：深色（macOS Dark） ============ */
+:root.dark {
+  --background: #1e1e20;
+  --foreground: #f5f5f7;
+  --card: #28282b;
+  --popover: #2c2c30;
+  --primary: #0a84ff;
+  --primary-foreground: #ffffff;
+  --secondary: #323236;
+  --secondary-foreground: #d1d1d6;
+  --muted: #2a2a2d;
+  --muted-foreground: #98989d;
+  --accent: #3a3a3f;
+  --accent-foreground: #f5f5f7;
+  --destructive: #ff453a;
+  --border: #38383c;
+  --input: #48484d;
+  --ring: rgba(10, 132, 255, 0.5);
+  --radius: 8px;
+}
+
+/* ============ Tailwind 4 语义映射 ============ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-popover: var(--popover);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}

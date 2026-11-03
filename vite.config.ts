@@ -124,14 +124,18 @@ export default defineConfig(async () => ({
     },
   },
 
-  resolve: isTestMode
-    ? {
-        alias: {
-          "@tauri-apps/api/event": path.resolve(__dirname, "src/__mocks__/tauri-event.ts"),
-          "@tauri-apps/api/core": path.resolve(__dirname, "src/__mocks__/tauri-core.ts"),
-        },
-      }
-    : undefined,
+  resolve: {
+    alias: {
+      // shadcn/ui 约定的 @/ 别名，与 tsconfig paths 保持一致
+      "@": path.resolve(__dirname, "src"),
+      ...(isTestMode
+        ? {
+            "@tauri-apps/api/event": path.resolve(__dirname, "src/__mocks__/tauri-event.ts"),
+            "@tauri-apps/api/core": path.resolve(__dirname, "src/__mocks__/tauri-core.ts"),
+          }
+        : {}),
+    },
+  },
 
   build: {
     // vendor-antd 含 antd + rc-*，两者双向引用无法再拆；且 Tauri 走本地文件加载，不涉及网络传输。

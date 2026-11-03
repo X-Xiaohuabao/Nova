@@ -1,0 +1,31 @@
+{
+  "common": {
+    "search": "Search"
+  },
+  "shell": {
+    "groupProjects": "Projects",
+    "groupFavorites": "Favorites",
+    "sampleSession": "Sample session",
+    "sampleSsh": "SSH · dev-server",
+    "newSession": "New Session",
+    "ready": "Ready",
+    "openSidebar": "Open sidebar",
+    "toggleThemePreview": "Toggle theme preview",
+    "close": "Close",
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "contentTitle": "Content Area",
+    "contentDesc": "Skeleton preview: features land in later phases",
+    "cardTabs": "Tabs",
+    "cardTerminal": "Terminal",
+    "cardCost": "Cost",
+    "cardPlaceholder": "Placeholder",
+    "bridgeTauri": "Tauri IPC bridge",
+    "bridgeWs": "WebSocket bridge",
+    "skeletonBadge": "Skeleton"
+  },
+  "chat": {
+    "title": "Chat View Mount Point",
+    "desc": "Agent unified access (separate feature) mounts chat UI here"
+  }
+}

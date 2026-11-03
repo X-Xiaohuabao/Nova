@@ -1,0 +1,31 @@
+{
+  "common": {
+    "search": "搜索"
+  },
+  "shell": {
+    "groupProjects": "项目",
+    "groupFavorites": "收藏",
+    "sampleSession": "示例会话",
+    "sampleSsh": "SSH · dev-server",
+    "newSession": "新建会话",
+    "ready": "就绪",
+    "openSidebar": "打开侧栏",
+    "toggleThemePreview": "切换明暗主题预览",
+    "close": "关闭",
+    "minimize": "最小化",
+    "maximize": "最大化",
+    "contentTitle": "内容区",
+    "contentDesc": "骨架预览：功能接入在后续阶段进行",
+    "cardTabs": "标签页",
+    "cardTerminal": "终端",
+    "cardCost": "费用",
+    "cardPlaceholder": "占位卡片",
+    "bridgeTauri": "Tauri IPC 桥",
+    "bridgeWs": "WebSocket 桥",
+    "skeletonBadge": "骨架预览"
+  },
+  "chat": {
+    "title": "聊天视图挂载点",
+    "desc": "智能体统一接入（独立特性）在此挂载聊天 UI"
+  }
+}
