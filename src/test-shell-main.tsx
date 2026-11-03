@@ -5,6 +5,9 @@ import { toast } from "sonner";
 import ChatPlaceholder from "@/components/chat/ChatPlaceholder";
 import ResponsiveDialog from "@/components/common/ResponsiveDialog";
 import SettingsPageNext from "@/components/settings/next/SettingsPageNext";
+import SearchPanelNext from "@/components/tabs/next/SearchPanelNext";
+import { useAppStore } from "@/stores/appStore";
+import NewProjectModalNext from "@/components/tabs/next/NewProjectModalNext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -41,6 +44,9 @@ function ShellPreview() {
   const [demoOpen, setDemoOpen] = useState(false);
   // 内容区视图切换：聊天占位 / 设置中心（T9 验证用）
   const [view, setView] = useState<"chat" | "settings">("chat");
+  // 弹窗组演示（T12 验证用：搜索面板走 store searchOpen / 新建项目本地态）
+  const setSearchOpen = useAppStore((s) => s.setSearchOpen);
+  const [projectOpen, setProjectOpen] = useState(false);
   const runtime: RuntimeKind =
     new URLSearchParams(window.location.search).get("platform") === "mobile"
       ? "web-remote"
@@ -84,6 +90,23 @@ function ShellPreview() {
       >
         {view === "chat" ? t("shell.viewSettings") : t("shell.viewChat")}
       </button>
+      {/* 预览专用：弹窗组演示（T12 验证用） */}
+      <button
+        type="button"
+        onClick={() => setSearchOpen(true)}
+        className="fixed top-3 left-36 z-50 rounded-md border border-white/20 bg-black/50 px-2 py-1 text-xs text-white/80 backdrop-blur transition-colors hover:bg-black/70"
+      >
+        {t("shell.demoSearch")}
+      </button>
+      <button
+        type="button"
+        onClick={() => setProjectOpen(true)}
+        className="fixed top-3 left-56 z-50 rounded-md border border-white/20 bg-black/50 px-2 py-1 text-xs text-white/80 backdrop-blur transition-colors hover:bg-black/70"
+      >
+        {t("shell.demoNewProject")}
+      </button>
+      <SearchPanelNext />
+      <NewProjectModalNext open={projectOpen} onClose={() => setProjectOpen(false)} />
       {/* 预览专用：组件集演示（T5 验证用） */}
       <button
         type="button"
