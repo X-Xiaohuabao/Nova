@@ -10,7 +10,7 @@
 
 ### 阶段 0 · 盘点、备份与规范
 
-- [ ] T0 盘点功能点清单
+- [x] T0 盘点功能点清单（完成于 2026-11-03，提交 9f55e8e 后追加未提交，做了什么：产出 doc/功能点清单.md——A~I 九域 54 项功能点，保留 40 / 换方案 5 / 砍掉 4 / 待定 3（G9 设置同步、G10 AI 补全、B4 会话记录形态，需用户拍板））
   - 验收: 产出 `doc/功能点清单.md`，覆盖 src/ 全部用户可见功能点，逐项标注 保留/换方案/砍掉/待定；"换方案"项附一句理由（智能体嵌入终端 → 标注"统一聊天接入，另立特性"）
   - 涉及: doc/功能点清单.md（只读代码，不碰代码）
 - [x] T1 创建备份分支并修订技术栈声明（完成于 2026-11-03，未提交，做了什么：创建 backup/antd-ui 分支指向 026fe72；AGENTS.md/CLAUDE.md 技术栈表 AntD→shadcn/ui、编码规范节与 skills 列表同步修订）
@@ -32,15 +32,15 @@
   - 涉及: src/styles/、src/stores/、src/themes/
   - 依赖: T3
 - [ ] T5 落地最小组件集（骨架所需）
-  - 验收: button / input / dropdown-menu / tooltip / dialog / separator / scroll-area 落地 `src/components/ui/` 并按 macOS 观感定制（8px 圆角、紧凑密度、SF 字体栈）；`tsc --noEmit` 通过
+  - 验收: button / input / dropdown-menu / tooltip / dialog / separator / scroll-area 落地 `src/components/ui/` 并按 macOS 观感定制（8px 圆角、紧凑密度、SF 字体栈）；**ResponsiveDialog 封装落地**（≥768px Dialog / <768px 底部 Sheet，见 doc/design-ui-patterns.md 第 2 章）；`tsc --noEmit` 通过
   - 涉及: src/components/ui/
   - 依赖: T4
 - [ ] T6 全新实现 App Shell 骨架（Layout/Header/Sidebar/StatusBar/交通灯 + 聊天接口位预留）
   - 验收: 新骨架渲染正常；侧栏折叠/宽度拖拽可用；WindowControls 三平台统一交通灯且三键在 Windows 真实生效；Header/侧栏毛玻璃质感；窗口圆角与透明背景保持；聊天视图容器占位可挂载（空态），types 预留 `agent:*` 与 `AgentKind` 占位类型
   - 涉及: src/components/layout/、src/components/chat/（占位）、src/types/
   - 依赖: T5
-- [ ] T7 重做 TabBar 与 Panes 外壳
-  - 验收: 多标签新建/切换/关闭/拖拽排序可用；分屏分割条拖拽可用；对接现有 appStore 会话状态
+- [ ] T7 重做 TabBar 与 Panes 外壳（交互按 macos-hig 第 8 章标签页规范执行）
+  - 验收: 多标签新建/切换/关闭/拖拽排序可用，且符合规范：单行弹性收缩（flex-1 均分，min 96/max 200，禁止换行）、关闭钮 hover 显示、溢出横向滚动+右缘渐隐、拖拽位移动画+指示线、双击重命名、右键关闭其他/全部、⌘T/⌘W/⌘1-9/⌘⇧[ ] 快捷键、状态点语义（运行脉冲绿/未读蓝/错误红）；分屏分割条拖拽可用；对接现有 appStore 会话状态
   - 涉及: src/components/tabs/（TabBar）、src/components/panes/
   - 依赖: T6
 
@@ -54,11 +54,11 @@
 ### 阶段 3 · 功能点迁移（以 T0 功能点清单为准，清单若调整则同步台账）
 
 - [ ] T9 迁移 Settings 框架与通用件（SettingsPage + SearchBar/SettingRow/SectionHeader）
-  - 验收: 设置中心导航、搜索定位、行/分组通用件全部新组件实现；General + Terminal 两页先迁移完成且设置读写生效
+  - 验收: 设置中心按 **doc/design-ui-patterns.md 第 1 章**实现（左分类导航 6 组 + 右内容面板 max-w 640 + 搜索定位 + 移动端下拉切换）；SettingRow 窄屏上下堆叠；General + Terminal 两页先迁移完成且设置读写生效（含语言三态选择，i18n I3 一并落地）
   - 涉及: src/components/settings/
   - 依赖: T6、T8
 - [ ] T10 迁移 Settings 其余页面（分批）
-  - 验收: Claude/Codex/Gemini/OpenCode/Antigravity/CliShell/Keybindings/Network/Notification/DataManagement/McpAccess/RemoteAccess/Sync/About 各页可打开且设置生效；`tsc --noEmit` 通过
+  - 验收: Claude/Codex/Gemini/OpenCode/Antigravity/CliShell/Keybindings/Network/Notification/DataManagement/McpAccess/RemoteAccess/About 各页可打开且设置生效（**SyncPage 删除、AIAssistantPage 移除**——功能点清单 G9/G10 拍板）；快捷键页展示经 `formatShortcut` 平台化；`tsc --noEmit` 通过
   - 涉及: src/components/settings/
   - 依赖: T9
 - [ ] T11 迁移 LlmProviders + ProfileManagement（含 react-hook-form + zod 改造）
@@ -66,7 +66,7 @@
   - 涉及: src/components/settings/、src/components/profile/、src/components/cli/
   - 依赖: T9
 - [ ] T12 迁移 project/tabs/profile 弹窗组
-  - 验收: NewProjectModal / NewCategoryModal / NewSessionModal / EditSessionModal / ProfileFormModal / ProfileManager / SearchPanel 全链路可用，新建→落库→显示正确（手测）
+  - 验收: NewProjectModal / NewCategoryModal / NewSessionModal / EditSessionModal / ProfileFormModal / ProfileManager / SearchPanel 全链路可用（弹窗一律经 **ResponsiveDialog**，移动端自动底部 Sheet），新建→落库→显示正确（手测）
   - 涉及: src/components/project/、src/components/tabs/、src/components/profile/
   - 依赖: T8、T6
 - [ ] T13 迁移外围视图（cost/help/onboarding/terminal 外壳/transcript/quick-commands/cli）

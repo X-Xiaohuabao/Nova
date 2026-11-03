@@ -45,7 +45,8 @@ description: |
 | 需求 | 唯一方案 | 禁止 |
 | --- | --- | --- |
 | 表单 | react-hook-form + zod + shadcn `Form` | AntD Form、手写校验散落 |
-| 图标 | lucide-react（默认 14/16px，`strokeWidth` 1.5~2） | 多套图标库混用 |
+| 图标 | lucide-react（默认 14/16px，`strokeWidth` 2） | 多套图标库混用、**新增 PNG 图标** |
+| 表单弹窗 | `ResponsiveDialog`（≥768px Dialog / <768px 底部 Sheet，内容一处声明双壳切换） | 裸用 Dialog 不做响应式 |
 | Toast | sonner（全局挂一次，`toast.success/error()`） | message/notification 自实现 |
 | 确认交互 | AlertDialog | 浏览器 `confirm()`、自造弹窗 |
 | 命令面板/自动补全 | command（cmdk） | 自造下拉搜索 |
@@ -62,6 +63,39 @@ description: |
 - 毛玻璃：仅壳层（Header/侧栏/状态条）`backdrop-blur` + 半透明背景（`bg-background/80` 一类 token 透明度写法）；**内容区实色**
 - 分隔线：细线 `border-border`，1px；投影分三档（窗口大投影/浮层中投影/卡片微投影）
 - 动效：hover 微高亮、active 微缩放（`scale-[0.98]`），过渡 100~150ms；弹层 200~250ms；复杂动效用 tw-animate-css 预设；尊重 `prefers-reduced-motion`
+
+## 图标体系细则
+
+- **lucide 优先**：通用图标一律 lucide-react；禁止引入第二套通用图标库；禁止新增 PNG 图标
+- **CLI 品牌标识** = lucide 抽象图标 + 品牌色（`style={{ color }}`），摆脱 PNG：
+
+| 工具 | lucide 图标 | 品牌色 |
+| --- | --- | --- |
+| Claude Code | Sparkles | `#722ed1` |
+| Codex CLI | SquareCode | `#1890ff` |
+| Gemini CLI | Gem | `#1677ff` |
+| OpenCode | Code2 | `#fa8c16` |
+| 终端 | SquareTerminal | `#52c41a` |
+| SSH | Cable | `#1677ff` |
+
+- 尺寸档位：**14px**（行内/标签）/ **16px**（按钮/菜单）/ **20px**（空态）；`strokeWidth` 2
+- **AntD → lucide 迁移映射表**（旧组件迁移查阅，遇到表外图标按语义就近选择并回填本表）：
+
+| AntD | lucide | AntD | lucide |
+| --- | --- | --- | --- |
+| PlusOutlined | Plus | CloseOutlined | X |
+| EditOutlined | Pencil | DeleteOutlined | Trash2 |
+| SearchOutlined | Search | SettingOutlined | Settings |
+| MenuOutlined | Menu | ReloadOutlined | RotateCw |
+| CopyOutlined | Copy | CheckOutlined | Check |
+| DesktopOutlined | Monitor | CloudOutlined | Cloud |
+| CodeOutlined | Code | LoadingOutlined | LoaderCircle（+spin） |
+| FileOutlined | FileText | FolderOutlined | Folder |
+| FolderOpenOutlined | FolderOpen | DownOutlined | ChevronDown |
+| RightOutlined | ChevronRight | LeftOutlined | ChevronLeft |
+| UpOutlined | ChevronUp | EyeOutlined | Eye |
+| EyeInvisibleOutlined | EyeOff | InfoCircleOutlined | Info |
+| ExclamationCircleOutlined | CircleAlert | QuestionCircleOutlined | CircleHelp |
 
 ## 检查清单
 

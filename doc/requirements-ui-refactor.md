@@ -190,6 +190,6 @@ Rust AgentBackend trait（工厂按 CLI 类型实例化适配器）
    └─ OpenCodeAdapter (opencode run)
 ```
 
-**已确认**: 聊天优先 + 终端保留（裸终端/SSH 会话仍用 TerminalView，作为高级模式）；独立立项，完成各 CLI headless 能力调研后另走 /kickoff。
+**已确认**: 聊天优先 + 终端保留（裸终端/SSH 会话仍用 TerminalView，作为高级模式）；独立立项，完成各 CLI headless 能力调研后另走 /kickoff。**聊天界面 UI 设计规范已定义**：`doc/design-agent-chat.md`（ChatGPT/DeepSeek 风格非对称消息形态、流式渲染、工具调用折叠卡片、分期 MVP/V2/V3），立项时直接引用。
 
 **本期预留**（见 REQ-106）: 聊天视图容器占位、`agent:*` IPC 事件命名段声明、`AgentKind` 类型占位。
