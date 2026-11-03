@@ -34,6 +34,11 @@ import {
   AntigravitySettingsNext,
   CliShellSettingsNext,
 } from "./CliSettingsPages";
+import NetworkSettingsNext from "./NetworkSettingsNext";
+import NotificationSettingsNext from "./NotificationSettingsNext";
+import DataManagementNext from "./DataManagementNext";
+import McpAccessNext from "./McpAccessNext";
+import AboutNext from "./AboutNext";
 
 /* ============ 页面注册表（按 design-ui-patterns 1.2 分组定稿） ============ */
 
@@ -61,14 +66,14 @@ const PAGES: SettingsPageDef[] = [
   { key: "opencode", groupKey: "groupCli", labelKey: "settings.pageOpenCode", render: () => <OpenCodeSettingsNext />, itemKeys: [...CLI_ITEM_KEYS, "settings.opencode.autoExecute"] },
   { key: "antigravity", groupKey: "groupCli", labelKey: "settings.pageAntigravity", render: () => <AntigravitySettingsNext />, itemKeys: [...CLI_ITEM_KEYS, "settings.antigravity.apiKey", "settings.antigravity.endpoint", "settings.antigravity.autoCommit"] },
   { key: "clishell", groupKey: "groupCli", labelKey: "settings.pageCliShell", render: () => <CliShellSettingsNext toolType="terminal" />, itemKeys: ["settings.cliShellEnvVars", "settings.quickCommands"] },
-  { key: "mcp", groupKey: "groupCli", labelKey: "settings.pageMcp", migrating: true },
+  { key: "mcp", groupKey: "groupCli", labelKey: "settings.pageMcp", render: () => <McpAccessNext />, itemKeys: ["settings.mcp.servers"] },
   { key: "llm-providers", groupKey: "groupProviders", labelKey: "settings.pageLlmProviders", migrating: true },
   { key: "profile-management", groupKey: "groupProviders", labelKey: "settings.pageProfileManagement", migrating: true },
-  { key: "network", groupKey: "groupNetwork", labelKey: "settings.pageNetwork", migrating: true },
+  { key: "network", groupKey: "groupNetwork", labelKey: "settings.pageNetwork", render: () => <NetworkSettingsNext />, itemKeys: ["settings.net.enableProxy", "settings.net.proxyAddress", "settings.net.timeout", "settings.net.sslVerify"] },
   { key: "remote-access", groupKey: "groupNetwork", labelKey: "settings.pageRemoteAccess", migrating: true },
-  { key: "notification", groupKey: "groupSystem", labelKey: "settings.pageNotification", migrating: true },
-  { key: "data-management", groupKey: "groupSystem", labelKey: "settings.pageDataManagement", migrating: true },
-  { key: "about", groupKey: "groupAbout", labelKey: "settings.pageAbout", migrating: true },
+  { key: "notification", groupKey: "groupSystem", labelKey: "settings.pageNotification", render: () => <NotificationSettingsNext />, itemKeys: ["settings.notif.desktop", "settings.notif.sessionComplete", "settings.notif.costWarning", "settings.notif.versionUpdate"] },
+  { key: "data-management", groupKey: "groupSystem", labelKey: "settings.pageDataManagement", render: () => <DataManagementNext />, itemKeys: ["settings.data.directory", "settings.data.export", "settings.data.clearCache", "settings.data.clearAll"] },
+  { key: "about", groupKey: "groupAbout", labelKey: "settings.pageAbout", render: () => <AboutNext />, itemKeys: ["settings.about.version", "settings.about.channel"] },
 ];
 
 const GROUP_ORDER = ["groupGeneral", "groupCli", "groupProviders", "groupNetwork", "groupSystem", "groupAbout"];
