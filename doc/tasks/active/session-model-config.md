@@ -45,7 +45,7 @@
 - [ ] createSession 拆"创建/启动"两步 + 启动失败回滚
 - [ ] appStore 拆域 store + 删死状态(settingsPage/compactMode/fontSize/duplicateSession/locateSession/costTick/manualGuideOpen 等)
 - [ ] 统一删除确认组件,替换 4 处重复实现
-- [ ] 清理 tool_settings.model 死字段展示;两套默认值来源合一(随 M1 完成)
+- [x] 清理 tool_settings.model 死字段展示;两套默认值来源合一(随 M1 完成)(2026-11-04 死字段清理完成,提交 b86b7fa;CliSettingsPages 五页移除 model 字段声明与默认值——该字段不进启动链路,展示即误导;表列与存量数据保留(只加列不删列红线);i18n 键暂留(settings.model 或被 LlmProviders 页复用,单独清理另轮);两套默认值合一已随 M1 完成——Profile 暗规则删除,resolve_session_defaults 单一真相源)
 
 ### 已完成
 
