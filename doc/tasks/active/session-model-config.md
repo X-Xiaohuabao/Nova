@@ -35,7 +35,7 @@
 
 ### M4 项目默认配置 UI
 
-- [ ] 项目右键/编辑弹窗:默认智能体+供应商+模型三字段编辑(v17 字段)
+- [x] 项目右键/编辑弹窗:默认智能体+供应商+模型三字段编辑(v17 字段)(2026-11-04 完成,提交 6e623c6;项目右键新增"默认模型配置"→ ProjectDefaultsDialog(ResponsiveDialog,智能体/供应商/模型三连选+级联默认,claude 5 档由所选模型全档同映射自动生成);写路径 UpdateProjectInput.defaultConfig 全量替换语义——提供即四字段一次性写入,未提供字段写 NULL 清空,"清除"按钮发送空配置回退全局;ipc/appStore 类型同步加宽;clippy/test 242/tsc 全绿;设置后新建会话默认值经 M1 resolve_session_defaults 即时消费,清空回退全局由解析链保证;真机验证待用户)
   - 验收: 设置后该项目新建会话默认值随之变化;清空则回退全局
   - 涉及: SidebarTreeNext.tsx、NewProjectModalNext 或新组件
 
