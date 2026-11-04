@@ -815,3 +815,6 @@ export const TOOL_PROVIDER_KIND_MAP: Record<
   gemini: ["google"],
   opencode: ["anthropic", "openai", "google", "custom"],
 };
+
+/** 智能体统一聊天接入类型（Rust agent 模块镜像，详见 types/agent.ts） */
+export * from "./agent";

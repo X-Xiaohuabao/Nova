@@ -1,26 +1,93 @@
 /**
- * 智能体统一接入 — 类型占位（命名段预留）。
+ * 智能体统一聊天接入 — 类型定义。
  *
- * 本文件仅为「聊天 UI → 工厂模式转发各 CLI」特性预留 IPC 类型命名段，
- * 具体实现（AgentBackend trait、agent_* 命令、agent:* 事件）由独立立项交付；
- * 详见 doc/requirements-ui-refactor.md 第 5 节与 tauri-ipc skill 的命名段预留声明。
- * 任何其他特性禁止占用 agent 命名段。
+ * 与 src-tauri/src/agent/mod.rs 的 serde 序列化输出严格对齐：
+ * AgentEvent 以 `kind` 判别（snake_case 变体名），字段 camelCase；
+ * 事件负载（sessionId + event）经 `agent:message` / `agent:state` 推送。
  */
 
-/** 支持的智能体 CLI 类型 */
-export type AgentKind = "claude" | "codex" | "gemini" | "opencode";
+/** 智能体会话运行状态（Rust AgentSessionState，snake_case 序列化） */
+export type AgentSessionState =
+  | "starting"
+  | "thinking"
+  | "waiting_input"
+  | "idle"
+  | "error";
 
-/** 智能体流式消息块（对应规划中的 agent:message 事件负载） */
-export interface AgentMessageChunk {
-  /** 所属聊天会话 id */
-  sessionId: string;
-  /** 单调递增序号，用于乱序重组 */
-  seq: number;
-  /** 块类型：正文 / 工具调用 / 错误 */
-  kind: "text" | "tool_use" | "error";
-  /** 文本内容 */
-  text: string;
+/** 一轮对话用量统计（CLI result 消息上报；仅聊天内即时展示，权威数字走 cost 模块） */
+export interface TurnUsage {
+  inputTokens: number | null;
+  outputTokens: number | null;
+  cacheCreationInputTokens: number | null;
+  cacheReadInputTokens: number | null;
+  costUsd: number | null;
 }
 
-/** 智能体会话运行状态（对应规划中的 agent:state 事件负载） */
-export type AgentSessionState = "idle" | "thinking" | "waiting_input" | "error";
+/** Driver 归一事件（Rust AgentEvent 镜像） */
+export type AgentEvent =
+  | { kind: "session_ready"; cliVersion: string | null; claudeSessionId: string | null }
+  | { kind: "message_delta"; delta: string }
+  | { kind: "message_complete"; text: string }
+  | {
+      kind: "tool_use";
+      toolUseId: string;
+      name: string;
+      input: unknown;
+    }
+  | {
+      kind: "tool_result";
+      toolUseId: string;
+      content: string;
+      isError: boolean;
+    }
+  | {
+      kind: "permission_request";
+      requestId: string;
+      toolName: string;
+      input: unknown;
+    }
+  | { kind: "turn_ended"; usage: TurnUsage; isError: boolean; durationMs: number | null }
+  | { kind: "state_changed"; state: AgentSessionState }
+  | { kind: "error"; message: string }
+  | { kind: "session_ended"; reason: string | null };
+
+/** agent:message / agent:state 事件负载 */
+export interface AgentEventPayload {
+  sessionId: string;
+  event: AgentEvent;
+}
+
+/** 权限确认卡的待答视图（T5 渲染，应答后固化） */
+export interface PermissionRequestView {
+  requestId: string;
+  toolName: string;
+  input: unknown;
+  /** 用户已应答后的固化记录（"allow" | "deny" | null=待答） */
+  answered: "allow" | "deny" | null;
+}
+
+/** 工具调用折叠卡片视图（design doc §3） */
+export interface ToolUseView {
+  toolUseId: string;
+  name: string;
+  input: unknown;
+  /** CLI 回填的执行结果（tool_result 到达后填充） */
+  resultContent?: string;
+  isError?: boolean;
+}
+
+/** 聊天消息（design doc §3 非对称形态的数据载体） */
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+  /** AI 消息流式进行中（打字机光标显示依据） */
+  streaming: boolean;
+  createdAt: number;
+  /** 本条 AI 消息内嵌的工具调用卡片 */
+  toolUses?: ToolUseView[];
+  /** 轮结束统计（挂在轮末尾的 AI 消息上） */
+  usage?: TurnUsage;
+  /** 发送失败 / 运行错误标记（红边条 + 重试按钮的依据） */
+  error?: boolean;
+}

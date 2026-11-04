@@ -44,6 +44,32 @@ export async function stopSession(tabId: string): Promise<void> {
   return invoke("stop_session", { tabId });
 }
 
+export async function agentSessionStart(params: {
+  sessionId: string;
+  workDir: string;
+  profileId?: string;
+  llmProviderId?: string;
+  modelName?: string;
+  userEnvVars?: Record<string, string>;
+  cliArgs?: string;
+  cliSessionId?: string;
+  claudeModels?: string;
+}): Promise<void> {
+  return invoke("agent_session_start", params);
+}
+
+export async function agentSend(sessionId: string, text: string): Promise<void> {
+  return invoke("agent_send", { sessionId, text });
+}
+
+export async function agentInterrupt(sessionId: string): Promise<void> {
+  return invoke("agent_interrupt", { sessionId });
+}
+
+export async function agentSessionStop(sessionId: string): Promise<void> {
+  return invoke("agent_session_stop", { sessionId });
+}
+
 export async function writeToPty(tabId: string, data: string): Promise<void> {
   return invoke("write_to_pty", { tabId, data });
 }

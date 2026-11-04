@@ -44,8 +44,9 @@ pub struct TurnUsage {
 }
 
 /// Driver 归一事件模型：各 CLI 协议消息统一映射到本枚举后经 IPC 推送。
+/// 字段统一 camelCase 序列化（与前端 TS 类型镜像对齐）。
 #[derive(Debug, Clone, Serialize)]
-#[serde(tag = "kind", rename_all = "snake_case")]
+#[serde(tag = "kind", rename_all = "snake_case", rename_all_fields = "camelCase")]
 pub enum AgentEvent {
     /// 会话就绪（system init）：CLI 版本与 CLI 侧会话 id
     SessionReady {
@@ -201,5 +202,48 @@ impl AgentManager {
             let _ = entry.child.lock().await.kill().await;
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// 序列化契约：前端 TS 类型（src/types/agent.ts）按 camelCase 字段镜像，
+    /// 字段名漂移会静默破坏 UI 解析，此处锁住关键事件的 JSON 形态。
+    #[test]
+    fn event_serialization_contract() {
+        let payload = AgentEventPayload {
+            session_id: "s-1".to_string(),
+            event: AgentEvent::ToolUse {
+                tool_use_id: "tu-1".to_string(),
+                name: "Bash".to_string(),
+                input: serde_json::json!({"command": "ls"}),
+            },
+        };
+        let json = serde_json::to_string(&payload).expect("序列化不应失败");
+        assert!(json.contains(r#""kind":"tool_use""#), "变体名 snake_case: {json}");
+        assert!(json.contains(r#""toolUseId":"tu-1""#), "字段名 camelCase: {json}");
+        assert!(json.contains(r#""sessionId":"s-1""#), "负载字段 camelCase: {json}");
+
+        let state_payload = serde_json::to_string(&AgentEvent::StateChanged {
+            state: AgentSessionState::WaitingInput,
+        })
+        .expect("序列化不应失败");
+        assert!(
+            state_payload.contains(r#""state":"waiting_input""#),
+            "状态值 snake_case: {state_payload}"
+        );
+    }
+
+    /// 事件分流：状态语义走 agent:state，其余走 agent:message
+    #[test]
+    fn event_channel_split() {
+        assert_eq!(event_channel(&AgentEvent::SessionEnded { reason: None }), "agent:state");
+        assert_eq!(
+            event_channel(&AgentEvent::StateChanged { state: AgentSessionState::Idle }),
+            "agent:state"
+        );
+        assert_eq!(event_channel(&AgentEvent::MessageDelta { delta: "x".into() }), "agent:message");
     }
 }
