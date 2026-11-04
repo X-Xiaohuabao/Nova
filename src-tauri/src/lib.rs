@@ -1,3 +1,4 @@
+mod agent;
 mod cli;
 mod commands;
 mod cost;
@@ -131,6 +132,7 @@ pub fn run() {
             }
         })
         .manage(PtyManager::new())
+        .manage(agent::AgentManager::new())
         .manage(crate::ssh::registry::TransferRegistry::new())
         .invoke_handler(tauri::generate_handler![
             commands::cli::detect_cli_tools,
