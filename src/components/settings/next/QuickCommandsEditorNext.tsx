@@ -10,6 +10,7 @@ import { useAppStore } from "@/stores/appStore";
 import { Textarea } from "@/components/ui/textarea";
 import SettingRow from "./SettingRow";
 import SectionHeader from "./SectionHeader";
+import SettingsCard from "./SettingsCard";
 
 interface QuickCommandsEditorNextProps {
   toolType: string;
@@ -23,14 +24,16 @@ export default function QuickCommandsEditorNext({ toolType }: QuickCommandsEdito
   return (
     <div>
       <SectionHeader title={t("settings.quickCommands")} />
-      <SettingRow id="settings.quickCommands" label={t("settings.quickCommands")} description={t("settings.quickCommandsDesc")}>
-        <Textarea
-          className="min-h-24 w-full font-mono text-xs md:w-96"
-          placeholder={t("settings.quickCommandsPlaceholder")}
-          value={value}
-          onChange={(e) => update(toolType, e.target.value)}
-        />
-      </SettingRow>
+      <SettingsCard>
+        <SettingRow id="settings.quickCommands" label={t("settings.quickCommands")} description={t("settings.quickCommandsDesc")}>
+          <Textarea
+            className="min-h-24 w-full font-mono text-xs md:w-96"
+            placeholder={t("settings.quickCommandsPlaceholder")}
+            value={value}
+            onChange={(e) => update(toolType, e.target.value)}
+          />
+        </SettingRow>
+      </SettingsCard>
     </div>
   );
 }

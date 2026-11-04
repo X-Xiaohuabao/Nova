@@ -274,14 +274,16 @@ export default function TerminalSettingsNext({ highlightKey }: TerminalSettingsN
       </SettingsCard>
 
       <SectionHeader title={t("settings.envVars")} />
-      {row("envVars", t("settings.envVars"), (
-        <Textarea
-          className="min-h-20 w-full md:w-72"
-          placeholder="KEY=VALUE"
-          value={settings.envVars}
-          onChange={(e) => update("envVars", e.target.value)}
-        />
-      ), t("settings.envVarsHint"))}
+      <SettingsCard>
+        {row("envVars", t("settings.envVars"), (
+          <Textarea
+            className="min-h-20 w-full md:w-72"
+            placeholder="KEY=VALUE"
+            value={settings.envVars}
+            onChange={(e) => update("envVars", e.target.value)}
+          />
+        ), t("settings.envVarsHint"))}
+      </SettingsCard>
     </div>
   );
 }

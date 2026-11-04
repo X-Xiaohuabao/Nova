@@ -13,6 +13,7 @@ import type { FieldDef } from "./ToolSettingsPageNext";
 import QuickCommandsEditorNext from "./QuickCommandsEditorNext";
 import SettingRow from "./SettingRow";
 import SectionHeader from "./SectionHeader";
+import SettingsCard from "./SettingsCard";
 
 /* ============ Claude ============ */
 
@@ -140,18 +141,20 @@ export function CliShellSettingsNext({ toolType }: CliShellSettingsNextProps) {
   return (
     <div>
       <SectionHeader title={t("settings.cliShellEnvVars")} />
-      <SettingRow
-        id="settings.envVars"
-        label={t("settings.cliShellEnvVars")}
-        description={t("settings.cliShellEnvVarsDesc")}
-      >
-        <Textarea
-          className="min-h-20 w-full font-mono text-xs md:w-80"
-          placeholder={"NODE_OPTIONS=--max-old-space-size=4096\nPYTHONPATH=/usr/local/lib/python3.9"}
-          value={envVars}
-          onChange={(e) => updateSetting("envVars", e.target.value)}
-        />
-      </SettingRow>
+      <SettingsCard>
+        <SettingRow
+          id="settings.envVars"
+          label={t("settings.cliShellEnvVars")}
+          description={t("settings.cliShellEnvVarsDesc")}
+        >
+          <Textarea
+            className="min-h-20 w-full font-mono text-xs md:w-80"
+            placeholder={"NODE_OPTIONS=--max-old-space-size=4096\nPYTHONPATH=/usr/local/lib/python3.9"}
+            value={envVars}
+            onChange={(e) => updateSetting("envVars", e.target.value)}
+          />
+        </SettingRow>
+      </SettingsCard>
       <QuickCommandsEditorNext toolType={toolType} />
     </div>
   );
