@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * UserPromptSubmit Hook - 强制技能评估（TeaCoder 版，ZCode 适配）
+ * UserPromptSubmit Hook - 强制技能评估（Nova 版，ZCode 适配）
  * 功能: 开发场景下，将 Skills 激活率从约 25% 提升到 90% 以上
  *
  * ZCode 适配说明：

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * PreToolUse Hook - 工具使用前触发（TeaCoder 版，ZCode 适配）
+ * PreToolUse Hook - 工具使用前触发（Nova 版，ZCode 适配）
  * 功能:
  * 1. 阻止危险命令
  * 2. 阻止写入敏感配置文件
@@ -99,7 +99,7 @@ if (toolName === 'Write' || toolName === 'Edit') {
 
   for (const sensitive of sensitiveFiles) {
     if (filePath.endsWith(sensitive) || filePath.includes(sensitive)) {
-      block(`🔒 **写入被阻止**：\`${filePath}\` 疑似敏感配置/凭据文件\n\nTeaCoder 规范：\n- API Key / OAuth Token 必须通过系统 Keychain（keyring crate）存储\n- 禁止将凭据明文写入任何文件\n\n如确需修改，请手动编辑`);
+      block(`🔒 **写入被阻止**：\`${filePath}\` 疑似敏感配置/凭据文件\n\nNova 规范：\n- API Key / OAuth Token 必须通过系统 Keychain（keyring crate）存储\n- 禁止将凭据明文写入任何文件\n\n如确需修改，请手动编辑`);
     }
   }
 
@@ -107,7 +107,7 @@ if (toolName === 'Write' || toolName === 'Edit') {
   const content = String(toolInput.content || toolInput.new_string || '');
   const keyLeak = /(sk-[A-Za-z0-9]{20,}|AKIA[A-Z0-9]{16})/.test(content);
   if (keyLeak) {
-    block(`🔒 **写入被阻止**：内容疑似包含明文 API Key\n\nTeaCoder 规范：凭据走系统 Keychain，代码/配置/日志中只允许 \`sk-***\` 脱敏格式`);
+    block(`🔒 **写入被阻止**：内容疑似包含明文 API Key\n\nNova 规范：凭据走系统 Keychain，代码/配置/日志中只允许 \`sk-***\` 脱敏格式`);
   }
 }
 

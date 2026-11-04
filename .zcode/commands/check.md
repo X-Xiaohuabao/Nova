@@ -1,6 +1,6 @@
-# /check - 全栈代码规范检查（TeaCoder）
+# /check - 全栈代码规范检查（Nova）
 
-作为代码规范检查助手，自动检测项目代码是否符合 TeaCoder 规范（AGENTS.md / CLAUDE.md）。
+作为代码规范检查助手，自动检测项目代码是否符合 Nova 规范（AGENTS.md / CLAUDE.md）。
 
 ---
 
@@ -65,7 +65,7 @@ git diff --cached | grep -nE "console\.log|: any|sk-[A-Za-z0-9]{20,}" # 已暂�
 ## 输出格式
 
 ```
-## 🔍 TeaCoder 规范检查报告
+## 🔍 Nova 规范检查报告
 
 ### 阻断项（必须修复才能提交）
 - [rust] src-tauri/src/pty/mod.rs:123 使用 .unwrap() → 改为 Result 传播

@@ -46,7 +46,7 @@ cat doc/待办清单.md 2>/dev/null
 
 ### 1.4 路线图
 
-读取 `doc/teacoder-roadmap.md`，提取当前阶段目标与下一里程碑。
+读取 `doc/nova-roadmap.md`，提取当前阶段目标与下一里程碑。
 
 ## 第二步：分析与推荐
 

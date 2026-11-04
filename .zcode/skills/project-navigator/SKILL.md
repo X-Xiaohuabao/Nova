@@ -1,7 +1,7 @@
 ---
 name: project-navigator
 description: |
-  TeaCoder 项目结构导航：找文件、定位代码、理解模块边界。
+  Nova 项目结构导航：找文件、定位代码、理解模块边界。
 
   触发场景：
   - 不确定某个功能代码在哪
@@ -9,11 +9,11 @@ description: |
   - 新会话快速定位
 ---
 
-# TeaCoder 项目导航
+# Nova 项目导航
 
 ## 项目一句话
 
-TeaCoder：AI 编程 CLI 工具（Claude Code / Codex / Gemini / OpenCode）的桌面管理客户端，Tauri 2.x + React 19。核心原则：PTY 直通、零额外 Token。
+Nova：AI 编程 CLI 工具（Claude Code / Codex / Gemini / OpenCode）的桌面管理客户端，Tauri 2.x + React 19。核心原则：PTY 直通、零额外 Token。
 
 ## 目录地图
 
@@ -39,7 +39,7 @@ src/                    # React 前端
 ├── themes/             # 主题
 doc/                    # 文档
 ├── requirements.md     # 需求
-├── teacoder-roadmap.md # 路线图
+├── nova-roadmap.md # 路线图
 ├── 待办清单.md / 项目状态.md / tasks/   # 流水线文档
 .zcode/                 # ZCode 工作区配置（命令/技能/hooks）
 ```

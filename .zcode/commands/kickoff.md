@@ -1,4 +1,4 @@
-# /kickoff - 从想法到自主循环开发（TeaCoder 前门编排器）
+# /kickoff - 从想法到自主循环开发（Nova 前门编排器）
 
 从一个想法启动一次完整的特性开发：**调研需求 → 拆解任务台账 → 起飞自主循环**。
 每个产出都有人工门，你点头才往下——**前段你把关「做什么」，后段交给 `/dev-loop` 自主做「怎么做」**。
@@ -17,7 +17,7 @@
 
 - **交互推进、有人工门**，AI 不闷头冲；需求确认后才进自主循环。
 - **全程复用现成件**：任务台账走 `task-tracker` 格式、计划走 `writing-plans`、实现走 `/dev-loop`、验收走 `/check`。
-- **反捏造**：调研结论标来源；不确定标「待确认」。事实以 `doc/requirements.md`、`doc/teacoder-roadmap.md` + 用户原话为准。
+- **反捏造**：调研结论标来源；不确定标「待确认」。事实以 `doc/requirements.md`、`doc/nova-roadmap.md` + 用户原话为准。
 - **技术栈不变**：Tauri 2.x / React 19 / AntD 6 / Zustand / SQLite，不因新特性引入替代品。
 
 ---

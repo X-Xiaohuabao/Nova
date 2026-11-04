@@ -1,18 +1,18 @@
-# TeaCoder — 需求说明书 v0.1.1
+# Nova — 需求说明书 v0.1.1
 
 > 本文档面向 Claude Code 开发实现，描述 v0.1.1 已发布版本的完整需求与功能明细。
 > 
-> **版本统一**：原 v0.1 (MVP) 规划已实现落地，代码当前版本为 **v0.1.1**（`tauri.conf.json` `version: "0.1.1"`、`identifier: com.codingtea.teacoder`）。
+> **版本统一**：原 v0.1 (MVP) 规划已实现落地，代码当前版本为 **v0.1.1**（`tauri.conf.json` `version: "0.1.1"`、`identifier: com.xiaohuabao.nova`）。
 
 ## 1. 项目概述
 
 ### 1.1 项目名称
 
-**TeaCoder**
+**Nova**
 
-- 产品名（display）：`TeaCoder`
-- Tauri `productName`：`teacoder`
-- 包标识符（identifier）：`com.codingtea.teacoder`
+- 产品名（display）：`Nova`
+- Tauri `productName`：`nova`
+- 包标识符（identifier）：`com.xiaohuabao.nova`
 
 ### 1.2 版本
 
@@ -119,7 +119,7 @@ v0.1.1（已发布）
 │   ├── App.tsx
 │   └── main.tsx
 ├── doc/
-│   ├── teacoder-roadmap.md     # 路线文档
+│   ├── nova-roadmap.md     # 路线文档
 │   └── requirements.md         # 本文档
 └── public/                      # 静态资源（logo、CLI 图标）
 ```
@@ -161,7 +161,7 @@ v0.1.1（已发布）
 
 - IPC 命令：`pty::test_ssh_connection`
 - 实现：在 PtyManager 中走独立分支（`ToolType::Ssh → "ssh"`）
-- 自动 askpass：检测密码型连接时生成 `teacoder-ssh-askpass-{pid}.sh` 临时脚本与 `teacoder-ssh-pwd-{pid}.txt` 密码文件，密码读取后立即清理
+- 自动 askpass：检测密码型连接时生成 `nova-ssh-askpass-{pid}.sh` 临时脚本与 `nova-ssh-pwd-{pid}.txt` 密码文件，密码读取后立即清理
 - 调用方负责在会话关闭时清理 askpass 文件（`remove_ssh_askpass`）
 
 ### 3.2 会话与项目层级管理
@@ -212,7 +212,7 @@ v0.1.0 引入了四层模型，关系为：Project → SessionCategory → Sessi
   - 拖拽排序（在同 pane 内 reorder）：落点以 tab 中线判定，拖拽时显示插入指示线
   - 跨 pane 拖拽（`moveTabToPane`）：目标 pane 已有该 tab 时按移动语义去重，不重复插入
   - 右键菜单：分屏左右 / 关闭分屏 / 关闭其他 / 关闭所有 / 关闭右侧 / 重新打开
-- 持久化：`teacoder_panes_layout`（version=2，存全量 panes + activePaneId）；`teacoder_open_tabs` 兼容旧版本
+- 持久化：`nova_panes_layout`（version=2，存全量 panes + activePaneId）；`nova_open_tabs` 兼容旧版本
 
 #### 3.3.2 多分屏（Pane）✅
 
@@ -323,14 +323,14 @@ interface Profile {
 - Windows：Credential Manager
 - Linux：Secret Service（libsecret）
 - Rust crate：`keyring = "3"`
-- Service 标识：`com.teacoder.app`
+- Service 标识：`com.xiaohuabao.nova`
 - 存储键名：`{profile_id}:api_key` / `{profile_id}:oauth_token` / `{profile_id}:oauth_refresh_token`
 - API：`crypto::keychain::{store_secret, get_secret, delete_secret, delete_all_secrets, has_secret}`
 
 #### 3.5.4 多实例数据隔离（Claude Code）✅
 
 - 通过环境变量 `CLAUDE_CONFIG_DIR` 指向 Profile 独立目录
-- 默认 `~/.claude/`，Profile 独立目录：`~/.teacoder/profiles/<profile_id>/claude-data/`
+- 默认 `~/.claude/`，Profile 独立目录：`~/.nova/profiles/<profile_id>/claude-data/`
 - 其他 CLI 工具 v0.1.0 暂不强制隔离
 
 #### 3.5.5 环境变量注入 ✅
@@ -431,7 +431,7 @@ pub trait CostProvider: Send + Sync {
 
 - 首次启动时触发
 - 流程：用户协议 → 核心功能引导（云端同步 / 项目管理 / 会话）
-- localStorage key：`teacoder_onboarding_completed` / `teacoder_agreement_accepted`
+- localStorage key：`nova_onboarding_completed` / `nova_agreement_accepted`
 
 ### 3.12 快捷命令（QuickCommands）
 
@@ -541,14 +541,14 @@ CREATE TABLE llm_providers (
 
 ### 4.3 持久化（前端）
 
-- `teacoder_panes_layout`（version=2）：JSON，存 `{panes, activePaneId}`（全量 panes，不去重）
-- `teacoder_open_tabs`：兼容旧版扁平列表（v2 中已被清空）
-- `teacoder_sidebar_collapsed`：侧边栏折叠状态
+- `nova_panes_layout`（version=2）：JSON，存 `{panes, activePaneId}`（全量 panes，不去重）
+- `nova_open_tabs`：兼容旧版扁平列表（v2 中已被清空）
+- `nova_sidebar_collapsed`：侧边栏折叠状态
 
 ### 4.4 JSONL 用途
 
-- CLI 工具自身的 JSONL 会话记录保持原样（TeaCoder 只读不写）
-- TeaCoder 自身审计日志暂未启用（v0.1.0 未生成 `~/.teacoder/logs/audit.jsonl`）
+- CLI 工具自身的 JSONL 会话记录保持原样（Nova 只读不写）
+- Nova 自身审计日志暂未启用（v0.1.0 未生成 `~/.nova/logs/audit.jsonl`）
 
 ---
 
@@ -708,7 +708,7 @@ on("cost:updated", (payload: { sessionId: string; cost: SessionCost }) => void)
 
 ### 6.3.1 Tab 拖拽（HTML5 DnD）
 
-- 拖拽数据通过自定义 MIME `application/x-teacoder-tab` 传递（JSON：`{tabId, sourcePaneId}`）
+- 拖拽数据通过自定义 MIME `application/x-nova-tab` 传递（JSON：`{tabId, sourcePaneId}`）
 - 插入位置按落点 x 与各 tab 中线比较得出，拖拽过程中在 Tab 栏显示插入指示线
 - 跨引擎约束（Chromium / WebKitGTK / WKWebView 均需满足）：
   - `dragover` 期间 `dataTransfer.getData()` 返回空字符串，只能读 `dataTransfer.types` 判断是否为 tab 拖拽
@@ -842,7 +842,7 @@ on("cost:updated", (payload: { sessionId: string; cost: SessionCost }) => void)
 - [x] Zustand store（panes / openTabIds / activePaneId / splitRatio）
 - [x] 标签页 UI（新建 / 关闭 / 切换 / 拖拽 / 跨 pane 拖拽）
 - [x] 快捷键：Ctrl+T / Ctrl+W / Ctrl+Tab / Ctrl+P
-- [x] 持久化 `teacoder_panes_layout`（version=2）
+- [x] 持久化 `nova_panes_layout`（version=2）
 - [x] 分屏（PaneView / PaneSplitter / 共享 PTY）
 - [x] 会话搜索（Ctrl+P → `SearchPanel`）
 

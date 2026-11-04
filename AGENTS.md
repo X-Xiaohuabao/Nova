@@ -1,4 +1,4 @@
-# AGENTS.md — TeaCoder 项目指导（ZCode）
+# AGENTS.md — Nova 项目指导（ZCode）
 
 > 本文件是 ZCode 的项目级指导文件，所有开发任务必须严格遵守。Claude Code 用户请看 `CLAUDE.md`（两份内容需保持同步）。
 
@@ -12,7 +12,7 @@
 
 ## 项目概述
 
-TeaCoder 是一款 AI 编程 CLI 工具的桌面管理客户端（Tauri 2.x），为 Claude Code / Codex CLI / Gemini CLI / OpenCode 提供图形化的 LLM 供应商管理、会话管理等"周边设施"。
+Nova 是一款 AI 编程 CLI 工具的桌面管理客户端（Tauri 2.x），为 Claude Code / Codex CLI / Gemini CLI / OpenCode 提供图形化的 LLM 供应商管理、会话管理等"周边设施"。
 
 **核心原则：零额外 Token 开销** — PTY 直通，不拦截/代理 API 请求。
 
@@ -111,7 +111,7 @@ TeaCoder 是一款 AI 编程 CLI 工具的桌面管理客户端（Tauri 2.x）�
 | 文档 | 作用 |
 | --- | --- |
 | `doc/requirements.md` | 需求（只读输入） |
-| `doc/teacoder-roadmap.md` | 路线图/里程碑 |
+| `doc/nova-roadmap.md` | 路线图/里程碑 |
 | `doc/项目状态.md` | 当前状态快照（模板：`.zcode/templates/项目状态模板.md`） |
 | `doc/待办清单.md` | 待办（模板：`.zcode/templates/待办清单模板.md`） |
 | `doc/tasks/active/*.md` | 任务台账，`[ ]/[x]` 进度（格式见 task-tracker 技能） |

@@ -29,7 +29,7 @@ description: |
 
 ## 数据边界
 
-- 本地优先：所有 TeaCoder 自身数据存本地（SQLite + JSONL）
+- 本地优先：所有 Nova 自身数据存本地（SQLite + JSONL）
 - 🔴 **禁止**引入任何云端服务端依赖
 - 网络请求仅限：CLI 工具自身的 API 调用、费用探活、版本检查
 

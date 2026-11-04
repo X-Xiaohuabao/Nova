@@ -1,16 +1,16 @@
-# TeaCoder
+# Nova
 
 > AI 编程 CLI 工具的桌面管理客户端 — Claude Code / Codex CLI / Gemini CLI / OpenCode / Antigravity 的统一管家
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Latest Release](https://img.shields.io/github/v/release/yingcongshaw/teacoder.svg)](https://github.com/yingcongshaw/teacoder/releases/latest)
+[![Latest Release](https://img.shields.io/github/v/release/X-Xiaohuabao/Nova.svg)](https://github.com/X-Xiaohuabao/Nova/releases/latest)
 [![Tauri 2.x](https://img.shields.io/badge/Tauri-2.x-blueviolet.svg)](https://tauri.app/)
 [![React 19](https://img.shields.io/badge/React-19-149eca.svg)](https://react.dev/)
 [![TypeScript 5](https://img.shields.io/badge/TypeScript-5-3178c6.svg)](https://www.typescriptlang.org/)
 [![Rust](https://img.shields.io/badge/Rust-stable-orange.svg)](https://www.rust-lang.org/)
 
 <div align="center">
-  <img src="./public/logo.png" width="96" alt="TeaCoder Logo" />
+  <img src="./public/logo.png" width="96" alt="Nova Logo" />
 
   **动动你发财的小手，给点一颗星星吧！**
 </div>
@@ -19,9 +19,9 @@
 
 ## 项目简介
 
-TeaCoder是一款为 **AI 编程 CLI 工具** 量身打造的桌面管理客户端。它不做 AI 推理，只做"周边设施"——为 Claude Code、Codex CLI、Gemini CLI、OpenCode、Antigravity 提供图形化的会话管理、账号管理、LLM 供应商管理、配置管理。
+Nova是一款为 **AI 编程 CLI 工具** 量身打造的桌面管理客户端。它不做 AI 推理，只做"周边设施"——为 Claude Code、Codex CLI、Gemini CLI、OpenCode、Antigravity 提供图形化的会话管理、账号管理、LLM 供应商管理、配置管理。
 
-**核心原则：零额外 Token 开销。** TeaCoder 通过 PTY 直通运行 CLI 工具，**不拦截、不代理任何 API 请求**。Token 统计直接读取各 CLI 工具本地的 JSONL / 数据库，不解析 PTY 输出——CLI 工具的协议怎么变都不会影响 TeaCoder 的统计准确性。
+**核心原则：零额外 Token 开销。** Nova 通过 PTY 直通运行 CLI 工具，**不拦截、不代理任何 API 请求**。Token 统计直接读取各 CLI 工具本地的 JSONL / 数据库，不解析 PTY 输出——CLI 工具的协议怎么变都不会影响 Nova 的统计准确性。
 
 
 
@@ -98,20 +98,20 @@ npm install -g opencode-ai
 
 ### 下载安装
 
-前往 [Releases 页面](https://github.com/yingcongshaw/teacoder/releases) 下载对应平台的安装包，
+前往 [Releases 页面](https://github.com/X-Xiaohuabao/Nova/releases) 下载对应平台的安装包，
 历史版本都在这个列表里；只想要最新版可点
-[Latest release](https://github.com/yingcongshaw/teacoder/releases/latest)。
+[Latest release](https://github.com/X-Xiaohuabao/Nova/releases/latest)。
 
 以 v0.1.1 为例：
 
-- Windows：`TeaCoder_0.1.1_x64-setup.exe`（NSIS 安装程序，界面为简体中文）/ `TeaCoder_0.1.1_x64_zh-CN.msi`（MSI）
-- macOS：`TeaCoder_0.1.1_universal.dmg`（Intel + Apple Silicon 通用）
-- Ubuntu：`TeaCoder_0.1.1_amd64.deb`
-- 其他 Linux：`TeaCoder_0.1.1_amd64.AppImage`
-- RPM 系（CentOS / Fedora / openEuler 等）：`TeaCoder-0.1.1-1.x86_64.rpm`
+- Windows：`Nova_0.1.1_x64-setup.exe`（NSIS 安装程序，界面为简体中文）/ `Nova_0.1.1_x64_zh-CN.msi`（MSI）
+- macOS：`Nova_0.1.1_universal.dmg`（Intel + Apple Silicon 通用）
+- Ubuntu：`Nova_0.1.1_amd64.deb`
+- 其他 Linux：`Nova_0.1.1_amd64.AppImage`
+- RPM 系（CentOS / Fedora / openEuler 等）：`Nova-0.1.1-1.x86_64.rpm`
 
 > rpm 的命名规则和其他格式不一样：Tauri 的 rpm bundler 用 `产品名-版本-release号.架构.rpm`，
-> 所以是 `TeaCoder-0.1.1-1.x86_64.rpm`（短横线 + 多一段 release 号），不是下划线。
+> 所以是 `Nova-0.1.1-1.x86_64.rpm`（短横线 + 多一段 release 号），不是下划线。
 
 ### 首次启动
 
@@ -148,8 +148,8 @@ npm install -g opencode-ai
 ### 克隆与启动
 
 ```bash
-git clone https://github.com/codingtea/TeaCoder.git
-cd TeaCoder
+git clone https://github.com/codingtea/Nova.git
+cd Nova
 pnpm install
 pnpm tauri dev
 ```
@@ -245,13 +245,13 @@ git tag v0.1.1 && git push origin v0.1.1
 也可在 Actions 页面手动触发（`workflow_dispatch`），此时只产出构建产物、不发 Release。
 
 > **MSI 的中文程度**：`bundle.windows.wix.language` 只决定 MSI 的安装语言（zh-CN、代码页 936），
-> 产品级文案（如「启动 TeaCoder」）由 Tauri 内置的英文模板生成 —— 要完全中文化需要额外提供
+> 产品级文案（如「启动 Nova」）由 Tauri 内置的英文模板生成 —— 要完全中文化需要额外提供
 > 自定义 `.wxl`（`bundle.windows.wix.language.zh-CN.localePath`）。NSIS 安装器已是完整中文。
 
 ### 项目目录
 
 ```
-TeaCoder/
+Nova/
 ├── src/                    # React 前端
 │   ├── components/         # UI 组件
 │   │   ├── layout/         # 顶部栏 / 侧边栏 / 主区域 / 状态栏
@@ -287,7 +287,7 @@ TeaCoder/
 │   ├── migrations/         # schema v1~v12
 │   └── tauri.conf.json
 ├── doc/                    # 项目文档
-│   ├── teacoder-roadmap.md # 路线图
+│   ├── nova-roadmap.md # 路线图
 │   └── requirements.md     # 需求规格
 ├── public/                 # 静态资源(logo / CLI 图标)
 ├── CLAUDE.md               # Claude Code 项目指引
@@ -314,7 +314,7 @@ TeaCoder/
 
 ## 文档
 
-- 📍 [路线图](./doc/teacoder-roadmap.md) — v0.1.1 已发布 v1.0.0+ 远期规划
+- 📍 [路线图](./doc/nova-roadmap.md) — v0.1.1 已发布 v1.0.0+ 远期规划
 - 📋 [需求规格](./doc/requirements.md) — 完整功能需求、数据模型、IPC 命令清单
 
 
@@ -365,13 +365,13 @@ MIT 协议允许：
 
 ## 致谢
 
-TeaCoder 的诞生离不开以下开源项目：
+Nova 的诞生离不开以下开源项目：
 
 - [Tauri](https://tauri.app/) — 跨平台桌面应用框架
 - [React](https://react.dev/) — 用户界面库
 - [Ant Design](https://ant.design/) — 企业级 UI 设计语言
 - [xterm.js](https://xtermjs.org/) — 浏览器终端组件
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) / [Codex CLI](https://github.com/openai/codex) / [Gemini CLI](https://github.com/google-gemini/gemini-cli) / [OpenCode](https://opencode.ai/) / [Antigravity](https://github.com/codingtea/antigravity) — TeaCoder 服务的 CLI 工具
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) / [Codex CLI](https://github.com/openai/codex) / [Gemini CLI](https://github.com/google-gemini/gemini-cli) / [OpenCode](https://opencode.ai/) / [Antigravity](https://github.com/codingtea/antigravity) — Nova 服务的 CLI 工具
 
 ---
 
@@ -379,6 +379,6 @@ TeaCoder 的诞生离不开以下开源项目：
 
 - 作者：苦鼎茶(CodingTea)
 - 邮箱：yingcongshaw@gmail.com
-- 问题反馈：[GitHub Issues](https://github.com/yingcongshaw/teacoder/issues)
+- 问题反馈：[GitHub Issues](https://github.com/X-Xiaohuabao/Nova/issues)
 
 ---

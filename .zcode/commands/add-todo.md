@@ -39,7 +39,7 @@
 | 所属模块 | 模块名前缀如"pty"、"cost"、"settings"、"终端UI" | 通用 |
 | 截止日期 | "截止XX"或"deadline XX" | 待定 |
 
-### TeaCoder 有效模块名
+### Nova 有效模块名
 
 `pty` / `cli` / `profile` / `cost` / `storage` / `session` / `ssh` / `crypto` / `llm_provider` / `tool_settings` / `终端UI` / `设置` / `会话管理` / `通用`
 

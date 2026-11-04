@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Stop Hook - 回答结束时触发（TeaCoder 版，ZCode 适配）
+ * Stop Hook - 回答结束时触发（Nova 版，ZCode 适配）
  * 功能: 清理 Windows `> nul` 误用产生的 nul 文件
  *
  * ZCode 适配说明：

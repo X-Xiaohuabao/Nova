@@ -1,4 +1,4 @@
-# CLAUDE.md — TeaCoder 项目指导
+# CLAUDE.md — Nova 项目指导
 
 > 本文件是 Claude Code 的项目级指导文件，所有开发任务必须严格遵守本文件中的约束和规范。
 
@@ -12,7 +12,7 @@
 
 ## 项目概述
 
-TeaCoder 是一款 AI 编程 CLI 工具的桌面管理客户端（Tauri 2.x），为 Claude Code / Codex CLI / Gemini CLI / OpenCode 提供图形化的LLM供应商管理、会话管理等"周边设施"。
+Nova 是一款 AI 编程 CLI 工具的桌面管理客户端（Tauri 2.x），为 Claude Code / Codex CLI / Gemini CLI / OpenCode 提供图形化的LLM供应商管理、会话管理等"周边设施"。
 
 **核心原则：零额外 Token 开销** — PTY 直通，不拦截/代理 API 请求。
 
@@ -66,7 +66,7 @@ TeaCoder 是一款 AI 编程 CLI 工具的桌面管理客户端（Tauri 2.x）�
 │   ├── App.tsx
 │   └── main.tsx
 ├── doc/
-│   ├── teacoder-roadmap.md # 产品路线文档
+│   ├── nova-roadmap.md # 产品路线文档
 │   └── requirements.md     # 需求说明书
 ├── package.json
 ├── tsconfig.json

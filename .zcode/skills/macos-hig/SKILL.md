@@ -1,7 +1,7 @@
 ---
 name: macos-hig
 description: |
-  Apple HIG（Human Interface Guidelines）设计规范摘译与 TeaCoder 落地参数。
+  Apple HIG（Human Interface Guidelines）设计规范摘译与 Nova 落地参数。
   设计决策的依据源；工程实现规范见 shadcn-ui skill。
 
   触发场景：
@@ -10,14 +10,14 @@ description: |
   - 视觉走查 / 设计评审对照
 ---
 
-# macOS HIG 设计规范（TeaCoder 落地版）
+# macOS HIG 设计规范（Nova 落地版）
 
 > 依据：Apple Human Interface Guidelines 官方文档 + WWDC17/WWDC20 会话。
 > Apple 不公开全部精确数值，文中标注 ≈ 的为社区实测共识值；其余为 HIG 明确指引。
 
 ## 1. 三大设计原则（一切判断的源头）
 
-| 原则 | 含义 | TeaCoder 落地 |
+| 原则 | 含义 | Nova 落地 |
 | --- | --- | --- |
 | **Clarity（清晰）** | 文字清晰易读、图标精确、装饰克制；内容优先于装饰 | 不为好看加渐变/重投影；终端内容区永远最高对比、零毛玻璃 |
 | **Deference（内容优先）** | UI 帮助理解内容，永不与内容竞争 | 毛玻璃只用于"壳"（标题栏/侧栏/状态条），内容区实色；色彩克制，蓝仅表交互 |
@@ -29,18 +29,18 @@ description: |
 
 ### 窗口与标题栏
 - 标题栏三档：**28**（纯标题）/ **38**（紧凑工具栏 unifiedCompact）/ **52**（完整工具栏 unified）
-- TeaCoder 取 **38px**：工具型应用、信息密度优先
+- Nova 取 **38px**：工具型应用、信息密度优先
 - 交通灯：直径 **12px**、中心间距 **20px**（视觉 gap 8px）、距左边缘 **12~20px**；hover 才浮现符号
 - 窗口圆角 **10px**；非激活窗口整体降饱和（可简化为标题文字降透明度）
 
 ### 侧栏
-- 宽度：**≈200~240px**（Finder 档位；TeaCoder 取 200）
-- 行高：**28px**（紧凑）/ **37px**（宽松）；TeaCoder 取 28
+- 宽度：**≈200~240px**（Finder 档位；Nova 取 200）
+- 行高：**28px**（紧凑）/ **37px**（宽松）；Nova 取 28
 - 行样式：圆角高亮块（左右留边 ~8px），选中用 `--accent`，非选中 hover 半透明 accent
 - 分组标题：**11px** 大写或常规，`--muted-foreground`，与内容弱对比
 
 ### 状态条
-- 高度 **≈24~28px**、字号 **11px**；TeaCoder 取 28px
+- 高度 **≈24~28px**、字号 **11px**；Nova 取 28px
 
 ### 控件
 - 常规控件高度：**小 20 / 中 28 / 大 32px**；表单与按钮默认 **28px**（中号）
@@ -84,7 +84,7 @@ description: |
 
 ## 4. 颜色系统（macOS 系统色，浅色 / 深色）
 
-| 语义 | 浅色 | 深色 | TeaCoder 用途 |
+| 语义 | 浅色 | 深色 | Nova 用途 |
 | --- | --- | --- | --- |
 | systemBlue | `#007AFF` | `#0A84FF` | `--primary`：一切可交互指示 |
 | systemRed | `#FF3B30` | `#FF453A` | `--destructive`：删除/关闭/危险 |

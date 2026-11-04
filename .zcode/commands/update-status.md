@@ -37,7 +37,7 @@ ls doc/tasks/done/ 2>/dev/null                     # 已归档台账
 | 章节 | 数据来源 |
 |------|---------|
 | 当前状态（阶段/进度/重点/下一步） | 台账完成率 + 最近提交方向综合判断 |
-| 模块概览表 | 按 TeaCoder 模块（pty/profile/cost/storage/终端UI/设置/会话/SSH）汇总 |
+| 模块概览表 | 按 Nova 模块（pty/profile/cost/storage/终端UI/设置/会话/SSH）汇总 |
 | 已完成 | 最近勾完的台账项 + 对应提交 hash |
 | 进行中 | 活跃台账的未勾项 |
 | 问题和风险 | 停滞任务、自检不过项、架构隐患 |

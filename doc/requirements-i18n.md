@@ -15,7 +15,7 @@
 | --- | --- | --- |
 | 1 | 语言范围 | 先 zh-CN + en-US 两种，结构预留扩展 |
 | 2 | 默认语言 | 跟随系统（navigator.language，zh* → zh-CN，其余 → en-US） |
-| 3 | 持久化 | localStorage（`teacoder_language`），与现有侧栏折叠状态同款惯例；设置页迁移时统一 |
+| 3 | 持久化 | localStorage（`nova_language`），与现有侧栏折叠状态同款惯例；设置页迁移时统一 |
 | 4 | 技术选型 | `react-i18next` + `i18next`（React 生态事实标准：语言检测、回退链、命名空间、TS 类型提示齐全；shadcn/Tailwind 无冲突） |
 | 5 | 范围节奏 | 新骨架（shell/chat）立即接入；旧 AntD UI 不回头改造（迁移重写时直接走 t()）；语言设置项随设置页迁移（T9/T10）落地 |
 
@@ -56,7 +56,7 @@
 ## 3. 技术方案
 
 - **方案概述**: i18next 单实例 + React useContext（react-i18next `useTranslation`）；资源 JSON 同步 import；检测链 localStorage → navigator → 默认；回退 zh-CN。
-- **数据结构变更**: 无（localStorage 键 `teacoder_language`）
+- **数据结构变更**: 无（localStorage 键 `nova_language`）
 - **新增依赖及理由**: `i18next`（核心，检测/回退/插值）、`react-i18next`（Hooks 绑定）——两者是唯一被广泛维护的组合，其余方案（自建 context）失去 TS 键校验与生态插件
 - **风险与权衡**: 单文件资源随功能增长会变大——按命名空间拆分键组，必要时升级为按文件懒加载（结构已预留）
 

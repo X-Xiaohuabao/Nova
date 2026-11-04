@@ -50,7 +50,7 @@
 | --- | --- | --- |
 | **用户消息** | 右对齐**气泡**：`--primary` 背景 10% 透明 + `--primary` 文字，圆角 12px（右上角 4px 收角），max-width 75% | 自己的内容用气泡包裹，与 AI 区分 |
 | **AI 消息** | **无气泡全宽**左对齐：头部 `[工具图标 14px] [工具名 caption]`，正文直接 Markdown 排版 | AI 回答长且含代码块，气泡妨碍阅读——ChatGPT/DeepSeek/Claude 共同的现代模式 |
-| **工具调用** | **折叠卡片**：`▸ [工具图标] 工具名 + 参数摘要 …… [状态]`，圆角 8px `--card` 底、1px `--border` | TeaCoder 特有：Claude Code 的 tool_use 链；默认折叠，点击展开参数/结果详情 |
+| **工具调用** | **折叠卡片**：`▸ [工具图标] 工具名 + 参数摘要 …… [状态]`，圆角 8px `--card` 底、1px `--border` | Nova 特有：Claude Code 的 tool_use 链；默认折叠，点击展开参数/结果详情 |
 | **错误** | `--destructive` 左边条 3px + 浅红底的卡片，含错误文案与 [重试] 按钮 | 对应 agent 帧的 `kind: "error"` |
 
 - 头像：AI 消息仅头部小图标（lucide 对应工具图标）+ 工具名 caption；用户消息无头像

@@ -14,7 +14,7 @@ description: |
 ## 产出位置
 
 - 特性级计划 → 台账 `doc/tasks/active/<特性名>.md`（task-tracker 格式）
-- 里程碑级计划 → `doc/teacoder-roadmap.md` 对照更新
+- 里程碑级计划 → `doc/nova-roadmap.md` 对照更新
 - 一次性探索 → 直接在对话中输出，不落文件
 
 ## 拆解原则
@@ -24,7 +24,7 @@ description: |
 3. **验收可量化**：每个任务带验收标准（命令能跑通/界面可见/性能指标）
 4. **影响面标注**：每个任务标注涉及模块（src-tauri 领域 / src 前端目录）
 
-## 拆解顺序（TeaCoder 惯例）
+## 拆解顺序（Nova 惯例）
 
 1. 数据层先行：SQLite 迁移 / 类型定义
 2. Rust 后端：领域逻辑 + IPC 命令

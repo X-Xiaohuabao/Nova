@@ -1,4 +1,4 @@
-# /dev-loop - 自主循环开发（TeaCoder，一轮一最小提交）
+# /dev-loop - 自主循环开发（Nova，一轮一最小提交）
 
 配合 ZCode 内置循环能力：自主连续开发，直到任务台账做完。本命令是「一轮的标准作业」。
 
@@ -22,7 +22,7 @@
 
 1. `AGENTS.md` / `CLAUDE.md`（架构约束与编码规范，红线不可破）
 2. **`doc/requirements.md`** —— 需求（只读输入，不改）
-3. **`doc/teacoder-roadmap.md`** —— 路线图（判断优先级）
+3. **`doc/nova-roadmap.md`** —— 路线图（判断优先级）
 4. **任务台账** —— `doc/tasks/active/*.md`（`[ ]/[x]` 进度，task-tracker 格式）
 
 ## 前置门（缺则不进循环）

@@ -1,18 +1,18 @@
-# TeaCoder — 功能与技术路线文档
+# Nova — 功能与技术路线文档
 
-> 本文档记录 TeaCoder 的产品定位、版本规划与技术方案。已实现的版本（v0.1.1）按代码现状描述，未实现的版本（v1.0.0）保留方向性规划。
+> 本文档记录 Nova 的产品定位、版本规划与技术方案。已实现的版本（v0.1.1）按代码现状描述，未实现的版本（v1.0.0）保留方向性规划。
 >
-> 项目代号：统一为 **TeaCoder**；Tauri `productName`: `teacoder`；包标识符：`com.codingtea.teacoder`。
+> 项目代号：统一为 **Nova**；Tauri `productName`: `nova`；包标识符：`com.xiaohuabao.nova`。
 
 ---
 
 ## 一、产品定位
 
-TeaCoder是一款 **AI 编程 CLI 工具的桌面管理客户端**，为 Claude Code / Codex CLI / Gemini CLI / OpenCode / Antigravity / 裸终端 / SSH 提供图形化的 LLM 供应商管理、会话管理、配置管理等"周边设施"。
+Nova是一款 **AI 编程 CLI 工具的桌面管理客户端**，为 Claude Code / Codex CLI / Gemini CLI / OpenCode / Antigravity / 裸终端 / SSH 提供图形化的 LLM 供应商管理、会话管理、配置管理等"周边设施"。
 
 **核心原则：零额外 Token 开销** — PTY 直通运行 CLI 工具，不拦截/代理 API 请求，不解析 PTY 输出估算 Token（改为读取各 CLI 工具本地 JSONL / 数据库）。
 
-TeaCoder **不提供 AI 模型服务**，仅做"统一管家"，把不同供应商、不同模型、不同账号的管理复杂度收敛到一个桌面 GUI 中。
+Nova **不提供 AI 模型服务**，仅做"统一管家"，把不同供应商、不同模型、不同账号的管理复杂度收敛到一个桌面 GUI 中。
 
 ---
 
@@ -151,7 +151,7 @@ pub trait CostProvider: Send + Sync {
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│                   TeaCoder 桌面端                  │
+│                   Nova 桌面端                  │
 │                                                       │
 │  ┌──────────────────────┐  ┌──────────────────────┐  │
 │  │   React 19 + TS      │  │   Rust (Tauri 2.x)   │  │

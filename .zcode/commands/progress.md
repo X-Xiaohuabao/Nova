@@ -41,7 +41,7 @@ cat doc/待办清单.md 2>/dev/null
 
 ### 1.4 路线图对照
 
-读取 `doc/teacoder-roadmap.md`，对照当前完成情况标注里程碑状态。
+读取 `doc/nova-roadmap.md`，对照当前完成情况标注里程碑状态。
 
 ### 1.5 代码规模参考（可选）
 
@@ -53,7 +53,7 @@ git ls-files "src-tauri/src/*.rs" | wc -l
 ## 第二步：输出结构化报告
 
 ```
-## 📊 TeaCoder 进度报告（YYYY-MM-DD）
+## 📊 Nova 进度报告（YYYY-MM-DD）
 
 ### 总体状态
 - 项目阶段 / 整体评估 / 当前重点（1-2 句）
