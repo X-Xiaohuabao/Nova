@@ -41,6 +41,8 @@ interface WindowFrameProps {
   showDefaultSidebar?: boolean;
   /** showDefaultSidebar=false 时接管标题栏侧栏按钮（折叠/抽屉语义由调用方定义） */
   onToggleSidebar?: () => void;
+  /** 底部状态栏插槽；缺省渲染内置状态栏（正式应用传带会话信息的自定义状态栏） */
+  footer?: ReactNode;
   /** 内容区插槽；缺省渲染静态占位 */
   children?: ReactNode;
 }
@@ -90,6 +92,7 @@ export default function WindowFrame({
   fullscreen = false,
   showDefaultSidebar = true,
   onToggleSidebar,
+  footer,
   children,
 }: WindowFrameProps) {
   const kind = runtime ?? runtimeKind();
@@ -189,7 +192,7 @@ export default function WindowFrame({
         {children ?? <DefaultContentPlaceholder />}
       </div>
 
-      <StatusBarShell runtime={kind} />
+      {footer ?? <StatusBarShell runtime={kind} />}
     </div>
   );
 }

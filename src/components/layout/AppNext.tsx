@@ -207,6 +207,35 @@ export default function AppNext() {
     void openTab(sessionId).catch(() => {});
   };
 
+  const statusbar = (
+    <StatusBarShell
+      runtime="tauri-desktop"
+      leftText={
+        activeSession ? (
+          <span className="flex items-center gap-1.5">
+            <ActiveSessionBadge
+              toolType={activeSession.toolType}
+              profileName={
+                activeSession.profileId
+                  ? profilesAll.find((p) => p.id === activeSession.profileId)?.name
+                  : undefined
+              }
+              providerName={
+                activeSession.llmProviderId
+                  ? llmProvidersAll.find((p) => p.id === activeSession.llmProviderId)?.name
+                  : undefined
+              }
+              modelName={activeSession.modelName}
+              costUsd={activeCost?.costUsd}
+            />
+          </span>
+        ) : (
+          t("shell.ready")
+        )
+      }
+    />
+  );
+
   return (
     <WindowFrame
       title="TeaCoder"
@@ -217,6 +246,7 @@ export default function AppNext() {
       fullscreen
       showDefaultSidebar={false}
       onToggleSidebar={() => shellStore.getState().setSidebarCollapsed(!collapsed)}
+      footer={statusbar}
     >
       <div className="relative flex min-h-0 flex-1">
         {/* 桌面侧栏（真实数据） */}
@@ -348,32 +378,6 @@ export default function AppNext() {
         )}
       </div>
 
-      <StatusBarShell
-        runtime="tauri-desktop"
-        leftText={
-          activeSession ? (
-            <span className="flex items-center gap-1.5">
-              <ActiveSessionBadge
-                toolType={activeSession.toolType}
-                profileName={
-                  activeSession.profileId
-                    ? profilesAll.find((p) => p.id === activeSession.profileId)?.name
-                    : undefined
-                }
-                providerName={
-                  activeSession.llmProviderId
-                    ? llmProvidersAll.find((p) => p.id === activeSession.llmProviderId)?.name
-                    : undefined
-                }
-                modelName={activeSession.modelName}
-                costUsd={activeCost?.costUsd}
-              />
-            </span>
-          ) : (
-            t("shell.ready")
-          )
-        }
-      />
 
       {/* 全局弹窗组 */}
       <NewProjectModalNext open={newProjectModalOpen} onClose={() => setNewProjectModalOpen(false)} />
