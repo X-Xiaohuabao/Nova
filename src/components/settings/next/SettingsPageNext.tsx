@@ -263,7 +263,7 @@ export default function SettingsPageNext({ initialPage = "general" }: SettingsPa
 
           {/* 内容面板 */}
           <div ref={contentRef} className="min-h-0 flex-1 overflow-y-auto p-4 md:p-6">
-            <div className="mx-auto w-full max-w-[640px]">
+            <div className="w-full">
               <h2 className="pb-1 text-[15px] font-semibold">{t(activeDef.labelKey)}</h2>
               {activeDef.render?.(highlightKey) ?? (
                 <div className="py-10 text-center text-xs text-muted-foreground/60">
