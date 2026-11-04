@@ -57,6 +57,9 @@ Nova 是一款 AI 编程 CLI 工具的桌面管理客户端（Tauri 2.x），为
 ### TypeScript / React
 
 - strict 模式；函数组件 + Hooks，**禁止** class 组件与 `any`
+- 分层依赖单向：组件 → hooks → stores → `utils/ipc.ts`（唯一 invoke 出口）；组件**禁止**裸 invoke
+- store 按领域拆分（一句话测试，**禁止**万物桶）；派生状态用 selector，**禁止**双写
+- **禁止**复制同构逻辑（第二份出现即抽共享）；弹窗/确认等交互全局唯一实现
 - 全局状态统一 Zustand，**禁止** Context + useReducer 替代
 - **禁止** `console.log` 进生产代码；**禁止** TODO/FIXME/HACK 注释
 
