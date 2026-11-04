@@ -315,17 +315,22 @@ interface LaunchNewSessionParams {
  * cliArgs 可携带 --resume（切换视图/重开时恢复上下文）。
  */
 async function startAgentChannel(session: Session, workDir: string, cliArgs?: string): Promise<void> {
-  await useAgentStore.getState().start({
-    sessionId: session.id,
-    workDir,
-    profileId: session.profileId || undefined,
-    llmProviderId: session.llmProviderId || undefined,
-    modelName: session.modelName || undefined,
-    userEnvVars: parseEnvVars(session.envVars || ""),
-    cliArgs,
-    cliSessionId: session.cliSessionId || undefined,
-    claudeModels: serializeClaudeModels(session.claudeModels),
-  });
+  try {
+    await useAgentStore.getState().start({
+      sessionId: session.id,
+      workDir,
+      profileId: session.profileId || undefined,
+      llmProviderId: session.llmProviderId || undefined,
+      modelName: session.modelName || undefined,
+      userEnvVars: parseEnvVars(session.envVars || ""),
+      cliArgs,
+      cliSessionId: session.cliSessionId || undefined,
+      claudeModels: serializeClaudeModels(session.claudeModels),
+    });
+  } catch {
+    // 启动失败已在 agentStore.start 内推错误卡片入流，此处不再向上抛
+    // （三个调用点 openTab/launchNewSession/setSessionViewMode 均为 fire-and-forget 语义）
+  }
 }
 
 /** 会话当前视图形态：显式选择优先；claude 默认聊天，其余默认终端 */

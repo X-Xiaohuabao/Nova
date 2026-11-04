@@ -89,6 +89,12 @@ export default function ChatView({ sessionId, toolType = "claude" }: ChatViewPro
     [send, sessionId],
   );
 
+  // 尾部已有流式 AI 消息时不再显示思考占位（光标即活动指示）
+  const isTailStreaming =
+    messages.length > 0 &&
+    messages[messages.length - 1].role === "assistant" &&
+    messages[messages.length - 1].streaming;
+
   const handleStop = useCallback(() => {
     void interrupt(sessionId);
   }, [interrupt, sessionId]);
@@ -117,8 +123,19 @@ export default function ChatView({ sessionId, toolType = "claude" }: ChatViewPro
                   message={message}
                   toolType={toolType}
                   toolLabel={TOOL_DISPLAY_NAMES[toolType] ?? toolType}
+                  onRetry={handleSend}
                 />
               ))}
+              {(state === "starting" || state === "thinking") && !isTailStreaming && (
+                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-0.5">
+                    <span className="thinking-dot h-1 w-1 rounded-full bg-foreground/60" />
+                    <span className="thinking-dot h-1 w-1 rounded-full bg-foreground/60" />
+                    <span className="thinking-dot h-1 w-1 rounded-full bg-foreground/60" />
+                  </span>
+                  {state === "starting" ? t("chat.connecting") : t("chat.thinking")}
+                </div>
+              )}
             </div>
           )}
         </div>

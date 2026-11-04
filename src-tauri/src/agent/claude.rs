@@ -257,10 +257,18 @@ pub struct ClaudeStartParams {
     pub extra_args: Vec<String>,
 }
 
+/// 展开工作目录中的 `~`：Windows 下 "~" 不是合法路径，必须替换为用户目录。
+fn expand_home_dir(work_dir: &str) -> std::path::PathBuf {
+    if work_dir == "~" || work_dir.is_empty() {
+        return dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
+    }
+    std::path::PathBuf::from(work_dir)
+}
+
 /// 启动 Claude 子进程：spawn + 读循环任务 + 注册到 Manager。
 ///
-/// `which` 解析可执行文件（Windows 上 npm 的 .cmd shim 无法被 tokio::process
-/// 直接按名 spawn，必须先解析出完整路径，与 cli/detector.rs 同一策略）。
+/// Windows 上 npm 安装的 claude 是 `.cmd` shim，CreateProcess 无法直接执行，
+/// 必须经 `cmd /C` 包装（PTY 通道由 portable-pty 内部处理同一问题）。
 pub async fn start_claude(
     app: tauri::AppHandle,
     manager: Arc<AgentManager>,
@@ -269,10 +277,24 @@ pub async fn start_claude(
     let exe = which::which("claude")
         .map_err(|e| AgentError::SpawnFailed(format!("未找到 claude 可执行文件: {e}")))?;
 
-    let mut cmd = Command::new(exe);
+    let work_dir = expand_home_dir(&params.work_dir);
+    if !work_dir.is_dir() {
+        return Err(AgentError::SpawnFailed(format!(
+            "工作目录不存在: {}",
+            work_dir.display()
+        )));
+    }
+
+    let mut cmd = if cfg!(windows) {
+        let mut c = Command::new("cmd");
+        c.arg("/C").arg(&exe);
+        c
+    } else {
+        Command::new(&exe)
+    };
     cmd.args(base_args())
         .args(&params.extra_args)
-        .current_dir(&params.work_dir)
+        .current_dir(&work_dir)
         .env("TERM", "dumb") // headless 无 TUI 交互，禁用终端控制序列
         .envs(&params.env_vars)
         .stdin(Stdio::piped())

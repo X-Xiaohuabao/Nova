@@ -73,7 +73,11 @@
     "questionOther": "Other answer (optional)…",
     "questionSubmit": "Submit",
     "switchToTerminal": "Switch to terminal view",
-    "switchToChat": "Switch to chat view"
+    "switchToChat": "Switch to chat view",
+    "thinking": "Thinking…",
+    "connecting": "Connecting to agent…",
+    "sendFailed": "Send failed",
+    "retry": "Retry"
   },
   "theme": {
     "light": "Light",

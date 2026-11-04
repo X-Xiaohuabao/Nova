@@ -340,9 +340,14 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
     try {
       await agentSessionStart(params);
     } catch (e) {
-      // 启动失败回滚运行标志并透传错误（openTab/切换层据此提示）
-      set((s) => ({ ...s, running: { ...s.running, [params.sessionId]: false } }));
-      throw e;
+      // 启动失败：回滚运行标志、状态置 error，并推错误卡片入流（不再静默卡"启动中"）
+      const message = e instanceof Error ? e.message : String(e);
+      set((s) => ({
+        ...s,
+        running: { ...s.running, [params.sessionId]: false },
+        states: { ...s.states, [params.sessionId]: "error" },
+      }));
+      get().applyAgentEvent(params.sessionId, { kind: "error", message });
     }
   },
 

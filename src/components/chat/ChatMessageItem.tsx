@@ -95,14 +95,17 @@ interface ChatMessageItemProps {
   toolType: ToolType;
   /** 工具名（AI 消息头部 caption） */
   toolLabel: string;
+  /** 失败用户气泡的重试回调（design doc §6：标红左边条 + [重试]） */
+  onRetry?: (text: string) => void;
 }
 
-export default function ChatMessageItem({ message, toolType, toolLabel }: ChatMessageItemProps) {
+export default function ChatMessageItem({ message, toolType, toolLabel, onRetry }: ChatMessageItemProps) {
+  const { t } = useTranslation();
   const { Icon, color } = toolVisual(toolType);
 
   if (message.role === "user") {
     return (
-      <div className="flex justify-end">
+      <div className="flex flex-col items-end gap-1">
         <div
           className={cn(
             "max-w-[75%] rounded-xl rounded-tr-sm px-3 py-2 text-[13px] leading-relaxed",
@@ -113,6 +116,20 @@ export default function ChatMessageItem({ message, toolType, toolLabel }: ChatMe
         >
           <p className="whitespace-pre-wrap break-words">{message.text}</p>
         </div>
+        {message.error && (
+          <div className="flex items-center gap-1.5 text-[11px] text-destructive">
+            {t("chat.sendFailed")}
+            {onRetry && (
+              <button
+                type="button"
+                onClick={() => onRetry(message.text)}
+                className="rounded border border-border px-1.5 py-0.5 font-medium transition-colors hover:bg-accent"
+              >
+                {t("chat.retry")}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     );
   }

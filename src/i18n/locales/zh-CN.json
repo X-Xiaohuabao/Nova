@@ -73,7 +73,11 @@
     "questionOther": "其他答案（可选）…",
     "questionSubmit": "提交",
     "switchToTerminal": "切换到终端视图",
-    "switchToChat": "切换到聊天视图"
+    "switchToChat": "切换到聊天视图",
+    "thinking": "思考中…",
+    "connecting": "连接智能体…",
+    "sendFailed": "发送失败",
+    "retry": "重试"
   },
   "theme": {
     "light": "浅色",

@@ -211,12 +211,28 @@ impl AgentManager {
     }
 
     /// 停止会话：杀子进程并清理表项。
+    ///
+    /// Windows 上经 `cmd /C` 启动的进程树（cmd → node），单杀 cmd 会留下
+    /// 僵尸 node，必须 taskkill /T 整树终止。
     pub async fn stop(&self, session_id: &str) -> Result<(), AgentError> {
         let entry = {
             let mut sessions = self.sessions.lock().unwrap_or_else(|e| e.into_inner());
             sessions.remove(session_id)
         };
         if let Some(entry) = entry {
+            #[cfg(windows)]
+            {
+                let pid = entry.child.lock().await.id();
+                if let Some(pid) = pid {
+                    let mut kill_cmd = tokio::process::Command::new("taskkill");
+                    kill_cmd.args(["/T", "/F", "/PID", &pid.to_string()]);
+                    {
+                        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+                        kill_cmd.creation_flags(CREATE_NO_WINDOW);
+                    }
+                    let _ = kill_cmd.status().await;
+                }
+            }
             let _ = entry.child.lock().await.kill().await;
         }
         Ok(())
