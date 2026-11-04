@@ -18,7 +18,7 @@
 
 ### M2 新建会话交互
 
-- [ ] 新建弹窗重构:默认态一行(显示解析结果,一键创建)+ 高级折叠区;智能体→模型级联只列已配置模型;默认项目取当前活动 tab 所属项目(禁 projects[0])
+- [x] 新建弹窗重构:默认态一行(显示解析结果,一键创建)+ 高级折叠区;智能体→模型级联只列已配置模型;默认项目取当前活动 tab 所属项目(禁 projects[0])(2026-11-04 完成,提交 3daa424;摘要行显示 工具·供应商·模型+来源徽标(未偏离解析结果时显示 项目默认/全局默认/默认);高级折叠区收纳 分类/名称/颜色/思考强度/模板/Claude参数/5档映射/环境变量,SSH 参数保持可见(必填核心);级联沿用 compatibleProviders(仅 active)→provider.models,只列已配置模型;默认项目链收进 appStore.setNewSessionModalOpen(活动会话所属项目→最近活动会话所属项目→首项目),侧栏+与 TabBar+两入口统一受益,AppNext 移除 projects[0] 硬编码;i18n +7 键两语言;tsc 通过,Rust 零改动沿 M1 绿基线;真机视觉/交互验证待用户)
   - 验收: 默认路径 ≤2 次交互完成新建;claude 5 档映射进折叠区
   - 涉及: src/components/tabs/next/NewSessionModalNext.tsx、AppNext.tsx、TabBarNext.tsx
 
