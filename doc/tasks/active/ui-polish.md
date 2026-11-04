@@ -14,3 +14,10 @@
 
 - [x] P1 滚动条样式统一（完成于 2026-11-04，做了什么：index.css 全局滚动条统一——webkit + Firefox 双语法细条（8px 槽/4px 视觉圆角滑条，muted-foreground 35%/60% 跟随明暗主题）；xterm 滚动条从 16px 直角对齐为同观感（覆盖内联样式）；删除 md-body/md-table-wrap 局部段（全局接管）与 .transfer-log-table .ant-* 死样式 44 行（旧 AntD Table 遗留））
   - 验收: 全部 overflow 容器（侧栏树/设置面板/帮助/Transcript/日志表/终端）滚动条统一为 macOS 细条观感；`tsc` + `vite build` 通过，HMR 实时生效
+
+- [ ] P4 LlmProviders 页去弹框化（登记于 2026-11-04，来源：此前会话拍板的去弹框方向——帮助（4c55c58）→ Profile（021da1b）已完成，LlmProviders 是下一个候选；现为 ResponsiveDialog 弹窗编辑，改为 master-detail 双栏或行式右栏，模式参照 ProfileManagementNext）
+  - 验收: 供应商新建/编辑不再弹框；交互与 ProfileManagementNext 一致（列表卡 +/− 工具栏、脏态离开确认）；tsc 通过
+  - 所属模块: 设置
+- [ ] P5 收藏区显示方式拍板（待定，需用户确认）：收藏会话当前在「★收藏」与所属项目下**双显示**（引用非复制，VS Code 风格）；用户曾对重复显示困惑（d7c1704 解释后暂留），待拍板保留双显示或改单显示
+  - 验收: 用户拍板；如改单显示，侧栏树渲染与 i18n 文案同步调整
+  - 所属模块: 终端UI
