@@ -85,6 +85,11 @@
     "cmdCleared": "已开启全新对话上下文",
     "cmdHelp": "输入 / 唤起命令面板；↑↓ 选择、Enter 执行、Esc 关闭。/clear 清空上下文，/model 切换模型。",
     "cmdSkillInvoke": "请使用「{{name}}」技能（{{description}}）。{{args}}",
+    "cmdCost": "本会话用量：输入 {{input}}K · 输出 {{output}}K tokens · 费用 ${{cost}}",
+    "cmdCostEmpty": "本会话暂无用量记录",
+    "cmdCostFailed": "用量查询失败",
+    "cmdExported": "对话已复制到剪贴板（Markdown）",
+    "cmdExportFailed": "导出失败",
     "sendFailed": "发送失败",
     "retry": "重试"
   },

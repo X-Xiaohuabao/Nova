@@ -85,6 +85,11 @@
     "cmdCleared": "Started a fresh conversation context",
     "cmdHelp": "Type / to open the command palette; ↑↓ to navigate, Enter to run, Esc to close. /clear resets context, /model switches model.",
     "cmdSkillInvoke": "Please use the \"{{name}}\" skill ({{description}}). {{args}}",
+    "cmdCost": "Session usage: {{input}}K in · {{output}}K out tokens · ${{cost}}",
+    "cmdCostEmpty": "No usage recorded for this session yet",
+    "cmdCostFailed": "Failed to query usage",
+    "cmdExported": "Conversation copied to clipboard (Markdown)",
+    "cmdExportFailed": "Export failed",
     "sendFailed": "Send failed",
     "retry": "Retry"
   },

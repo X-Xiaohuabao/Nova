@@ -9,11 +9,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { ArrowDown } from "lucide-react";
-import type { SlashCommand, ToolType } from "@/types";
+import type { ChatMessage, SlashCommand, ToolType } from "@/types";
 import { TOOL_DISPLAY_NAMES } from "@/types";
 import { useAgentStore } from "@/stores/agentStore";
 import { useAppStore } from "@/stores/appStore";
-import { agentListCommands } from "@/utils/ipc";
+import { agentListCommands, getSessionCost, writeClipboardText } from "@/utils/ipc";
 import ChatMessageItem from "./ChatMessageItem";
 import ChatInput from "./ChatInput";
 import ChatEmptyState from "./ChatEmptyState";
@@ -24,6 +24,21 @@ const NO_MESSAGES: never[] = [];
 
 /** 用户上滚超过该距离即暂停自动跟随（design doc §4） */
 const FOLLOW_THRESHOLD_PX = 48;
+
+/** 对话导出为 Markdown（/export）：用户/AI 消息按序输出，工具调用以引用块附录 */
+function messagesToMarkdown(messages: ChatMessage[], aiLabel: string): string {
+  const blocks = messages.map((m) => {
+    if (m.role === "user") {
+      return `## 🧑 用户\n\n${m.text}`;
+    }
+    const tools = (m.toolUses ?? [])
+      .map((tu) => `> 🔧 \`${tu.name}\`${tu.resultContent ? ` → ${tu.resultContent.slice(0, 120)}` : ""}`)
+      .join("\n>\n");
+    const parts = [m.text && `## 🤖 ${aiLabel}\n\n${m.text}`, tools && `**工具调用**\n\n${tools}`].filter(Boolean);
+    return parts.join("\n\n") || `## 🤖 ${aiLabel}\n\n（仅工具调用，无文本）`;
+  });
+  return `# Nova 对话导出\n\n${blocks.join("\n\n---\n\n")}\n`;
+}
 
 interface ChatViewProps {
   sessionId: string;
@@ -112,6 +127,9 @@ export default function ChatView({ sessionId, toolType = "claude" }: ChatViewPro
     [send, sessionId],
   );
 
+  /** AI 消息头部标识（导出与消息渲染共用） */
+  const toolLabel = TOOL_DISPLAY_NAMES[toolType] ?? toolType;
+
   /** 斜杠命令执行分治：Nova 本地动作 / prompt 展开发送（/clear /model /help 见各自分支） */
   const handleExecuteCommand = useCallback(
     (cmd: SlashCommand, args: string) => {
@@ -126,6 +144,31 @@ export default function ChatView({ sessionId, toolType = "claude" }: ChatViewPro
           useAppStore.getState().setEditSessionModalOpen(true, sessionId);
           return;
         }
+        if (cmd.name === "cost") {
+          void getSessionCost(sessionId)
+            .then((c) => {
+              if (!c) {
+                toast.info(t("chat.cmdCostEmpty"));
+                return;
+              }
+              toast.info(
+                t("chat.cmdCost", {
+                  input: (c.inputTokens / 1000).toFixed(1),
+                  output: (c.outputTokens / 1000).toFixed(1),
+                  cost: (c.costUsd ?? 0).toFixed(3),
+                }),
+              );
+            })
+            .catch(() => toast.error(t("chat.cmdCostFailed")));
+          return;
+        }
+        if (cmd.name === "export") {
+          const md = messagesToMarkdown(messages, toolLabel);
+          void writeClipboardText(md)
+            .then(() => toast.success(t("chat.cmdExported")))
+            .catch(() => toast.error(t("chat.cmdExportFailed")));
+          return;
+        }
         if (cmd.name === "help") {
           toast.info(t("chat.cmdHelp"));
           return;
@@ -138,7 +181,7 @@ export default function ChatView({ sessionId, toolType = "claude" }: ChatViewPro
         : t("chat.cmdSkillInvoke", { name: cmd.name, description: cmd.description ?? "", args });
       handleSend(text);
     },
-    [handleSend, sessionId, t],
+    [handleSend, sessionId, t, messages, toolLabel],
   );
 
   // 尾部已有流式 AI 消息时不再显示思考占位（光标即活动指示）
@@ -174,7 +217,7 @@ export default function ChatView({ sessionId, toolType = "claude" }: ChatViewPro
                   key={message.id}
                   message={message}
                   toolType={toolType}
-                  toolLabel={TOOL_DISPLAY_NAMES[toolType] ?? toolType}
+                  toolLabel={toolLabel}
                   onRetry={handleSend}
                 />
               ))}

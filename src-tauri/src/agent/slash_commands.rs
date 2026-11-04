@@ -46,6 +46,8 @@ fn builtin_nova() -> Vec<SlashCommand> {
     [
         ("clear", "清空对话上下文（保留界面历史，开启全新会话）"),
         ("model", "切换模型（选择后以新模型重启智能体通道）"),
+        ("cost", "查看本会话 Token 用量与费用"),
+        ("export", "导出对话为 Markdown（复制到剪贴板）"),
         ("help", "查看 Nova 聊天支持的能力与快捷键"),
     ]
     .iter()
@@ -58,7 +60,46 @@ fn builtin_nova() -> Vec<SlashCommand> {
     .collect()
 }
 
-/// 枚举全部命令源：项目/用户自定义命令 + Skills + Nova 内置。
+/// Nova 内置 prompt 模板型命令：展开即发送，行为与 CLI 内置命令等价
+/// （同一模型与工具集执行同一任务指令）。prompt 取自 CLI 官方语义的提炼，
+/// 内容稳定；版本演进差异不影响核心功能。
+fn builtin_prompt() -> Vec<SlashCommand> {
+    [
+        (
+            "init",
+            "分析当前代码库并生成/更新 CLAUDE.md（构建命令、代码规范、架构要点）",
+            concat!(
+                "Please analyze this codebase and create a CLAUDE.md file. ",
+                "The file should contain: (1) build/lint/test commands, (2) code style guidelines ",
+                "including import/file-naming conventions, TypeScript/JavaScript preferences, ",
+                "(3) architecture overview with key directories and their purposes. ",
+                "After thoroughly exploring the repository, write the CLAUDE.md to the project root. ",
+                "Keep it concise and immediately useful for future coding sessions."
+            ),
+        ),
+        (
+            "review",
+            "审查最近的代码改动（git diff / 当前分支 vs main），输出问题与建议",
+            concat!(
+                "Review the recent changes in this repository: run git diff (and git diff --cached, ",
+                "or diff the current branch against main) and examine the changes. Provide a code ",
+                "review covering: correctness issues, potential bugs, security concerns, performance ",
+                "problems, and style inconsistencies. Be specific with file and line references, ",
+                "and prioritize findings by severity. $ARGUMENTS"
+            ),
+        ),
+    ]
+    .iter()
+    .map(|&(name, description, prompt)| SlashCommand {
+        name: name.to_string(),
+        description: Some(description.to_string()),
+        source: SlashCommandSource::BuiltinPrompt,
+        prompt: Some(prompt.to_string()),
+    })
+    .collect()
+}
+
+/// 枚举全部命令源：项目/用户自定义命令 + Skills + Nova 内置（prompt 型 + 本地动作型）。
 ///
 /// 任何目录缺失或读取失败都按空集处理（命令面板是增强能力，不因文件系统
 /// 异常阻塞聊天）。同名命令按「项目 > 用户 > 技能 > 内置」就近覆盖
@@ -74,6 +115,7 @@ pub fn list_commands(work_dir: &str) -> Vec<SlashCommand> {
     collect_command_files(&user_commands_dir(), SlashCommandSource::User, &mut commands);
     collect_skills(&work_dir.join(".claude").join("skills"), &mut commands);
     collect_skills(&user_skills_dir(), &mut commands);
+    commands.extend(builtin_prompt());
     commands.extend(builtin_nova());
     dedup_by_name(commands)
 }
