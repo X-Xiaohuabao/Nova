@@ -31,6 +31,9 @@ import {
 
 /** 消息 id 生成（store 内唯一即可，非持久主键） */
 let messageSeq = 0;
+
+/** 启动就绪守卫超时：超过此时长仍未 session_ready 判定 CLI 挂死 */
+const START_TIMEOUT_MS = 20_000;
 function nextMessageId(): string {
   messageSeq += 1;
   return `msg-${Date.now()}-${messageSeq}`;
@@ -339,6 +342,15 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
     }));
     try {
       await agentSessionStart(params);
+      // 启动守卫：CLI 正常就绪应在数秒内发出 system/init（session_ready）；
+      // 超时仍停在 starting 视为启动挂死（如 resume 损坏会话时 CLI 无限挂起），
+      // 杀进程并推错误卡，让用户得到明确失败而非无感等待。
+      window.setTimeout(() => {
+        const sid = params.sessionId;
+        if (get().states[sid] !== "starting") return;
+        void get().suspend(sid);
+        get().applyAgentEvent(sid, { kind: "error", message: i18n.t("chat.startTimeout") });
+      }, START_TIMEOUT_MS);
     } catch (e) {
       // 启动失败：回滚运行标志、状态置 error，并推错误卡片入流（不再静默卡"启动中"）
       const message = e instanceof Error ? e.message : String(e);
@@ -371,6 +383,12 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
     }));
     try {
       await agentSend(sessionId, text);
+      // 消息驱动初始化：CLI 收到首条消息才发 system/init。消息已在路上，
+      // starting 态提前推进 thinking（同时让启动守卫失效——进程是活的）
+      set((s) => {
+        if (s.states[sessionId] !== "starting") return s;
+        return { ...s, states: { ...s.states, [sessionId]: "thinking" } };
+      });
     } catch {
       set((s) => {
         const list = s.messages[sessionId];

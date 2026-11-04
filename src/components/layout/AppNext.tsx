@@ -24,6 +24,8 @@ import { listen } from "@tauri-apps/api/event";
 import { TOOL_DISPLAY_NAMES } from "@/types";
 import type { SessionCost } from "@/types";
 import { useAppStore } from "@/stores/appStore";
+import { toast } from "sonner";
+import { reportOpenTabError } from "@/utils/openTabError";
 import { themeStore, initTheme } from "@/stores/themeStore";
 import { shellStore, SIDEBAR_COLLAPSED_WIDTH } from "@/stores/shellStore";
 import useKeyboardShortcuts from "@/hooks/useKeyboardShortcuts";
@@ -245,7 +247,10 @@ export default function AppNext() {
   };
 
   const openSession = (sessionId: string) => {
-    void openTab(sessionId).catch(() => {});
+    // 失败原因可见化（如窗口数超限）；未知错误静默由业务上下文负责
+    openTab(sessionId).catch((err) => {
+      reportOpenTabError(toast, err);
+    });
   };
 
   const statusbar = (

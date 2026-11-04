@@ -76,6 +76,7 @@
     "switchToChat": "Switch to chat view",
     "thinking": "Thinking…",
     "connecting": "Connecting to agent…",
+    "startTimeout": "Agent startup timed out: the session may be corrupted (CLI unresponsive). Delete and recreate it.",
     "sendFailed": "Send failed",
     "retry": "Retry"
   },

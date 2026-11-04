@@ -6,7 +6,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowUp, LoaderCircle, Square, TriangleAlert } from "lucide-react";
+import { ArrowUp, Square, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AgentSessionState } from "@/types";
 
@@ -33,7 +33,10 @@ export default function ChatInput({
 }: ChatInputProps) {
   const { t } = useTranslation();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const generating = state === "thinking" || state === "starting";
+  // 仅 thinking 锁发送：CLI 的 stream-json 双向模式是「消息驱动初始化」——
+  // 首条 user 消息到达前不会发 system/init，starting 态必须允许用户输入，
+  // 否则 UI 等 init、CLI 等消息，互相死锁。
+  const generating = state === "thinking";
 
   /** 高度自适应：先复位再按内容撑开，封顶后内部滚动 */
   const resize = useCallback(() => {
@@ -57,7 +60,8 @@ export default function ChatInput({
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       const text = draft.trim();
-      if (text && !disabled) onSend(text);
+      // 与发送按钮 disabled 语义对齐：starting/thinking 中 Enter 不发送（此时发送钮为停止钮）
+      if (text && !disabled && !generating) onSend(text);
     }
   };
 
@@ -96,11 +100,7 @@ export default function ChatInput({
             title={t("chat.stop")}
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-destructive text-white transition-transform active:scale-[0.95]"
           >
-            {state === "starting" ? (
-              <LoaderCircle size={13} strokeWidth={2} className="animate-spin" />
-            ) : (
-              <Square size={12} strokeWidth={2.5} fill="currentColor" />
-            )}
+            <Square size={12} strokeWidth={2.5} fill="currentColor" />
           </button>
         ) : (
           <button

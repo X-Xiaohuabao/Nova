@@ -25,7 +25,8 @@ use super::{
 /// 组装 Claude headless 双向模式的最小参数集。
 ///
 /// `--include-partial-messages` 提供 stream_event 增量（打字机效果输入源）；
-/// delta 事件形态属 PoC 验证项（T5），缺失时 UI 退化为按块渲染，通道不依赖它。
+/// `--verbose` 为 CLI（2.1.x 起）对 print 模式 stream-json 输出的硬性要求，
+/// 官方 TS SDK 同款参数集——缺失时 CLI 启动即报错退出，UI 永远等不到 result。
 fn base_args() -> Vec<String> {
     [
         "-p",
@@ -34,6 +35,7 @@ fn base_args() -> Vec<String> {
         "--output-format",
         "stream-json",
         "--include-partial-messages",
+        "--verbose",
     ]
     .iter()
     .map(|s| s.to_string())

@@ -1313,8 +1313,17 @@ export const useAppStore = create<AppState>((set, get) => ({
     const tabInTargetPane =
       targetPaneId && state.panes.some((p) => p.id === targetPaneId && p.openTabIds.includes(id));
     if (tabInTargetPane && targetSession?.isRunning) {
-      set({ activePaneId: targetPaneId, activeTabId: id });
-      return;
+      // 聊天视图的 claude 会话：DB 的 isRunning 可能是脏数据（应用重启/进程异常退出
+      // 未清），agent 子进程实际已不存在——此时不能早退，否则 tab 恢复后 agent 通道
+      // 永远不会启动，聊天页停在"启动中"转圈。走完整路径重启通道。
+      const chatChannelDead =
+        targetSession.toolType === "claude" &&
+        effectiveViewMode(targetSession, state.sessionViewModes) === "chat" &&
+        !useAgentStore.getState().running[id];
+      if (!chatChannelDead) {
+        set({ activePaneId: targetPaneId, activeTabId: id });
+        return;
+      }
     }
     if (!targetSession) return;
     const session = targetSession;
@@ -1327,10 +1336,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     const project = state.projects.find((p) => p.id === session.projectId);
     const envVars = parseEnvVars(session.envVars || "");
 
-    // Claude Code 预检：若 DB 里的 cliSessionId 在本地 JSONL 不存在，
-    // 说明用户已清理 ~/.claude/projects/<workdir>/<cliSessionId>.jsonl，
-    // --resume 会失败 → 提前拒绝，由 UI 显示"会话被删除或不存在"。
-    // 探测本身抛错时 fail-open：允许继续启动，让 Claude Code 报更明确的错误。
+    // Claude Code 预检：cliSessionId 的本地 JSONL 是否存在，决定能否 --resume。
+    // 不存在（挂死期间创建的空壳会话从未落盘 / 用户清理过）不再拒绝打开——
+    // 按「从未开始的新会话」启动（--session-id 注入原 id，CLI 首条消息后落盘）。
+    // 探测本身抛错时 fail-open：按可恢复处理，让 CLI 报更明确的错误。
+    let claudeJsonlOk = true;
     if (session.toolType === "claude" && session.cliSessionId) {
       const workDir = project?.path || "~";
       const profile = session.profileId
@@ -1338,17 +1348,13 @@ export const useAppStore = create<AppState>((set, get) => ({
         : undefined;
       const claudeConfigDir = profile?.appDataRoot ?? null;
       try {
-        const exists = await claudeJsonlExists(
+        claudeJsonlOk = await claudeJsonlExists(
           session.cliSessionId,
           workDir,
           claudeConfigDir,
         );
-        if (!exists) {
-          throw new Error("SESSION_DELETED");
-        }
-      } catch (e) {
-        if (e instanceof Error && e.message === "SESSION_DELETED") throw e;
-        // 其他错误（IPC 失败等）:放行,让 startSession 自己报
+      } catch {
+        claudeJsonlOk = true;
       }
     }
 
@@ -1368,10 +1374,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     // SSH 的 cli_args 是 JSON 对象（如 {"hostname":"...","port":22,...}），
     // 不能按 Vec<String> 反序列化，也不能注入 Claude 专属恢复参数。
     if (session.toolType !== "terminal" && session.toolType !== "ssh") {
-      if (session.cliSessionId && !hasResume && !hasContinue) {
-        // 有 cliSessionId：精确恢复到特定对话
+      if (session.cliSessionId && !hasResume && !hasContinue && claudeJsonlOk) {
+        // 有 cliSessionId 且本地 JSONL 存在：精确恢复到特定对话
         args = ["--resume", session.cliSessionId, ...args];
         cliArgs = JSON.stringify(args);
+        willResumeSessionId = session.cliSessionId;
+      } else if (session.cliSessionId && !claudeJsonlOk) {
+        // 空壳会话（从未落盘）：按新会话启动，注入原预分配 id（--session-id 语义），
+        // CLI 首条消息后以该 id 落盘，Nova 侧记录保持一致
         willResumeSessionId = session.cliSessionId;
       } else if (!session.cliSessionId && !hasResume && !hasContinue) {
         // 旧会话无 cliSessionId：回退到恢复当前目录最近对话
