@@ -1,4 +1,4 @@
-// Theme system for TeaCoder
+// Theme system for Nova
 // Each theme defines Ant Design token overrides + Tailwind dark class handling
 
 import { TERMINAL_COLOR_THEMES } from "../types";

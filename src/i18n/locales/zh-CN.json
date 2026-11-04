@@ -506,14 +506,14 @@
     "tocCollapse": "收起目录"
   },
   "onboarding": {
-    "welcome": "欢迎使用TeaCoder",
+    "welcome": "欢迎使用Nova",
     "skip": "跳过引导",
     "prev": "上一步",
     "next": "下一步",
     "start": "开始使用",
     "agree.title": "用户协议",
-    "agree.heading": "TeaCoder 用户协议",
-    "agree.intro": "欢迎使用TeaCoder（以下简称“本软件”）。在使用本软件之前，请您仔细阅读以下协议内容。",
+    "agree.heading": "Nova 用户协议",
+    "agree.intro": "欢迎使用Nova（以下简称“本软件”）。在使用本软件之前，请您仔细阅读以下协议内容。",
     "agree.licenseTitle": "1. 软件许可",
     "agree.licenseBody": "本软件采用 MIT 许可证开源。您可以自由使用、修改和分发本软件，但需遵守许可证中的相关条款。",
     "agree.dataTitle": "2. 数据安全",

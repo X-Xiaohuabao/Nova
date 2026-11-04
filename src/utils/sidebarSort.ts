@@ -1,7 +1,7 @@
 import type { Session, SessionCategory } from "../types";
 import type { SessionMove } from "./ipc";
 
-export const SIDEBAR_DND_MIME = "application/x-teacoder-sidebar";
+export const SIDEBAR_DND_MIME = "application/x-nova-sidebar";
 
 export type SidebarDragKind = "session" | "category" | "project";
 

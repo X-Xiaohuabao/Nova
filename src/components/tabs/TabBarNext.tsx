@@ -6,7 +6,7 @@
  * - 毛玻璃融合条（surface-blur），溢出横向滚动 + 右缘渐隐
  * - 关闭钮 hover / active 显示；中键关闭；双击重命名（inline，Esc/失焦提交）
  * - 右键菜单：分屏右侧 / 关闭 / 关闭其他 / 关闭右侧 / 关闭全部
- * - 拖拽重排：HTML5 DnD（application/x-teacoder-tab；dragenter/dragover 必须
+ * - 拖拽重排：HTML5 DnD（application/x-nova-tab；dragenter/dragover 必须
  *   preventDefault，否则 WebKit 不派发 drop）；中线判定插入位；指示线直改 DOM
  *   避免 dragover 高频重渲染；落位后 FLIP 位移动画（WAAPI）
  * - 状态点：运行中 = 绿色脉冲；未读/错误待智能体接入提供数据源后补全
@@ -29,7 +29,7 @@ import { useAppStore } from "@/stores/appStore";
 import type { Session } from "@/types";
 import { toolVisual } from "./tabVisuals";
 
-const DND_MIME_TAB = "application/x-teacoder-tab";
+const DND_MIME_TAB = "application/x-nova-tab";
 
 /** 标签宽度约束（macos-hig 8.1） */
 const TAB_MIN_WIDTH = 96;

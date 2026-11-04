@@ -25,8 +25,8 @@ impl AskpassGuard {
         // 覆盖第一个的密码文件，且任一方被清理时会把另一个还在用的文件删掉。
         let id = uuid::Uuid::new_v4();
         let tmp_dir = std::env::temp_dir();
-        let pwd_file = tmp_dir.join(format!("teacoder-ssh-pwd-{id}.txt"));
-        let script = tmp_dir.join(format!("teacoder-ssh-askpass-{id}.sh"));
+        let pwd_file = tmp_dir.join(format!("nova-ssh-pwd-{id}.txt"));
+        let script = tmp_dir.join(format!("nova-ssh-askpass-{id}.sh"));
 
         if let Err(e) = write_with_mode(&pwd_file, password, 0o600) {
             return Err(format!("写入 SSH 密码临时文件失败: {e}"));

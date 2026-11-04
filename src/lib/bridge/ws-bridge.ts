@@ -15,7 +15,7 @@ type Pending = {
 };
 
 /** 会话令牌本地存储键（web-remote 端；服务端只存哈希） */
-const TOKEN_STORAGE_KEY = "teacoder-remote-token";
+const TOKEN_STORAGE_KEY = "nova-remote-token";
 
 export class WebSocketBridge implements Bridge {
   readonly kind = "websocket" as const;

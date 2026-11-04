@@ -27,7 +27,7 @@ import SettingsCard from "./SettingsCard";
 /** 语言偏好三态（跟随系统 / 具体语言） */
 type LanguagePref = "system" | Language;
 
-const LANG_STORAGE_KEY = "teacoder_language";
+const LANG_STORAGE_KEY = "nova_language";
 
 function readLanguagePref(): LanguagePref {
   try {

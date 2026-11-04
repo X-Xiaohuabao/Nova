@@ -279,7 +279,7 @@ export default function AppNext() {
 
   return (
     <WindowFrame
-      title="TeaCoder"
+      title="Nova"
       dark={resolved === "dark"}
       onToggleTheme={() => {
         themeStore.getState().setMode(resolved === "dark" ? "light" : "dark");

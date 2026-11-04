@@ -1,14 +1,14 @@
 [package]
-name = "teacoder"
+name = "nova"
 version = "0.1.1"
-description = "TeaCoder — AI 编程 CLI 工具桌面管理客户端"
-authors = ["苦鼎茶 <yingcongshaw@gmail.com>"]
+description = "Nova — AI 编程 CLI 工具桌面管理客户端"
+authors = ["苦鼎茶 <yingcongshaw@gmail.com>", "X-Xiaohuabao"]
 edition = "2021"
-license = ""
-default-run = "teacoder"
+license = "MIT"
+default-run = "nova"
 
 [lib]
-name = "teacoder_lib"
+name = "nova_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

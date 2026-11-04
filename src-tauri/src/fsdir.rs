@@ -101,7 +101,7 @@ mod tests {
 
     fn tmpdir(tag: &str) -> std::path::PathBuf {
         let d = std::env::temp_dir().join(format!(
-            "teacoder-fsdir-{}-{}",
+            "nova-fsdir-{}-{}",
             tag,
             uuid::Uuid::new_v4()
         ));

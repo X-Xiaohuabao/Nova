@@ -299,7 +299,7 @@ function ProfileDialogNext({ open, editingProfile, onClose }: ProfileDialogProps
                 <FormItem>
                   <FormLabel>{t("settings.profiles.appDataRoot")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="~/.teacoder/profiles/<id>/claude-data" {...field} />
+                    <Input placeholder="~/.nova/profiles/<id>/claude-data" {...field} />
                   </FormControl>
                   <p className="text-[11px] text-muted-foreground/70">
                     {t("settings.profiles.envHint", { env: ENV_HINTS[toolType] })}

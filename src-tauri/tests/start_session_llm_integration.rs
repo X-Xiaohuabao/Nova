@@ -2,13 +2,13 @@
 //!
 //! 验证 env_vars 合并顺序：Profile → LLM Provider → user_env_vars，
 //! 后者覆盖前者。`compose_env` 与生产代码（`commands::pty::start_session`）共享，
-//! 集成测试通过 `teacoder::llm_provider::env_merge` 直接调用同一函数，
+//! 集成测试通过 `nova_lib::llm_provider::env_merge` 直接调用同一函数，
 //! 保证测试与生产合并顺序完全一致。
 
 use std::collections::HashMap;
 
-use teacoder_lib::llm_provider::env_inject::compute_injection;
-use teacoder_lib::llm_provider::env_merge::compose_env;
+use nova_lib::llm_provider::env_inject::compute_injection;
+use nova_lib::llm_provider::env_merge::compose_env;
 
 #[test]
 fn test_user_env_vars_override_provider() {

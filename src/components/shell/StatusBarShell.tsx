@@ -28,7 +28,7 @@ export default function StatusBarShell({
   const { t } = useTranslation();
   const kind = runtime ?? runtimeKind();
   const left = leftText ?? t("shell.ready");
-  const right = rightText ?? `TeaCoder · ${t(kind === "tauri-desktop" ? "shell.bridgeTauri" : "shell.bridgeWs")}`;
+  const right = rightText ?? `Nova · ${t(kind === "tauri-desktop" ? "shell.bridgeTauri" : "shell.bridgeWs")}`;
 
   return (
     <footer

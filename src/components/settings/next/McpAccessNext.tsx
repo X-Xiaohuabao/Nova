@@ -2,7 +2,7 @@
  * MCP 服务器配置页（新骨架，G8）。
  *
  * 服务器列表（名称/命令/参数/启用）内联 CRUD，持久化
- * localStorage「teacoder_mcpaccess_settings」，与旧页同键兼容。
+ * localStorage「nova_mcpaccess_settings」，与旧页同键兼容。
  */
 
 import { useState } from "react";
@@ -34,7 +34,7 @@ const EMPTY_FORM: McpServer = { name: "", command: "", args: "", enabled: true }
 
 export default function McpAccessNext() {
   const { t } = useTranslation();
-  const [settings, update] = useLocalStorageSettings<McpAccessSettings>("teacoder_mcpaccess_settings", DEFAULTS);
+  const [settings, update] = useLocalStorageSettings<McpAccessSettings>("nova_mcpaccess_settings", DEFAULTS);
   const [form, setForm] = useState<McpServer>(EMPTY_FORM);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [formOpen, setFormOpen] = useState(false);

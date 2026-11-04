@@ -6,7 +6,7 @@
 //! 其中任意一个都会 `--resume` 到同一段对话。
 //!
 //! 修复思路不是"在重复组里挑一个留下、其余清空"，而是**按创建时间反查真实归属**：
-//! TeaCoder 用 `--session-id` 启动时，Claude Code 会立刻在项目目录下建出以该 UUID
+//! Nova 用 `--session-id` 启动时，Claude Code 会立刻在项目目录下建出以该 UUID
 //! 命名的 JSONL，其首条记录落在 `session.created_at` 之后约一秒内。实测全部命中
 //! 样本的偏差在 +0.4s ~ +4.3s 之间，因此按此时间差匹配可以无歧义地找回每个会话
 //! 真正的对话文件。
@@ -386,7 +386,7 @@ mod tests {
     use crate::storage::AppDatabase;
 
     fn temp_home(tag: &str) -> PathBuf {
-        std::env::temp_dir().join(format!("teacoder-dedupe-{tag}-{}", uuid::Uuid::new_v4()))
+        std::env::temp_dir().join(format!("nova-dedupe-{tag}-{}", uuid::Uuid::new_v4()))
     }
 
     fn write_jsonl(home: &Path, work_dir: &str, uuid: &str, timestamp: &str) {

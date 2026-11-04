@@ -1,7 +1,7 @@
 //! 清理 Claude Code settings.json 的 env 字段。
 //!
 //! 每次 PTY 启动 Claude Code 前调用，避免用户在 ~/.claude/settings.json
-//! 中手动配置的 env 与 TeaCoder 自动注入冲突。
+//! 中手动配置的 env 与 Nova 自动注入冲突。
 //!
 //! best-effort 设计：任何 IO/JSON 解析失败均返回 Ok，不阻塞 PTY 启动。
 //! 仅当确实存在 `env` 字段时才回写文件，避免无意义的磁盘写入。
@@ -70,7 +70,7 @@ mod tests {
     /// 临时目录辅助：返回 (path, guard)
     fn temp_dir(tag: &str) -> (PathBuf, impl Drop) {
         let base = std::env::temp_dir().join(format!(
-            "teacoder-claude-settings-{}-{}",
+            "nova-claude-settings-{}-{}",
             tag,
             std::process::id()
         ));

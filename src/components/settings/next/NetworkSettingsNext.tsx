@@ -2,7 +2,7 @@
  * 网络设置页（新骨架，G5）。
  *
  * 代理（类型/地址/认证，启用后逐级展开）与连接（超时/重试/SSL），
- * 持久化 localStorage「teacoder_network_settings」，与旧页同键兼容。
+ * 持久化 localStorage「nova_network_settings」，与旧页同键兼容。
  */
 
 import { useTranslation } from "react-i18next";
@@ -40,7 +40,7 @@ const DEFAULTS: NetworkSettings = {
 
 export default function NetworkSettingsNext() {
   const { t } = useTranslation();
-  const [settings, update] = useLocalStorageSettings<NetworkSettings>("teacoder_network_settings", DEFAULTS);
+  const [settings, update] = useLocalStorageSettings<NetworkSettings>("nova_network_settings", DEFAULTS);
 
   return (
     <div>

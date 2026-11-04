@@ -17,7 +17,7 @@ import { rehypeHeadingIds } from "./docOutline";
 
 export { readmeRaw };
 
-const REPO_URL = "https://github.com/yingcongshaw/teacoder";
+const REPO_URL = "https://github.com/X-Xiaohuabao/Nova";
 
 /** 从组件自身反推 rehypePlugins 的类型 —— unified 的 Pluggable 元组类型
  *  推不出来(嵌套数组会被当成联合数组),为此单独引 unified 只为拿类型不划算。 */

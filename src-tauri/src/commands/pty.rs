@@ -35,7 +35,7 @@ pub fn start_session(
     let env_vars = launch.vars;
 
     // 启动 Claude Code 前清理 ~/.claude/settings.json 的 env 字段，
-    // 避免用户在该文件里手动配置的环境变量与 TeaCoder 的注入冲突。
+    // 避免用户在该文件里手动配置的环境变量与 Nova 的注入冲突。
     // best-effort：失败不阻塞 PTY 启动。
     if matches!(tool_type, ToolType::Claude) {
         if let Err(e) =

@@ -4,7 +4,7 @@
  * - 模式持久化走 zustand persist（localStorage，UI 偏好不落业务库）
  * - 「跟随系统」经 prefers-color-scheme 探测 + change 监听即时跟随
  * - 生效方式：documentElement 挂 light/dark class，语义 token 见 src/styles/tokens.css
- * - 首次运行无新 key 时，从旧主题 key（teacoder_general_settings.theme）归一迁移，
+ * - 首次运行无新 key 时，从旧主题 key（nova_general_settings.theme）归一迁移，
  *   映射规则见 src/themes/legacy.ts
  */
 
@@ -15,8 +15,8 @@ import { normalizeLegacyTheme } from "@/themes/legacy";
 export type ThemeMode = "light" | "dark" | "system";
 export type ConcreteTheme = "light" | "dark";
 
-const STORAGE_KEY = "teacoder-theme-mode";
-const LEGACY_SETTINGS_KEY = "teacoder_general_settings";
+const STORAGE_KEY = "nova-theme-mode";
+const LEGACY_SETTINGS_KEY = "nova_general_settings";
 
 const prefersDark = (): boolean =>
   typeof window !== "undefined" &&

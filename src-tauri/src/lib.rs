@@ -51,6 +51,8 @@ pub fn run() {
         }))
         .setup(|app| {
             let db = AppDatabase::new(app.handle())?;
+            // 一次性迁移旧 service 名下的凭据（内部逐条容错，失败仅记日志）
+            crypto::keychain::migrate_legacy_service(&db);
             app.manage(db);
 
             {

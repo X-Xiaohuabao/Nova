@@ -1,7 +1,7 @@
 /**
  * 桌面通知设置页（新骨架，G6）。
  *
- * 通知方式与通知事件开关，持久化 localStorage「teacoder_notification_settings」。
+ * 通知方式与通知事件开关，持久化 localStorage「nova_notification_settings」。
  */
 
 import { useTranslation } from "react-i18next";
@@ -34,7 +34,7 @@ const DEFAULTS: NotificationSettings = {
 
 export default function NotificationSettingsNext() {
   const { t } = useTranslation();
-  const [settings, update] = useLocalStorageSettings<NotificationSettings>("teacoder_notification_settings", DEFAULTS);
+  const [settings, update] = useLocalStorageSettings<NotificationSettings>("nova_notification_settings", DEFAULTS);
 
   return (
     <div>

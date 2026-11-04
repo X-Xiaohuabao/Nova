@@ -3,7 +3,7 @@
  *
  * 首启流程：用户协议（勾选确认，不可点遮罩/Esc 关闭）→ 三步功能引导
  * （LLM 供应商 → 项目 → 会话，进度条+点指示器）。localStorage 键与旧版一致
- * （teacoder_onboarding_completed / teacoder_agreement_accepted）。
+ * （nova_onboarding_completed / nova_agreement_accepted）。
  */
 
 import { useEffect, useState } from "react";
@@ -20,8 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import ResponsiveDialog from "@/components/common/ResponsiveDialog";
 
-const ONBOARDING_KEY = "teacoder_onboarding_completed";
-const AGREEMENT_KEY = "teacoder_agreement_accepted";
+const ONBOARDING_KEY = "nova_onboarding_completed";
+const AGREEMENT_KEY = "nova_agreement_accepted";
 
 export function useOnboarding() {
   const [showAgreement, setShowAgreement] = useState(false);

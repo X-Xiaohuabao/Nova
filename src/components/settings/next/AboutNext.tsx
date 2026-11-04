@@ -21,8 +21,8 @@ export default function AboutNext() {
     <div>
       {/* 应用标识 */}
       <div className="flex flex-col items-center gap-1 py-8 text-center">
-        <img src="/logo.png" alt="TeaCoder" width={72} height={72} className="mb-3 rounded-2xl" />
-        <h3 className="text-[15px] font-semibold">TeaCoder</h3>
+        <img src="/logo.png" alt="Nova" width={72} height={72} className="mb-3 rounded-2xl" />
+        <h3 className="text-[15px] font-semibold">Nova</h3>
         <p className="text-[13px] text-muted-foreground">{t("settings.about.tagline")}</p>
         <div className="mt-1 flex gap-1.5">
           <Badge variant="secondary">v0.1.1</Badge>
@@ -35,7 +35,7 @@ export default function AboutNext() {
       <SectionHeader title={t("settings.about.appInfo")} />
       <SettingsCard>
       <SettingRow id="settings.appName" label={t("settings.about.appName")}>
-        <span className="text-[13px] text-foreground/85">TeaCoder</span>
+        <span className="text-[13px] text-foreground/85">Nova</span>
       </SettingRow>
       <SettingRow id="settings.version" label={t("settings.about.version")}>
         <span className="text-[13px] text-foreground/85">v0.1.1</span>
@@ -76,7 +76,7 @@ export default function AboutNext() {
       <SettingsCard>
         <div className="py-2">
           <a
-            href="https://github.com/yingcongshaw/teacoder"
+            href="https://github.com/X-Xiaohuabao/Nova"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"

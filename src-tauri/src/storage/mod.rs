@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 use rusqlite::Connection;
@@ -12,13 +12,15 @@ pub struct AppDatabase {
 impl AppDatabase {
     pub fn new(_app: &tauri::AppHandle) -> Result<Self, String> {
         let app_dir = dirs::home_dir()
-            .map(|h| h.join(".teacoder"))
+            .map(|h| h.join(".nova"))
             .ok_or_else(|| "Failed to resolve home directory".to_string())?;
+
+        let migrated = migrate_legacy_data_dir(&app_dir);
 
         std::fs::create_dir_all(&app_dir)
             .map_err(|e| format!("Failed to create app data dir: {}", e))?;
 
-        let db_path = app_dir.join("teacoder.db");
+        let db_path = app_dir.join("nova.db");
         let conn = Connection::open(&db_path)
             .map_err(|e| format!("Failed to open database: {}", e))?;
 
@@ -29,6 +31,9 @@ impl AppDatabase {
             conn: Mutex::new(conn),
         };
         db.run_migrations()?;
+        if migrated {
+            fix_legacy_app_data_roots(&db)?;
+        }
         // best-effort 数据修复：旧版 closeTab 的探测逻辑曾把同一项目下多个会话的
         // cli_session_id 覆写成同一个值。修复幂等，失败不阻塞启动。
         match crate::session::dedupe::dedupe_cli_session_ids(&db) {
@@ -128,4 +133,57 @@ impl AppDatabase {
 
         Ok(exe_dir.join("migrations"))
     }
+}
+
+/// 一次性迁移旧版 TeaCoder 数据目录（~/.teacoder → ~/.nova）并同步改数据库文件名。
+/// 返回是否发生了目录迁移；rename 失败仅记日志并降级（应用改用新空目录，旧目录原样保留可手工恢复）。
+fn migrate_legacy_data_dir(app_dir: &Path) -> bool {
+    let Some(home) = dirs::home_dir() else {
+        return false;
+    };
+    let legacy_dir = home.join(".teacoder");
+    if !legacy_dir.exists() || app_dir.exists() {
+        return false;
+    }
+    if let Err(e) = std::fs::rename(&legacy_dir, app_dir) {
+        eprintln!("旧数据目录迁移失败（~/.teacoder 保持原样）: {e}");
+        return false;
+    }
+    // 数据库主文件与 WAL/SHM 伴生文件同步改名，改名失败仅记日志（连接时会新建空库，旧文件仍在目录内）
+    for (old, new) in [
+        ("teacoder.db", "nova.db"),
+        ("teacoder.db-wal", "nova.db-wal"),
+        ("teacoder.db-shm", "nova.db-shm"),
+    ] {
+        let from = app_dir.join(old);
+        if from.exists() {
+            if let Err(e) = std::fs::rename(&from, app_dir.join(new)) {
+                eprintln!("数据库文件改名失败 {old}: {e}");
+            }
+        }
+    }
+    true
+}
+
+/// 目录迁移后修复 profiles 表中手填的旧目录路径（覆盖 Windows / Unix / 波浪号三种写法）。
+fn fix_legacy_app_data_roots(db: &AppDatabase) -> Result<(), String> {
+    let Some(home) = dirs::home_dir() else {
+        return Ok(());
+    };
+    let old_win = home.join(".teacoder").to_string_lossy().to_string();
+    let new_win = home.join(".nova").to_string_lossy().to_string();
+    let old_unix = old_win.replace('\\', "/");
+    let new_unix = new_win.replace('\\', "/");
+    let conn = db.conn.lock().map_err(|e| e.to_string())?;
+    let updated = conn
+        .execute(
+            "UPDATE profiles SET app_data_root = REPLACE(REPLACE(REPLACE(app_data_root, ?1, ?2), ?3, ?4), '~/.teacoder', '~/.nova') \
+             WHERE app_data_root IS NOT NULL AND app_data_root != ''",
+            rusqlite::params![old_win, new_win, old_unix, new_unix],
+        )
+        .map_err(|e| format!("Failed to fix app_data_root: {}", e))?;
+    if updated > 0 {
+        eprintln!("已修复 {updated} 条 profile 的数据目录路径");
+    }
+    Ok(())
 }

@@ -3,7 +3,7 @@
  *
  * 旧 UI（AntD ConfigProvider 时期）的 theme 是 BUILT_IN_THEMES 里的 13 套 key
  * （system/dark/light/one-dark/monokai/warm-light 等），持久化在
- * localStorage「teacoder_general_settings」的 theme 字段。
+ * localStorage「nova_general_settings」的 theme 字段。
  * 新骨架只有 light/dark/system 三态（语义 token 见 src/styles/tokens.css），
  * 迁移时按旧主题表 algorithm 把暗色系归一为 dark、浅色系归一为 light；
  * 「system」由调用方单独映射为三态里的 system。

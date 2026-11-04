@@ -608,7 +608,7 @@ mod tests {
             ));
             content.push('\n');
         }
-        let p = write_temp("teacoder_transcript_tail_test.jsonl", &content);
+        let p = write_temp("nova_transcript_tail_test.jsonl", &content);
         let got = read_transcript(&p, 3).unwrap();
         assert_eq!(got.len(), 3);
         assert_eq!(got[2].text, "第9条", "应保留最新的三条");

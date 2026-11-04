@@ -49,7 +49,7 @@ const FIXED_BINDINGS: { labelKey: string; binding: string }[] = [
 
 export default function KeybindingsSettingsNext() {
   const { t } = useTranslation();
-  const [settings, update] = useLocalStorageSettings<KeybindingsSettings>("teacoder_keybindings_settings", DEFAULTS);
+  const [settings, update] = useLocalStorageSettings<KeybindingsSettings>("nova_keybindings_settings", DEFAULTS);
 
   const customRow = (key: keyof KeybindingsSettings, labelKey: string, descKey: string) => (
     <SettingRow id={`settings.kb.${key}`} label={t(labelKey)} description={t(descKey)}>

@@ -35,7 +35,7 @@ const useShellStore = create<ShellState>()(
       setSidebarWidth: (width) => set({ sidebarWidth: clampSidebarWidth(width) }),
     }),
     {
-      name: "teacoder-shell-ui",
+      name: "nova-shell-ui",
       version: 1,
       partialize: (state) => ({
         sidebarCollapsed: state.sidebarCollapsed,

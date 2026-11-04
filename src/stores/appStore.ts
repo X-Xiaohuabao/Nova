@@ -43,12 +43,12 @@ import type { ClaudeModels } from "../utils/claudeModels";
 import { stripResumeArgs } from "../utils/cliArgs";
 import { useAgentStore } from "./agentStore";
 
-const OPEN_TABS_KEY = "teacoder_open_tabs";
-const TERMINAL_SETTINGS_KEY = "teacoder_terminal_settings";
-const QUICK_COMMANDS_KEY = "teacoder_quick_commands";
-const SPLIT_RATIO_KEY = "teacoder_split_ratio";
-const PANES_LAYOUT_KEY = "teacoder_panes_layout";
-const SESSION_VIEW_MODES_KEY = "teacoder_session_view_modes";
+const OPEN_TABS_KEY = "nova_open_tabs";
+const TERMINAL_SETTINGS_KEY = "nova_terminal_settings";
+const QUICK_COMMANDS_KEY = "nova_quick_commands";
+const SPLIT_RATIO_KEY = "nova_split_ratio";
+const PANES_LAYOUT_KEY = "nova_panes_layout";
+const SESSION_VIEW_MODES_KEY = "nova_session_view_modes";
 
 /** 会话视图形态：聊天（agent 通道，claude 默认）/ 终端（PTY 通道） */
 export type SessionViewMode = "chat" | "terminal";
@@ -264,7 +264,7 @@ function bySortOrder<T extends { sortOrder: number; updatedAt: number }>(a: T, b
   return a.sortOrder - b.sortOrder || b.updatedAt - a.updatedAt;
 }
 
-const GENERAL_SETTINGS_KEY = "teacoder_general_settings";
+const GENERAL_SETTINGS_KEY = "nova_general_settings";
 
 function loadAppTheme(): string {
   try {
@@ -302,7 +302,7 @@ interface LaunchNewSessionParams {
 }
 
 /**
- * 启动"刚创建的全新会话"：起 PTY，并把 TeaCoder 标题同步进 Claude Code。
+ * 启动"刚创建的全新会话"：起 PTY，并把 Nova 标题同步进 Claude Code。
  *
  * 新建会话与复制会话共用这条路径 —— 副本必须拿到独立 UUID 由 `--session-id`
  * 注入，若只建库不起 PTY，副本停留在"已打开但无终端"状态，下次 openTab 会拿
@@ -376,7 +376,7 @@ async function launchNewSession(params: LaunchNewSessionParams): Promise<void> {
     claudeModels: serializeClaudeModels(params.claudeModels),
   });
 
-  // Claude Code：用 /rename 把 TeaCoder 标题同步过去。
+  // Claude Code：用 /rename 把 Nova 标题同步过去。
   // 这里只登记待注入的指令，由终端层在确认框消失、CLI 回到输入态后再发送。
   // 不能用固定延时盲发：Claude Code 首次在某工作目录下启动会弹安全确认框
   // （Quick safety check），默认项是「No, exit」，落在框还在的时候发出去的
@@ -596,10 +596,10 @@ interface AppState {
   updateQuickCommands: (toolType: string, value: string) => void;
 }
 
-const FAVORITE_KEY = "teacoder_favorites";
-const COLLAPSED_KEY = "teacoder_collapsed_projects";
-const COLLAPSED_CATEGORIES_KEY = "teacoder_collapsed_categories";
-const SIDEBAR_COLLAPSED_KEY = "teacoder_sidebar_collapsed";
+const FAVORITE_KEY = "nova_favorites";
+const COLLAPSED_KEY = "nova_collapsed_projects";
+const COLLAPSED_CATEGORIES_KEY = "nova_collapsed_categories";
+const SIDEBAR_COLLAPSED_KEY = "nova_sidebar_collapsed";
 
 function loadFavorites(): string[] {
   try {
@@ -832,7 +832,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     // PTY 重启会中断当前 Claude Code 会话上下文，由用户编辑保存触发的"重启配置"语义所预期。
     // 共享 PTY 语义:若该 tabId 在多个 pane 中共享(双开),stop+start 会让另一 pane 失联,
     // 这里跳过重启,只更新 DB 字段;用户需先关闭双开才能应用 env 变更。
-    // 重启时直接使用 DB 中的 cliSessionId（TeaCoder 预分配 + --session-id 注入），
+    // 重启时直接使用 DB 中的 cliSessionId（Nova 预分配 + --session-id 注入），
     // 不再探测 find_latest_claude_session；JSONL 是否存在由下次 openTab 的预检负责。
     const after = get().sessions.find((s) => s.id === id);
     const sharedInstances = after ? instanceCount(get().panes, id) : 0;

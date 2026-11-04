@@ -2,7 +2,7 @@
 //!
 //! 组装顺序（后者覆盖前者）：
 //! Profile 数据隔离 env → Keychain 凭据 → LLM Provider 注入 → compose_env 合并
-//! user_env_vars → Claude 模型 tier 映射（保持 TeaCoder 权威性，不被 user_env 覆盖）。
+//! user_env_vars → Claude 模型 tier 映射（保持 Nova 权威性，不被 user_env 覆盖）。
 //! 任何一条通道（PTY / agent stream-json）启动 CLI 前都应经由此处组装，
 //! 禁止在命令层复制粘贴注入逻辑（两通道凭据行为必须同源）。
 
@@ -153,7 +153,7 @@ pub fn assemble(
     );
 
     // Claude Code 模型 tier 映射 → ANTHROPIC_DEFAULT_*_MODEL[_NAME] + ANTHROPIC_MODEL + CLAUDE_CODE_SUBAGENT_MODEL
-    // 仅注入非空字段；user_env_vars 不覆盖此层（保持 TeaCoder 唯一权威性）。
+    // 仅注入非空字段；user_env_vars 不覆盖此层（保持 Nova 唯一权威性）。
     for (k, v) in crate::llm_provider::env_inject::compute_claude_tier_env(claude_models) {
         vars.insert(k, v);
     }

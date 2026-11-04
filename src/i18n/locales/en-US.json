@@ -506,14 +506,14 @@
     "tocCollapse": "Collapse contents"
   },
   "onboarding": {
-    "welcome": "Welcome to TeaCoder",
+    "welcome": "Welcome to Nova",
     "skip": "Skip tour",
     "prev": "Back",
     "next": "Next",
     "start": "Get started",
     "agree.title": "User Agreement",
-    "agree.heading": "TeaCoder User Agreement",
-    "agree.intro": "Welcome to TeaCoder (\"the Software\"). Please read the following agreement carefully before using the Software.",
+    "agree.heading": "Nova User Agreement",
+    "agree.intro": "Welcome to Nova (\"the Software\"). Please read the following agreement carefully before using the Software.",
     "agree.licenseTitle": "1. License",
     "agree.licenseBody": "The Software is open source under the MIT license. You may freely use, modify and distribute it under the license terms.",
     "agree.dataTitle": "2. Data Safety",

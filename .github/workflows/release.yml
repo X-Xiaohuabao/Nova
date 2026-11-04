@@ -83,7 +83,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: TeaCoder-linux-x64
+          name: Nova-linux-x64
           if-no-files-found: error
           path: |
             src-tauri/target/release/bundle/appimage/*.AppImage
@@ -149,7 +149,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: TeaCoder-macos-universal
+          name: Nova-macos-universal
           if-no-files-found: error
           path: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
 
@@ -199,7 +199,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: TeaCoder-windows-x64
+          name: Nova-windows-x64
           if-no-files-found: error
           path: |
             src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi
@@ -251,7 +251,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          pattern: 'TeaCoder-*'
+          pattern: 'Nova-*'
           path: dist
           merge-multiple: true
 

@@ -1,4 +1,4 @@
-/* TeaCoder 窗口骨架预览入口样式。
+/* Nova 窗口骨架预览入口样式。
  * 完整 Tailwind（含 preflight）+ token 层 + macOS 观感辅助类（共享层）。
  * 主应用入口为 src/index.css（同构引用 tokens 与 observance）。 */
 

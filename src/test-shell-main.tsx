@@ -74,7 +74,7 @@ function ShellPreview() {
   return (
     <div className="relative flex h-full w-full items-center justify-center">
       <WindowFrame
-        title="TeaCoder"
+        title="Nova"
         dark={resolved === "dark"}
         onToggleTheme={cycleTheme}
         runtime={runtime}

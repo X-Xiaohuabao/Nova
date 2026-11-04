@@ -15,7 +15,7 @@ import enUS from "./locales/en-US.json";
 export const SUPPORTED_LANGUAGES = ["zh-CN", "en-US"] as const;
 export type Language = (typeof SUPPORTED_LANGUAGES)[number];
 
-const STORAGE_KEY = "teacoder_language";
+const STORAGE_KEY = "nova_language";
 const FALLBACK_LANGUAGE: Language = "zh-CN";
 
 function isLanguage(value: string | null): value is Language {

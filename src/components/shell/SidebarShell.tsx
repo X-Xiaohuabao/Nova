@@ -25,7 +25,7 @@ export default function SidebarShell({ width = 200, collapsed = false }: Sidebar
       label: t("shell.groupProjects"),
       items: [
         { name: "nvo-switch", active: true },
-        { name: "teacoder-docs" },
+        { name: "nova-docs" },
         { name: "playground" },
       ],
     },

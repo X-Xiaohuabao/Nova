@@ -33,7 +33,7 @@ export default function DataManagementNext() {
       <SettingsCard>
       <SettingRow id="settings.dataDirectory" label={t("settings.data.directory")} description={t("settings.data.directoryDesc")}>
         <div className="flex items-center gap-2">
-          <Input className="w-56" value="~/.teacoder" readOnly />
+          <Input className="w-56" value="~/.nova" readOnly />
           <Button
             variant="outline"
             size="sm"
