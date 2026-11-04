@@ -24,12 +24,14 @@
 
 ### M3 会话内切换
 
-- [ ] 会话头部/状态栏轻量切换器:dropdown 选智能体/供应商/模型,写回 session 字段
+- [x] 会话头部/状态栏轻量切换器:dropdown 选智能体/供应商/模型,写回 session 字段(2026-11-04 完成,提交 85f60d9;状态栏徽标旁 SessionModelSwitcher——Popover 供应商/模型两连选,改动即 session_update 持久化并 merge store,重进会话沿用;⚠️ 智能体切换被现有不变量挡住——update_session 明确"tool_type 创建后不可改"(cli_args 编码依赖它,session/mod.rs:275-278 注释),以代码为准降范围为供应商/模型,突破不变量已登记待拍板条目;抽共享 utils/sessionModel.ts(compatibleProviders/pickDefaultProvider/buildDefaultClaudeModels/providerDefaultModel),弹窗与切换器同源,消除级联逻辑第二份)
   - 验收: 切换后 session_update 持久化;重进会话沿用;双开时明确提示不生效
   - 涉及: AppNext.tsx、appStore、commands/session.rs
-- [ ] 聊天通道 /model 热切换(作为用户输入发送,复用 pendingClaudeRenames 机制);PTY 通道提示"重启后生效"
+- [x] 聊天通道 /model 热切换(作为用户输入发送,复用 pendingClaudeRenames 机制);PTY 通道提示"重启后生效"(2026-11-04 完成,提交 85f60d9;switchSessionModel 返回生效策略 ok/restart-required/hot-switch/shared:聊天通道(claude+chat 视图+供应商未变+agent 运行中)由切换器组件编排 agentStore.send("/model <model>")即时热切换;PTY 运行中 toast"已保存,重启会话后生效";双开 toast 明确原因(替代 appStore updateSession 的静默跳过);未复用 pendingClaudeRenames——该机制是 PTY 通道"等提示符就绪再注入"的队列,聊天通道 send 即时送达,机制不适用,改走 agent 通道直发;tsc 通过,Rust 零改动)
   - 验收: 聊天会话不重启即可换模型;PTY 会话有明确提示
   - 涉及: agentStore、appStore
+- [ ] 智能体切换(会话创建后改 tool_type)拍板:M3 实施中发现现有不变量"tool_type 创建后不可改"(update_session 不接收该字段,cli_args 编码与否取决于工具类型);如需支持须连带 cli_args 清空/重编码、会话视图模式重置、SSH 参数清理,影响面独立——需用户拍板是否立项
+  - 涉及: session/mod.rs、appStore、切换器
 
 ### M4 项目默认配置 UI
 
