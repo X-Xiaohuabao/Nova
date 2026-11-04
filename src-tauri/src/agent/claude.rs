@@ -84,7 +84,8 @@ fn parse_system(value: &serde_json::Value) -> Vec<AgentEvent> {
     }]
 }
 
-/// assistant 消息：遍历 content 块——text → MessageComplete，tool_use → ToolUse。
+/// assistant 消息：遍历 content 块——text → MessageComplete，tool_use → ToolUse；
+/// AskUserQuestion 类工具调用归一为 QuestionRequest（应答走 tool_result 而非执行）。
 /// thinking 块 MVP 不展示（跳过）。
 fn parse_assistant(value: &serde_json::Value) -> Vec<AgentEvent> {
     let Some(blocks) = value
@@ -116,8 +117,12 @@ fn parse_assistant(value: &serde_json::Value) -> Vec<AgentEvent> {
                         .get("input")
                         .cloned()
                         .unwrap_or(serde_json::Value::Null);
-                    // tool_use 即代表智能体要动手：进入 thinking（等 result）
-                    Some(AgentEvent::ToolUse { tool_use_id, name, input })
+                    if name.contains("AskUserQuestion") {
+                        Some(AgentEvent::QuestionRequest { tool_use_id, input })
+                    } else {
+                        // tool_use 即代表智能体要动手：进入 thinking（等 result）
+                        Some(AgentEvent::ToolUse { tool_use_id, name, input })
+                    }
                 }
                 _ => None,
             }
@@ -384,7 +389,9 @@ fn apply_state(state: &std::sync::Mutex<AgentSessionState>, event: &AgentEvent) 
         | AgentEvent::MessageComplete { .. }
         | AgentEvent::ToolUse { .. }
         | AgentEvent::ToolResult { .. } => Some(AgentSessionState::Thinking),
-        AgentEvent::PermissionRequest { .. } => Some(AgentSessionState::WaitingInput),
+        AgentEvent::PermissionRequest { .. } | AgentEvent::QuestionRequest { .. } => {
+            Some(AgentSessionState::WaitingInput)
+        }
         AgentEvent::StateChanged { state: s } => Some(*s),
         _ => None,
     };
@@ -401,6 +408,36 @@ fn user_message_line(text: &str) -> Result<String, AgentError> {
         "message": { "role": "user", "content": text },
     });
     serde_json::to_string(&value).map_err(|e| AgentError::Protocol(format!("user 消息序列化失败: {e}")))
+}
+
+/// 组装权限应答 control_response 帧（can_use_tool 的 behavior 语义）。
+fn permission_response_line(request_id: &str, allow: bool) -> Result<String, AgentError> {
+    let response = if allow {
+        serde_json::json!({ "behavior": "allow" })
+    } else {
+        serde_json::json!({ "behavior": "deny", "message": "用户拒绝了该操作" })
+    };
+    let frame = serde_json::json!({
+        "type": "control_response",
+        "request_id": request_id,
+        "response": response,
+    });
+    serde_json::to_string(&frame)
+        .map_err(|e| AgentError::Protocol(format!("control_response 序列化失败: {e}")))
+}
+
+/// 组装提问应答 user 消息（tool_result 块终结 AskUserQuestion 的 tool_use）。
+fn tool_result_line(tool_use_id: &str, text: &str) -> Result<String, AgentError> {
+    let value = serde_json::json!({
+        "type": "user",
+        "message": {
+            "role": "user",
+            "content": [
+                { "type": "tool_result", "tool_use_id": tool_use_id, "content": text }
+            ]
+        },
+    });
+    serde_json::to_string(&value).map_err(|e| AgentError::Protocol(format!("tool_result 消息序列化失败: {e}")))
 }
 
 /// 往 stdin 写一行 JSON（行尾换行 + flush，stream-json 按行分帧）。
@@ -433,6 +470,18 @@ impl AgentDriver for ClaudeDriver {
         });
         let line = serde_json::to_string(&frame)
             .map_err(|e| AgentError::Protocol(format!("interrupt 帧序列化失败: {e}")))?;
+        let mut stdin = self.stdin.lock().await;
+        write_line(&mut stdin, &line).await
+    }
+
+    async fn respond_permission(&self, request_id: &str, allow: bool) -> Result<(), AgentError> {
+        let line = permission_response_line(request_id, allow)?;
+        let mut stdin = self.stdin.lock().await;
+        write_line(&mut stdin, &line).await
+    }
+
+    async fn answer_question(&self, tool_use_id: &str, text: &str) -> Result<(), AgentError> {
+        let line = tool_result_line(tool_use_id, text)?;
         let mut stdin = self.stdin.lock().await;
         write_line(&mut stdin, &line).await
     }
@@ -574,5 +623,46 @@ mod tests {
         assert_eq!(v["type"], "user");
         assert_eq!(v["message"]["role"], "user");
         assert_eq!(v["message"]["content"], "继续");
+    }
+
+    /// 权限应答 control_response 帧格式（allow / deny 两态）
+    #[test]
+    fn permission_response_line_format() {
+        let allow = permission_response_line("req-1", true).expect("序列化不应失败");
+        let v: serde_json::Value = serde_json::from_str(&allow).expect("应为合法 JSON");
+        assert_eq!(v["type"], "control_response");
+        assert_eq!(v["request_id"], "req-1");
+        assert_eq!(v["response"]["behavior"], "allow");
+
+        let deny = permission_response_line("req-1", false).expect("序列化不应失败");
+        let v: serde_json::Value = serde_json::from_str(&deny).expect("应为合法 JSON");
+        assert_eq!(v["response"]["behavior"], "deny");
+        assert!(v["response"]["message"].is_string());
+    }
+
+    /// 提问应答 tool_result 消息格式（终结 AskUserQuestion 的 tool_use）
+    #[test]
+    fn tool_result_line_format() {
+        let line = tool_result_line("toolu_9", "选方案 B").expect("序列化不应失败");
+        let v: serde_json::Value = serde_json::from_str(&line).expect("应为合法 JSON");
+        assert_eq!(v["type"], "user");
+        assert_eq!(v["message"]["content"][0]["type"], "tool_result");
+        assert_eq!(v["message"]["content"][0]["tool_use_id"], "toolu_9");
+        assert_eq!(v["message"]["content"][0]["content"], "选方案 B");
+    }
+
+    /// AskUserQuestion 工具调用归一为 QuestionRequest（应答走 tool_result）
+    #[test]
+    fn parse_ask_user_question() {
+        let line = r#"{"type":"assistant","message":{"content":[{"type":"tool_use","id":"toolu_q","name":"AskUserQuestion","input":{"questions":[{"question":"用哪个方案？","options":[{"label":"A"},{"label":"B"}]}]}}]}}"#;
+        let events = parse_sdk_message(line);
+        assert_eq!(events.len(), 1);
+        match &events[0] {
+            AgentEvent::QuestionRequest { tool_use_id, input } => {
+                assert_eq!(tool_use_id, "toolu_q");
+                assert_eq!(input["questions"][0]["question"], "用哪个方案？");
+            }
+            other => panic!("预期 QuestionRequest，实际 {other:?}"),
+        }
     }
 }

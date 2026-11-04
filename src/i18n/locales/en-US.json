@@ -63,7 +63,15 @@
     "toolFailed": "Failed",
     "toolParams": "Parameters",
     "toolResult": "Result",
-    "streamLabel": "Message stream"
+    "streamLabel": "Message stream",
+    "permissionTitle": "Agent requests to run a tool",
+    "permissionAllow": "Allow",
+    "permissionDeny": "Deny",
+    "allowed": "Allowed",
+    "denied": "Denied",
+    "questionTitle": "The agent needs your decision",
+    "questionOther": "Other answer (optional)…",
+    "questionSubmit": "Submit"
   },
   "theme": {
     "light": "Light",

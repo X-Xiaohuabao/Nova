@@ -46,6 +46,7 @@ export type AgentEvent =
       toolName: string;
       input: unknown;
     }
+  | { kind: "question_request"; toolUseId: string; input: unknown }
   | { kind: "turn_ended"; usage: TurnUsage; isError: boolean; durationMs: number | null }
   | { kind: "state_changed"; state: AgentSessionState }
   | { kind: "error"; message: string }
@@ -64,6 +65,26 @@ export interface PermissionRequestView {
   input: unknown;
   /** 用户已应答后的固化记录（"allow" | "deny" | null=待答） */
   answered: "allow" | "deny" | null;
+}
+
+/** AskUserQuestion 选项 */
+export interface QuestionOptionView {
+  label: string;
+  description?: string;
+}
+
+/** AskUserQuestion 单个问题（tolerant 解析后的视图形态） */
+export interface QuestionItemView {
+  question: string;
+  header?: string;
+  options: QuestionOptionView[];
+  multiSelect: boolean;
+}
+
+/** 问题选择卡的待答视图 */
+export interface QuestionRequestView {
+  toolUseId: string;
+  questions: QuestionItemView[];
 }
 
 /** 工具调用折叠卡片视图（design doc §3） */

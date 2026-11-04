@@ -70,6 +70,22 @@ export async function agentSessionStop(sessionId: string): Promise<void> {
   return invoke("agent_session_stop", { sessionId });
 }
 
+export async function agentRespondPermission(
+  sessionId: string,
+  requestId: string,
+  allow: boolean,
+): Promise<void> {
+  return invoke("agent_respond_permission", { sessionId, requestId, allow });
+}
+
+export async function agentAnswerQuestion(
+  sessionId: string,
+  toolUseId: string,
+  text: string,
+): Promise<void> {
+  return invoke("agent_answer_question", { sessionId, toolUseId, text });
+}
+
 export async function writeToPty(tabId: string, data: string): Promise<void> {
   return invoke("write_to_pty", { tabId, data });
 }

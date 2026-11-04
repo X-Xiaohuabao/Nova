@@ -14,6 +14,7 @@ import { useAgentStore } from "@/stores/agentStore";
 import ChatMessageItem from "./ChatMessageItem";
 import ChatInput from "./ChatInput";
 import ChatEmptyState from "./ChatEmptyState";
+import { PermissionCard, QuestionCard } from "./ChatCards";
 
 /** 消息列表空数组的模块级常量（selector 稳定引用，避免无谓重渲染） */
 const NO_MESSAGES: never[] = [];
@@ -31,9 +32,13 @@ export default function ChatView({ sessionId, toolType = "claude" }: ChatViewPro
   const { t } = useTranslation();
   const messages = useAgentStore((s) => s.messages[sessionId] ?? NO_MESSAGES);
   const state = useAgentStore((s) => s.states[sessionId] ?? "starting");
+  const pendingPermission = useAgentStore((s) => s.pendingPermissions[sessionId]);
+  const pendingQuestion = useAgentStore((s) => s.pendingQuestions[sessionId]);
   const bindListener = useAgentStore((s) => s.bindListener);
   const send = useAgentStore((s) => s.send);
   const interrupt = useAgentStore((s) => s.interrupt);
+  const answerPermission = useAgentStore((s) => s.answerPermission);
+  const answerQuestion = useAgentStore((s) => s.answerQuestion);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const followingRef = useRef(true);
@@ -133,6 +138,26 @@ export default function ChatView({ sessionId, toolType = "claude" }: ChatViewPro
           </button>
         )}
       </div>
+      {(pendingPermission || pendingQuestion) && (
+        <div className="px-4 pb-2">
+          {pendingPermission && (
+            <PermissionCard
+              view={pendingPermission}
+              onAnswer={(allow) => {
+                void answerPermission(sessionId, pendingPermission.requestId, allow);
+              }}
+            />
+          )}
+          {pendingQuestion && (
+            <QuestionCard
+              view={pendingQuestion}
+              onAnswer={(text) => {
+                void answerQuestion(sessionId, pendingQuestion.toolUseId, text);
+              }}
+            />
+          )}
+        </div>
+      )}
       <ChatInput
         state={state}
         draft={draft}

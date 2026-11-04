@@ -127,3 +127,35 @@ pub async fn agent_session_stop(
 ) -> Result<(), String> {
     manager.stop(&session_id).await.map_err(|e| e.to_string())
 }
+
+/// 应答权限询问（control_response 回写：allow/deny）。
+#[tauri::command]
+pub async fn agent_respond_permission(
+    manager: tauri::State<'_, Arc<AgentManager>>,
+    session_id: String,
+    request_id: String,
+    allow: bool,
+) -> Result<(), String> {
+    manager
+        .driver(&session_id)
+        .map_err(|e| e.to_string())?
+        .respond_permission(&request_id, allow)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// 应答智能体提问（tool_result 回写，终结 AskUserQuestion）。
+#[tauri::command]
+pub async fn agent_answer_question(
+    manager: tauri::State<'_, Arc<AgentManager>>,
+    session_id: String,
+    tool_use_id: String,
+    text: String,
+) -> Result<(), String> {
+    manager
+        .driver(&session_id)
+        .map_err(|e| e.to_string())?
+        .answer_question(&tool_use_id, &text)
+        .await
+        .map_err(|e| e.to_string())
+}

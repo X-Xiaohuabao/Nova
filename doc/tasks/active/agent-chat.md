@@ -19,7 +19,7 @@
 ## 开发中发现（待办追加）
 
 - [ ] D1 存量问题：utils/ipc.ts `startSession` 发送 `envVars`，但 Rust `start_session` 参数为 `user_env_vars`（JS 应传 `userEnvVars`）——Tauri 2 按参数名精确匹配，疑导致 NewSessionModal 的自定义环境变量被静默丢弃。涉及: src/utils/ipc.ts:33、调用方 NewSessionModal。修复需真机验证 env 注入链路，随 T6 回归一并处理
-- [ ] T4 ChatView MVP：ChatPlaceholder 替换为真实视图——消息流（用户气泡/AI 全宽非对称）+ 流式打字机渲染 + MarkdownBody 抽为 src/components/markdown/ 共享组件（transcript 同步改引用）+ 输入区（Enter 发送/Shift+Enter 换行/IME 不误发）+ 滚动跟随与上滚暂停 + 空态
+- [x] T4 ChatView MVP：ChatPlaceholder 替换为真实视图——消息流（用户气泡/AI 全宽非对称）+ 流式打字机渲染 + MarkdownBody 抽为 src/components/markdown/ 共享组件（transcript 同步改引用）+ 输入区（Enter 发送/Shift+Enter 换行/IME 不误发）+ 滚动跟随与上滚暂停 + 空态（2026-11-04 完成，提交 75c2293；tsc 通过；消息入场复用 observance.css 的 placeholder-in 并补 prefers-reduced-motion 守卫；MarkdownBody/markdownHighlight git mv 至 src/components/markdown/，TranscriptPanel 改引用；ChatView 已挂 test-shell 预览台（chat 视图）；真机视觉冒烟待 T6 挂接后一并验证——浏览器 MCP 工具本会话不可用，无法代跑视觉走查）
   - 验收: tsc 通过；渲染与交互符合 design-agent-chat.md §3/§4/§5/§6（MVP 范围）；transcript 面板显示无回归；prefers-reduced-motion 降级生效
   - 涉及: src/components/chat/（ChatView 及子组件）、src/components/markdown/（新共享组件）、src/components/transcript/（改引用）
 - [ ] T5 权限/问题卡片链路（PoC 关键验证）：PermissionRequest → 权限确认卡（工具名+参数摘要+[允许][拒绝]）→ control_response 回写；AskUserQuestion 类 → 选项卡+Other 自由输入 → tool_result 回写；waiting_input 状态（黄色提示条）→ 应答后卡片固化

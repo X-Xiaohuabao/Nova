@@ -8,15 +8,25 @@
 
 import { create } from "zustand";
 import { listen } from "@tauri-apps/api/event";
+import i18n from "@/i18n";
 import type {
   AgentEvent,
   AgentEventPayload,
   AgentSessionState,
   ChatMessage,
   PermissionRequestView,
+  QuestionItemView,
+  QuestionRequestView,
   ToolUseView,
 } from "../types";
-import { agentInterrupt, agentSend, agentSessionStart, agentSessionStop } from "../utils/ipc";
+import {
+  agentAnswerQuestion,
+  agentInterrupt,
+  agentRespondPermission,
+  agentSend,
+  agentSessionStart,
+  agentSessionStop,
+} from "../utils/ipc";
 
 /** 消息 id 生成（store 内唯一即可，非持久主键） */
 let messageSeq = 0;
@@ -36,6 +46,7 @@ export function nextState(current: AgentSessionState, event: AgentEvent): AgentS
     case "tool_result":
       return current === "waiting_input" ? current : "thinking";
     case "permission_request":
+    case "question_request":
       return "waiting_input";
     case "state_changed":
       return event.state;
@@ -175,6 +186,37 @@ export function toPermissionView(event: AgentEvent): PermissionRequestView | nul
   };
 }
 
+/**
+ * AskUserQuestion 的 input 宽容解析为问题视图（纯函数）。
+ *
+ * 官方输入形态：{questions:[{question,header,options:[{label,description}],multiSelect}]}。
+ * 逐层探测 + 逐项兜底：CLI 版本演进加字段/改可选性时不抛错，
+ * 无法识别任何问题时返回 null（调用方按普通 tool_use 兜底渲染）。
+ */
+export function toQuestionView(event: AgentEvent): QuestionRequestView | null {
+  if (event.kind !== "question_request") return null;
+  const raw = event.input as { questions?: unknown[] } | null;
+  const rawQuestions = Array.isArray(raw?.questions) ? (raw?.questions as Record<string, unknown>[]) : [];
+  const questions: QuestionItemView[] = rawQuestions
+    .map((q) => {
+      const rawOptions = Array.isArray(q.options) ? (q.options as Record<string, unknown>[]) : [];
+      return {
+        question: typeof q.question === "string" ? q.question : "",
+        header: typeof q.header === "string" ? q.header : undefined,
+        multiSelect: q.multiSelect === true,
+        options: rawOptions
+          .map((o) => ({
+            label: typeof o.label === "string" ? o.label : String(o),
+            description: typeof o.description === "string" ? o.description : undefined,
+          }))
+          .filter((o) => o.label.length > 0),
+      };
+    })
+    .filter((q) => q.question.length > 0);
+  if (questions.length === 0) return null;
+  return { toolUseId: event.toolUseId, questions };
+}
+
 interface AgentStoreState {
   /** 每会话状态机 */
   states: Record<string, AgentSessionState>;
@@ -182,6 +224,8 @@ interface AgentStoreState {
   messages: Record<string, ChatMessage[]>;
   /** 每会话待答权限卡（无卡为 undefined；已答卡由 T5 固化进消息流） */
   pendingPermissions: Record<string, PermissionRequestView>;
+  /** 每会话待答问题卡（AskUserQuestion；解析失败不生成） */
+  pendingQuestions: Record<string, QuestionRequestView>;
   /** 事件监听是否已建立（应用级一次） */
   listenerBound: boolean;
 
@@ -199,14 +243,17 @@ interface AgentStoreState {
   stop: (sessionId: string) => Promise<void>;
   /** 会话视图卸载时清理（进程生命周期由 stop 管理，本接口只清前端态） */
   clearSession: (sessionId: string) => void;
-  /** T5 应答权限卡后的本地固化 */
-  markPermissionAnswered: (sessionId: string, requestId: string, answer: "allow" | "deny") => void;
+  /** 应答权限卡：control_response 回写 + 本地固化 */
+  answerPermission: (sessionId: string, requestId: string, allow: boolean) => Promise<void>;
+  /** 应答问题卡：tool_result 回写 + 答案入消息流 */
+  answerQuestion: (sessionId: string, toolUseId: string, answerText: string) => Promise<void>;
 }
 
 export const useAgentStore = create<AgentStoreState>((set, get) => ({
   states: {},
   messages: {},
   pendingPermissions: {},
+  pendingQuestions: {},
   listenerBound: false,
 
   bindListener: async () => {
@@ -239,6 +286,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
     set((s) => {
       const prevMessages = s.messages[sessionId] ?? [];
       const permission = toPermissionView(event);
+      const question = toQuestionView(event);
       return {
         states: {
           ...s.states,
@@ -256,9 +304,16 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
               },
             }
           : {}),
+        ...(question
+          ? {
+              pendingQuestions: {
+                ...s.pendingQuestions,
+                [sessionId]: question,
+              },
+            }
+          : {}),
       };
     });
-    // 权限应答后 CLI 会继续推送事件；待答卡由 markPermissionAnswered 清除
   },
 
   start: async (params) => {
@@ -320,27 +375,34 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
       const { [sessionId]: _dropState, ...restStates } = s.states;
       const { [sessionId]: _dropMsgs, ...restMessages } = s.messages;
       const { [sessionId]: _dropPerm, ...restPerms } = s.pendingPermissions;
+      const { [sessionId]: _dropQ, ...restQs } = s.pendingQuestions;
       void _dropState;
       void _dropMsgs;
       void _dropPerm;
+      void _dropQ;
       return {
         states: restStates,
         messages: restMessages,
         pendingPermissions: restPerms,
+        pendingQuestions: restQs,
       };
     });
   },
 
-  markPermissionAnswered: (sessionId, requestId, answer) => {
+  answerPermission: async (sessionId, requestId, allow) => {
+    const pending = get().pendingPermissions[sessionId];
+    if (!pending || pending.requestId !== requestId) return;
+    // 先清卡再回写：CLI 应答后会立即恢复事件流，避免旧卡闪现
     set((s) => {
-      const pending = s.pendingPermissions[sessionId];
-      if (!pending || pending.requestId !== requestId) return s;
       const { [sessionId]: _drop, ...rest } = s.pendingPermissions;
       void _drop;
-      return {
+      return { ...s, pendingPermissions: rest };
+    });
+    try {
+      await agentRespondPermission(sessionId, requestId, allow);
+      // 固化应答记录进消息流（工具卡片形态）
+      set((s) => ({
         ...s,
-        pendingPermissions: rest,
-        // 固化：追加一条带工具卡片形态的应答记录进消息流
         messages: {
           ...s.messages,
           [sessionId]: [
@@ -356,13 +418,49 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
                   toolUseId: pending.requestId,
                   name: pending.toolName,
                   input: pending.input,
-                  resultContent: answer === "allow" ? "已允许" : "已拒绝",
+                  resultContent: allow ? i18n.t("chat.allowed") : i18n.t("chat.denied"),
                 },
               ],
             },
           ],
         },
-      };
+      }));
+    } catch {
+      // 回写失败：恢复待答卡让用户重试（进程可能已退出，重复点会再报）
+      set((s) => ({
+        ...s,
+        pendingPermissions: { ...s.pendingPermissions, [sessionId]: pending },
+      }));
+    }
+  },
+
+  answerQuestion: async (sessionId, toolUseId, answerText) => {
+    set((s) => {
+      const { [sessionId]: _drop, ...rest } = s.pendingQuestions;
+      void _drop;
+      return { ...s, pendingQuestions: rest };
     });
+    try {
+      await agentAnswerQuestion(sessionId, toolUseId, answerText);
+      // 答案以用户气泡入流，用户可回看自己的选择
+      set((s) => ({
+        ...s,
+        messages: {
+          ...s.messages,
+          [sessionId]: [
+            ...(s.messages[sessionId] ?? []),
+            {
+              id: nextMessageId(),
+              role: "user" as const,
+              text: answerText,
+              streaming: false,
+              createdAt: Date.now(),
+            },
+          ],
+        },
+      }));
+    } catch {
+      // 回写失败不下沉：答案文本已保留在消息流，用户可手动重发
+    }
   },
 }));

@@ -69,10 +69,16 @@ pub enum AgentEvent {
         content: String,
         is_error: bool,
     },
-    /// 权限询问（control_request / can_use_tool）——T5 完整接通应答
+    /// 权限询问（control_request / can_use_tool）——应答经 control_response 回写
     PermissionRequest {
         request_id: String,
         tool_name: String,
+        input: serde_json::Value,
+    },
+    /// 智能体主动向用户提问（AskUserQuestion 类工具调用）——
+    /// input.questions[] 含 question/options，应答经 tool_result 回写
+    QuestionRequest {
+        tool_use_id: String,
         input: serde_json::Value,
     },
     /// 一轮结束（result 消息）
@@ -116,6 +122,18 @@ pub trait AgentDriver: Send + Sync {
     async fn send(&self, text: &str) -> Result<(), AgentError>;
     /// 请求中断当前生成（协议层 interrupt，非杀进程）。
     async fn interrupt(&self) -> Result<(), AgentError>;
+    /// 应答权限询问（control_response：allow/deny）。
+    async fn respond_permission(
+        &self,
+        request_id: &str,
+        allow: bool,
+    ) -> Result<(), AgentError>;
+    /// 应答智能体提问（tool_result 回写，终结该 tool_use）。
+    async fn answer_question(
+        &self,
+        tool_use_id: &str,
+        text: &str,
+    ) -> Result<(), AgentError>;
     /// 返回当前状态机快照。
     fn state(&self) -> AgentSessionState;
 }
