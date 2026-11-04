@@ -41,4 +41,8 @@
   - 验收: `pnpm tauri dev` 跑通——新建 claude 会话默认进聊天视图；发消息流式渲染；让 Claude 改文件触发权限卡（允许/拒绝行为正确）；提问卡应答后 agent 继续；停止按钮/Esc 中断且内容保留；聊天⇄终端切换正常且终端视图与现状零差异；重启后视图偏好保持；PTY 通道回归（codex/gemini/opencode/terminal/ssh 建会话正常）
   - 涉及: 全链路
 - [ ] V2（design doc §10）：工具调用折叠卡片完整态、复制/重新生成工具条、日期分隔线、错误重试按钮、thinking/waiting_input 完整视觉
-- [ ] V3（design doc §10）：@文件引用、斜杠命令面板、图片粘贴、同屏双视图
+- [x] SC-1 斜杠命令源（2026-11-04，提交 7ab80a8 前后见 git log）：`agent_list_commands` 枚举项目/用户 `.claude/commands` md（frontmatter→description、正文→prompt 模板）+ `.claude/skills` SKILL.md + Nova 内置注册表（clear/model/help）；同名就近覆盖（项目>用户>技能>内置）；5 单测（frontmatter 拆分/引号剥离/去重优先级/SKILL 回退）
+- [x] SC-2 命令面板与分治执行（2026-11-04）：ChatInput `/` 唤起浮层面板（前缀过滤/↑↓导航/Enter·Tab 执行/Esc 关闭，焦点不离开输入框）；/clear=清上下文重启通道（appStore.agentRestartChannel fresh 语义，复用原 cliSessionId 新进程）；/model=复用会话编辑弹窗；自定义命令展开 $ARGUMENTS；技能以「使用技能」prompt 发出；CDP 实测渲染/过滤/内置组全通
+- [ ] SC-3 prompt 型内置命令：/init /review（官方标准 prompt 内置）+ /cost（读 JSONL 统计复用 cost 模块）+ /export（导出对话）
+- [ ] SC-4 /compact 两步模拟（总结历史→新会话注入摘要）与其余内置命令取舍
+- [ ] V3（design doc §10 其余）：@文件引用、图片粘贴、同屏双视图
