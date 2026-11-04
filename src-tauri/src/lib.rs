@@ -176,6 +176,7 @@ pub fn run() {
             commands::remote_access::remote_set_config,
             commands::session::session_list,
             commands::session::session_create,
+            commands::session::resolve_session_defaults,
             commands::session::session_update,
             commands::session::session_delete,
             commands::session::session_reorder,

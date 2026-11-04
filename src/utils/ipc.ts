@@ -20,6 +20,7 @@ import type {
   TransferSummary,
   TransferLogRow,
   SlashCommand,
+  SessionDefaults,
 } from "../types";
 
 export async function detectCliTools(): Promise<CliTool[]> {
@@ -352,6 +353,11 @@ export async function projectReorder(ids: string[]): Promise<void> {
 // Session IPC
 export async function sessionList(projectId?: string): Promise<Session[]> {
   return invoke<Session[]>("session_list", { projectId });
+}
+
+/** 新建会话默认值三层解析（项目 → 全局 → 兜底，后端单一真相源） */
+export async function resolveSessionDefaults(projectId?: string): Promise<SessionDefaults> {
+  return invoke<SessionDefaults>("resolve_session_defaults", { projectId });
 }
 
 export async function sessionCreate(input: {

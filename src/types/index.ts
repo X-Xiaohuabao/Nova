@@ -65,6 +65,25 @@ export interface Project {
   updatedAt: number;
   /** 侧边栏展示序号，越小越靠前 */
   sortOrder: number;
+  /** 项目级默认智能体（v17 三层配置：会话 > 项目 > 全局；空=未设置，回退全局） */
+  defaultToolType?: string;
+  defaultLlmProviderId?: string;
+  defaultModelName?: string;
+  /** 项目级 Claude 5 档映射 JSON 字符串，与 sessions.claudeModels 同构 */
+  defaultClaudeModels?: string;
+}
+
+/** 新建会话默认值来源层级（Rust DefaultsSource，snake_case 序列化） */
+export type DefaultsSource = "project" | "global" | "fallback";
+
+/** 新建会话默认值的三层解析结果（resolve_session_defaults IPC，单一真相源） */
+export interface SessionDefaults {
+  toolType?: string;
+  llmProviderId?: string;
+  modelName?: string;
+  /** Claude 5 档映射 JSON 字符串，与 sessions.claudeModels 同构 */
+  claudeModels?: string;
+  source: DefaultsSource;
 }
 
 /** SSH 工具会话的连接参数。跨 IPC 传输时是明文，只有落 SQLite 时才被编码。 */

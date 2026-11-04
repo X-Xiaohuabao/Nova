@@ -1,3 +1,4 @@
+use crate::llm_provider;
 use crate::session;
 use crate::session::claude_path::{find_session_jsonl_anywhere, resolve_session_jsonl};
 use crate::storage::AppDatabase;
@@ -35,6 +36,16 @@ pub fn session_create(
     input: session::CreateSessionInput,
 ) -> Result<session::Session, String> {
     session::create_session(&db, input)
+}
+
+/// 解析新建会话的默认配置（项目 → 全局 → 兜底 三层回退的单一真相源）。
+/// 前端新建弹窗以此初始化默认值，不再各自读取 Profile 偏好猜测。
+#[tauri::command]
+pub fn resolve_session_defaults(
+    db: tauri::State<AppDatabase>,
+    project_id: Option<String>,
+) -> Result<llm_provider::defaults::SessionDefaults, String> {
+    llm_provider::defaults::resolve_session_defaults(&db, project_id.as_deref())
 }
 
 #[tauri::command]

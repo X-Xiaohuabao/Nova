@@ -1,18 +1,19 @@
 /**
  * 新建会话弹窗（新骨架，B1/B2 / T12）。
  *
- * 逻辑与旧 NewSessionModal 对齐：工具选择（可用性排序）、Profile 模型默认值
- * （tool_settings.defaultLlmProviderId → 全局默认 Provider 回退）、Claude 分层
- * 模型映射（含 1M 标记）、模板、思考强度、颜色继承（分类→项目）、SSH 参数与
- * 连接测试。弹层经 ResponsiveDialog；受控 state 表单（动态条件字段多，不套 RHF）。
+ * 逻辑与旧 NewSessionModal 对齐：工具选择（可用性排序）、默认值（后端
+ * resolve_session_defaults 三层解析：项目 → 全局 → 兜底，一次采纳）、Claude
+ * 分层模型映射（含 1M 标记）、模板、思考强度、颜色继承（分类→项目）、SSH
+ * 参数与连接测试。弹层经 ResponsiveDialog；受控 state 表单（动态条件字段多，
+ * 不套 RHF）。
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useAppStore } from "@/stores/appStore";
-import { detectCliTools, testSshConnection, getToolSettings } from "@/utils/ipc";
-import { CLAUDE_TIER_ENTRIES } from "@/utils/claudeModels";
+import { detectCliTools, testSshConnection, resolveSessionDefaults } from "@/utils/ipc";
+import { CLAUDE_TIER_ENTRIES, parseClaudeModels } from "@/utils/claudeModels";
 import { BUILTIN_SESSION_TEMPLATES, TOOL_PROVIDER_KIND_MAP } from "@/types";
 import type { ToolType, CliTool, LlmProvider, SshArgs } from "@/types";
 import { EMPTY_SSH_ARGS, serializeSshArgs } from "@/utils/sshArgs";
@@ -109,9 +110,10 @@ export default function NewSessionModalNext({ open: isOpen, projectId, categoryI
   const [llmProviderId, setLlmProviderId] = useState<string | undefined>();
   const [modelName, setModelName] = useState<string | undefined>();
   const [claudeModels, setClaudeModels] = useState<ClaudeModelsState>({});
-  const [profileLlmDefaults, setProfileLlmDefaults] = useState<{ defaultLlmProviderId?: string }>({});
   const [sshArgs, setSshArgs] = useState<SshArgs>(EMPTY_SSH_ARGS);
   const [testingConnection, setTestingConnection] = useState(false);
+  // 用户已手动选工具则为 true：后端默认值解析返回时不覆盖用户选择
+  const userPickedToolRef = useRef(false);
 
   const project = projects.find((p) => p.id === projectId);
   const filteredCategories = projectId ? categories.filter((c) => c.projectId === projectId) : [];
@@ -137,6 +139,7 @@ export default function NewSessionModalNext({ open: isOpen, projectId, categoryI
   // 打开时重置（颜色继承项目）
   useEffect(() => {
     if (!isOpen) return;
+    userPickedToolRef.current = false;
     setSelectedTool(null);
     setSelectedColor(project?.color || COLOR_PRESETS[0]);
     setTitle("");
@@ -149,7 +152,6 @@ export default function NewSessionModalNext({ open: isOpen, projectId, categoryI
     setLlmProviderId(undefined);
     setModelName(undefined);
     setClaudeModels({});
-    setProfileLlmDefaults({});
   }, [isOpen, globalThinkingIntensity, categoryId, project?.color]);
 
   // 颜色继承：分类 → 项目
@@ -163,37 +165,34 @@ export default function NewSessionModalNext({ open: isOpen, projectId, categoryI
     }
   }, [isOpen, sessionCategoryId, project?.color, categories]);
 
-  // Profile 的默认供应商偏好在 pickTool 时读取（工具→Profile→tool_settings）；
-  // 弹窗重置由上方 open effect 清空。
-
-  // 默认供应商联动（Profile 偏好 → 全局默认回退）
+  // 默认值：后端三层解析（项目 → 全局 → 兜底，单一真相源）。打开/切项目时解析
+  // 一次直接采纳，取代原先"读第一个 Profile 的 tool_settings 偏好 + 前端三级
+  // 回退 effect 链"的暗规则；用户已手动选工具则不覆盖。
   useEffect(() => {
-    if (!selectedTool) return;
-    const defId = profileLlmDefaults.defaultLlmProviderId;
-    const applyProvider = (provider: LlmProvider) => {
-      setLlmProviderId(provider.id);
-      if (selectedTool === "claude") {
-        setClaudeModels(buildDefaultClaudeModels(provider));
-        setModelName(undefined);
-      } else {
-        setModelName(provider.models.find((m) => m.isDefault)?.modelName);
-        setClaudeModels({});
-      }
+    if (!isOpen) return;
+    let cancelled = false;
+    resolveSessionDefaults(projectId ?? undefined)
+      .then((d) => {
+        if (cancelled || userPickedToolRef.current || !d.toolType) return;
+        const tool = d.toolType as ToolType;
+        setSelectedTool(tool);
+        setCliParams(tool === "claude" ? { dangerouslySkipPermissions: true } : {});
+        setLlmProviderId(d.llmProviderId);
+        if (tool === "claude") {
+          setClaudeModels(d.claudeModels ? parseClaudeModels(d.claudeModels) : {});
+          setModelName(undefined);
+        } else {
+          setModelName(d.modelName);
+          setClaudeModels({});
+        }
+      })
+      .catch(() => {
+        // 解析失败不阻塞新建流程，各下拉留空由用户手动选择
+      });
+    return () => {
+      cancelled = true;
     };
-    const provider = defId ? llmProviders.find((p) => p.id === defId) : undefined;
-    if (provider?.isActive && compatibleProviders(selectedTool).some((cp) => cp.id === provider.id)) {
-      applyProvider(provider);
-      return;
-    }
-    const globalDef = llmProviders.find((p) => p.isDefault && p.isActive);
-    if (globalDef && compatibleProviders(selectedTool).some((cp) => cp.id === globalDef.id)) {
-      applyProvider(globalDef);
-      return;
-    }
-    setLlmProviderId(undefined);
-    setModelName(undefined);
-    // eslint 判定 compatibleProviders 为稳定调用（依赖 llmProviders/selectedTool）
-  }, [profileLlmDefaults.defaultLlmProviderId, llmProviders, selectedTool]);
+  }, [isOpen, projectId]);
 
   // 非 claude 工具清空分层映射
   useEffect(() => {
@@ -206,28 +205,30 @@ export default function NewSessionModalNext({ open: isOpen, projectId, categoryI
   const getToolInfo = (toolType: ToolType): CliTool | undefined =>
     cliTools.find((tool) => tool.toolType === toolType);
 
-  const pickTool = async (meta: CliToolMeta, available: boolean) => {
+  // 手动选工具：默认供应商同步推导（全局默认兼容时 → 第一个兼容供应商），
+  // 不再异步读 Profile 的 tool_settings 偏好。
+  const pickTool = (meta: CliToolMeta, available: boolean) => {
     if (!available) return;
+    userPickedToolRef.current = true;
     setSelectedTool(meta.id);
     setCliParams(meta.id === "claude" ? { dangerouslySkipPermissions: true } : {});
-    // 工具对应的第一个 Profile → 读其默认供应商偏好
-    if (meta.id !== "ssh" && meta.id !== "terminal") {
-      const profile = useAppStore.getState().profiles.find((p) => p.toolType === meta.id);
-      if (profile) {
-        try {
-          const toolSettings = await getToolSettings(profile.id);
-          const parsed = toolSettings?.settingsJson
-            ? (JSON.parse(toolSettings.settingsJson) as Record<string, unknown>)
-            : {};
-          setProfileLlmDefaults({
-            defaultLlmProviderId: typeof parsed.defaultLlmProviderId === "string" ? parsed.defaultLlmProviderId : undefined,
-          });
-        } catch {
-          setProfileLlmDefaults({});
-        }
-      } else {
-        setProfileLlmDefaults({});
-      }
+    if (meta.id === "ssh" || meta.id === "terminal") {
+      setLlmProviderId(undefined);
+      setModelName(undefined);
+      setClaudeModels({});
+      return;
+    }
+    const compat = compatibleProviders(meta.id);
+    const provider = compat.find((p) => p.isDefault) ?? compat[0];
+    setLlmProviderId(provider?.id);
+    if (meta.id === "claude") {
+      setClaudeModels(provider ? buildDefaultClaudeModels(provider) : {});
+      setModelName(undefined);
+    } else {
+      setModelName(
+        provider?.models.find((m) => m.isDefault)?.modelName ?? provider?.models[0]?.modelName,
+      );
+      setClaudeModels({});
     }
   };
 

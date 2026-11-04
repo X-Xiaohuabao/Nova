@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::storage::AppDatabase;
 
+pub mod defaults;
 pub mod env_inject;
 pub mod env_merge;
 pub mod preset;

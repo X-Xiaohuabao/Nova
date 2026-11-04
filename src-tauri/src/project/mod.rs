@@ -13,6 +13,14 @@ pub struct Project {
     pub updated_at: i64,
     /// 侧边栏展示序号,越小越靠前。只由 reorder_projects 写入。
     pub sort_order: i32,
+    /// 项目级默认智能体(v17,三层配置 会话>项目>全局 的项目层;空=未设置)
+    pub default_tool_type: Option<String>,
+    /// 项目级默认供应商 id(引用 llm_providers.id)
+    pub default_llm_provider_id: Option<String>,
+    /// 项目级默认模型名
+    pub default_model_name: Option<String>,
+    /// 项目级 Claude 5 档映射 JSON,与 sessions.claude_models 同构
+    pub default_claude_models: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -30,7 +38,8 @@ pub struct UpdateProjectInput {
     pub color: Option<String>,
 }
 
-const PROJECT_COLUMNS: &str = "id, name, path, color, created_at, updated_at, sort_order";
+const PROJECT_COLUMNS: &str = "id, name, path, color, created_at, updated_at, sort_order, \
+     default_tool_type, default_llm_provider_id, default_model_name, default_claude_models";
 
 pub fn list_projects(db: &AppDatabase) -> Result<Vec<Project>, String> {
     let conn = db.conn.lock().map_err(|e| e.to_string())?;
@@ -52,6 +61,10 @@ pub fn list_projects(db: &AppDatabase) -> Result<Vec<Project>, String> {
                 created_at: row.get(4)?,
                 updated_at: row.get(5)?,
                 sort_order: row.get(6)?,
+                default_tool_type: row.get(7)?,
+                default_llm_provider_id: row.get(8)?,
+                default_model_name: row.get(9)?,
+                default_claude_models: row.get(10)?,
             })
         })
         .map_err(|e| format!("Failed to query projects: {}", e))?;
@@ -95,6 +108,10 @@ pub fn create_project(db: &AppDatabase, input: CreateProjectInput) -> Result<Pro
         created_at: now,
         updated_at: now,
         sort_order: next_sort_order,
+        default_tool_type: None,
+        default_llm_provider_id: None,
+        default_model_name: None,
+        default_claude_models: None,
     })
 }
 
@@ -148,6 +165,10 @@ pub fn update_project(
             created_at: row.get(4)?,
             updated_at: row.get(5)?,
             sort_order: row.get(6)?,
+            default_tool_type: row.get(7)?,
+            default_llm_provider_id: row.get(8)?,
+            default_model_name: row.get(9)?,
+            default_claude_models: row.get(10)?,
         })
     })
     .map_err(|e| format!("Failed to fetch updated project: {}", e))
