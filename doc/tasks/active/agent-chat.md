@@ -33,6 +33,7 @@
 - [x] V1-2 启动失败可见化：agentStore.start 失败置 error 态 + 错误卡片入流（此前静默吞错，UI 卡"启动中"红按钮）；startAgentChannel 统一上报不外抛
 - [x] V1-3 视觉打磨：思考中/连接中三点脉冲占位（design doc §7 thinking 态补齐，含 reduced-motion 降级）；失败用户气泡补 [发送失败+重试]（design doc §6）
 
+- [x] V1-4 聊天区拉通全宽（2026-11-04 用户拍板，提交 005a8fe）：移除 720px 居中限宽改为内容区铺满（左右 24px），对齐设置面板拉通决策（4a92866）；design-agent-chat.md §2 已同步更新
 - [ ] V1 真机 E2E 验证（T5/T6 验收的机器侧收口，代码已全绿）
   - 验收: `pnpm tauri dev` 跑通——新建 claude 会话默认进聊天视图；发消息流式渲染；让 Claude 改文件触发权限卡（允许/拒绝行为正确）；提问卡应答后 agent 继续；停止按钮/Esc 中断且内容保留；聊天⇄终端切换正常且终端视图与现状零差异；重启后视图偏好保持；PTY 通道回归（codex/gemini/opencode/terminal/ssh 建会话正常）
   - 涉及: 全链路
