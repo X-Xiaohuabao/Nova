@@ -25,6 +25,7 @@ import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import SettingRow from "./SettingRow";
 import SectionHeader from "./SectionHeader";
+import SettingsCard from "./SettingsCard";
 
 /** 字体选择器：Popover + Command 可搜索（数量大，Select 不适合） */
 function FontPicker({
@@ -139,6 +140,7 @@ export default function TerminalSettingsNext({ highlightKey }: TerminalSettingsN
   return (
     <div>
       <SectionHeader title="Shell" />
+      <SettingsCard>
       {row("shell", t("settings.shell"), (
         <Input
           className="w-56"
@@ -153,8 +155,10 @@ export default function TerminalSettingsNext({ highlightKey }: TerminalSettingsN
           onChange={(e) => update("shellArgs", e.target.value)}
         />
       ))}
+      </SettingsCard>
 
       <SectionHeader title={t("settings.terminalFont")} />
+      <SettingsCard>
       {row("fontFamily", t("settings.terminalFont"), (
         <FontPicker
           value={settings.fontFamily}
@@ -185,8 +189,10 @@ export default function TerminalSettingsNext({ highlightKey }: TerminalSettingsN
           onChange={(e) => update("lineHeight", Number(e.target.value) || 1)}
         />
       ))}
+      </SettingsCard>
 
       <SectionHeader title={t("settings.colorTheme")} />
+      <SettingsCard>
       {row("colorTheme", t("settings.colorTheme"), (
         <Select value={settings.colorTheme} onValueChange={(value) => update("colorTheme", value)}>
           <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
@@ -203,8 +209,10 @@ export default function TerminalSettingsNext({ highlightKey }: TerminalSettingsN
           onCheckedChange={(checked) => update("followAppTheme", checked)}
         />
       ))}
+      </SettingsCard>
 
       <SectionHeader title={t("settings.cursorStyle")} />
+      <SettingsCard>
       {row("cursorStyle", t("settings.cursorStyle"), (
         <Select
           value={settings.cursorStyle}
@@ -224,8 +232,10 @@ export default function TerminalSettingsNext({ highlightKey }: TerminalSettingsN
           onCheckedChange={(checked) => update("cursorBlink", checked)}
         />
       ))}
+      </SettingsCard>
 
       <SectionHeader title={t("settings.scrollback")} />
+      <SettingsCard>
       {row("scrollback", t("settings.scrollback"), (
         <Input
           className="w-24"
@@ -242,8 +252,10 @@ export default function TerminalSettingsNext({ highlightKey }: TerminalSettingsN
           onCheckedChange={(checked) => update("scrollOnOutput", checked)}
         />
       ))}
+      </SettingsCard>
 
       <SectionHeader title={t("settings.bell")} />
+      <SettingsCard>
       {row("bell", t("settings.bell"), (
         <Switch checked={settings.bell} onCheckedChange={(checked) => update("bell", checked)} />
       ))}
@@ -259,6 +271,7 @@ export default function TerminalSettingsNext({ highlightKey }: TerminalSettingsN
           onCheckedChange={(checked) => update("rightClickPaste", checked)}
         />
       ))}
+      </SettingsCard>
 
       <SectionHeader title={t("settings.envVars")} />
       {row("envVars", t("settings.envVars"), (

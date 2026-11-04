@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import SettingRow from "./SettingRow";
 import SectionHeader from "./SectionHeader";
+import SettingsCard from "./SettingsCard";
 
 const TECH_STACK = ["Tauri 2.x", "Rust", "React 19", "TypeScript", "shadcn/ui", "TailwindCSS 4", "xterm.js", "SQLite"];
 
@@ -32,6 +33,7 @@ export default function AboutNext() {
       <Separator />
 
       <SectionHeader title={t("settings.about.appInfo")} />
+      <SettingsCard>
       <SettingRow id="settings.appName" label={t("settings.about.appName")}>
         <span className="text-[13px] text-foreground/85">TeaCoder</span>
       </SettingRow>
@@ -42,7 +44,10 @@ export default function AboutNext() {
         <Badge variant="secondary">{t("settings.about.channelStable")}</Badge>
       </SettingRow>
 
-      <SectionHeader title={t("settings.about.system")} />
+            </SettingsCard>
+
+<SectionHeader title={t("settings.about.system")} />
+      <SettingsCard>
       <SettingRow id="settings.os" label={t("settings.about.os")}>
         <span className="text-[13px] text-muted-foreground">{navigator.platform}</span>
       </SettingRow>
@@ -55,25 +60,32 @@ export default function AboutNext() {
         <span className="text-[13px] text-muted-foreground">2.x</span>
       </SettingRow>
 
-      <SectionHeader title={t("settings.about.stack")} />
+            </SettingsCard>
+
+<SectionHeader title={t("settings.about.stack")} />
+      <SettingsCard>
       <div className="flex flex-wrap gap-1.5 py-2">
         {TECH_STACK.map((tech) => (
           <Badge key={tech} variant="outline" className="font-normal">{tech}</Badge>
         ))}
       </div>
 
-      <SectionHeader title={t("settings.about.links")} />
-      <div className="py-2">
-        <a
-          href="https://github.com/yingcongshaw/teacoder"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
-        >
-          <GitBranch size={14} />
-          GitHub
-        </a>
-      </div>
+            </SettingsCard>
+
+<SectionHeader title={t("settings.about.links")} />
+      <SettingsCard>
+        <div className="py-2">
+          <a
+            href="https://github.com/yingcongshaw/teacoder"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
+          >
+            <GitBranch size={14} />
+            GitHub
+          </a>
+        </div>
+      </SettingsCard>
 
       <Separator />
       <div className="flex flex-col items-center gap-0.5 py-4 text-center text-xs text-muted-foreground/70">

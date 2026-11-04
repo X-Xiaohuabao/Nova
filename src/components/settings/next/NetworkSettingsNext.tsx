@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import SettingRow from "./SettingRow";
 import SectionHeader from "./SectionHeader";
+import SettingsCard from "./SettingsCard";
 
 interface NetworkSettings {
   enableProxy: boolean;
@@ -44,6 +45,7 @@ export default function NetworkSettingsNext() {
   return (
     <div>
       <SectionHeader title={t("settings.net.proxy")} />
+      <SettingsCard>
       <SettingRow id="settings.enableProxy" label={t("settings.net.enableProxy")} description={t("settings.net.enableProxyDesc")}>
         <Switch checked={settings.enableProxy} onCheckedChange={(v) => update({ enableProxy: v })} />
       </SettingRow>
@@ -94,7 +96,10 @@ export default function NetworkSettingsNext() {
         </>
       )}
 
+      </SettingsCard>
+
       <SectionHeader title={t("settings.net.connection")} />
+      <SettingsCard>
       <SettingRow id="settings.connectionTimeout" label={t("settings.net.timeout")} description={t("settings.net.timeoutDesc")}>
         <div className="flex items-center gap-1.5">
           <Input
@@ -121,6 +126,7 @@ export default function NetworkSettingsNext() {
       <SettingRow id="settings.sslVerify" label={t("settings.net.sslVerify")} description={t("settings.net.sslVerifyDesc")}>
         <Switch checked={settings.sslVerify} onCheckedChange={(v) => update({ sslVerify: v })} />
       </SettingRow>
+      </SettingsCard>
     </div>
   );
 }

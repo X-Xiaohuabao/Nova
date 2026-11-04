@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import SettingRow from "./SettingRow";
 import SectionHeader from "./SectionHeader";
+import SettingsCard from "./SettingsCard";
 
 interface NotificationSettings {
   enableDesktop: boolean;
@@ -38,6 +39,7 @@ export default function NotificationSettingsNext() {
   return (
     <div>
       <SectionHeader title={t("settings.notif.channels")} />
+      <SettingsCard>
       <SettingRow id="settings.enableDesktop" label={t("settings.notif.desktop")} description={t("settings.notif.desktopDesc")}>
         <Switch checked={settings.enableDesktop} onCheckedChange={(v) => update({ enableDesktop: v })} />
       </SettingRow>
@@ -45,7 +47,10 @@ export default function NotificationSettingsNext() {
         <Switch checked={settings.enableSound} onCheckedChange={(v) => update({ enableSound: v })} />
       </SettingRow>
 
-      <SectionHeader title={t("settings.notif.events")} />
+            </SettingsCard>
+
+<SectionHeader title={t("settings.notif.events")} />
+      <SettingsCard>
       <SettingRow id="settings.sessionComplete" label={t("settings.notif.sessionComplete")} description={t("settings.notif.sessionCompleteDesc")}>
         <Switch checked={settings.sessionComplete} onCheckedChange={(v) => update({ sessionComplete: v })} />
       </SettingRow>
@@ -73,6 +78,7 @@ export default function NotificationSettingsNext() {
       <SettingRow id="settings.versionUpdate" label={t("settings.notif.versionUpdate")} description={t("settings.notif.versionUpdateDesc")}>
         <Switch checked={settings.versionUpdate} onCheckedChange={(v) => update({ versionUpdate: v })} />
       </SettingRow>
+      </SettingsCard>
     </div>
   );
 }

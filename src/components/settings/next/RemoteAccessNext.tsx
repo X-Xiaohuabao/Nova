@@ -19,6 +19,7 @@ import { Switch } from "@/components/ui/switch";
 import { RefreshCw } from "lucide-react";
 import SettingRow from "./SettingRow";
 import SectionHeader from "./SectionHeader";
+import SettingsCard from "./SettingsCard";
 
 /** 连接地址提示：局域网 IP 需用户在本机查询（前端取不到多网卡真实 IP） */
 function lanAddressHint(port: number): string {
@@ -83,6 +84,7 @@ export default function RemoteAccessNext() {
   return (
     <div>
       <SectionHeader title={t("settings.remote.service")} />
+      <SettingsCard>
       <SettingRow
         id="settings.remote.enabled"
         label={t("settings.remote.enabled")}
@@ -114,9 +116,12 @@ export default function RemoteAccessNext() {
         />
       </SettingRow>
 
+      </SettingsCard>
+
       {config.enabled && (
         <>
           <SectionHeader title={t("settings.remote.pairing")} />
+          <SettingsCard>
           <SettingRow
             id="settings.remote.pairingCode"
             label={t("settings.remote.pairingCode")}
@@ -153,6 +158,7 @@ export default function RemoteAccessNext() {
           >
             <span className="font-mono text-xs text-muted-foreground">{lanAddressHint(config.port)}</span>
           </SettingRow>
+          </SettingsCard>
         </>
       )}
     </div>

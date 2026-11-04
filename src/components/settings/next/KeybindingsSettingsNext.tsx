@@ -11,6 +11,7 @@ import { formatShortcut } from "@/lib/shortcut";
 import KeyCaptureInput from "./KeyCaptureInput";
 import SettingRow from "./SettingRow";
 import SectionHeader from "./SectionHeader";
+import SettingsCard from "./SettingsCard";
 
 interface KeybindingsSettings {
   showHideWindow: string;
@@ -63,21 +64,31 @@ export default function KeybindingsSettingsNext() {
   return (
     <div>
       <SectionHeader title={t("settings.keybindings.global")} />
+      <SettingsCard>
       {customRow("showHideWindow", "settings.keybindings.showHide", "settings.keybindings.showHideDesc")}
       {customRow("newSession", "settings.keybindings.newSession", "settings.keybindings.newSessionDesc")}
       {customRow("closeSession", "settings.keybindings.closeSession", "settings.keybindings.closeSessionDesc")}
 
-      <SectionHeader title={t("settings.keybindings.terminal")} />
+            </SettingsCard>
+
+<SectionHeader title={t("settings.keybindings.terminal")} />
+      <SettingsCard>
       {customRow("terminalCopy", "settings.keybindings.copy", "settings.keybindings.copyDesc")}
       {customRow("terminalPaste", "settings.keybindings.paste", "settings.keybindings.pasteDesc")}
       {customRow("terminalClear", "settings.keybindings.clear", "settings.keybindings.clearDesc")}
       {customRow("terminalSearch", "settings.keybindings.search", "settings.keybindings.searchDesc")}
 
-      <SectionHeader title={t("settings.keybindings.editing")} />
+            </SettingsCard>
+
+<SectionHeader title={t("settings.keybindings.editing")} />
+      <SettingsCard>
       {customRow("editUndo", "settings.keybindings.undo", "settings.keybindings.undoDesc")}
       {customRow("editRedo", "settings.keybindings.redo", "settings.keybindings.redoDesc")}
 
-      <SectionHeader title={t("settings.keybindings.inApp")} />
+            </SettingsCard>
+
+<SectionHeader title={t("settings.keybindings.inApp")} />
+      <SettingsCard>
       {FIXED_BINDINGS.map(({ labelKey, binding }) => (
         <SettingRow
           key={labelKey}
@@ -90,6 +101,7 @@ export default function KeybindingsSettingsNext() {
           </kbd>
         </SettingRow>
       ))}
+      </SettingsCard>
     </div>
   );
 }

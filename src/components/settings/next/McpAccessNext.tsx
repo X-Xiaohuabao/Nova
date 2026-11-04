@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import SettingRow from "./SettingRow";
 import SectionHeader from "./SectionHeader";
+import SettingsCard from "./SettingsCard";
 
 interface McpServer {
   name: string;
@@ -81,6 +82,7 @@ export default function McpAccessNext() {
   return (
     <div>
       <SectionHeader title={t("settings.mcp.servers")} />
+      <SettingsCard>
       <SettingRow id="settings.mcpList" label={t("settings.mcp.servers")} description={t("settings.mcp.serversDesc")}>
         <Button size="sm" onClick={startAdd}>
           <Plus size={14} />
@@ -164,6 +166,7 @@ export default function McpAccessNext() {
           </div>
         </div>
       )}
+      </SettingsCard>
     </div>
   );
 }

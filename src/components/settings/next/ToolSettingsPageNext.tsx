@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sparkles } from "lucide-react";
 import SettingRow from "./SettingRow";
 import SectionHeader from "./SectionHeader";
+import SettingsCard from "./SettingsCard";
 
 /** tool_settings 表顶层列（其余字段进 settingsJson） */
 const TOP_KEYS = ["model", "autoSubmit", "customInstructions", "thinkingIntensity"] as const;
@@ -228,16 +229,18 @@ export default function ToolSettingsPageNext({
       {[...groups.entries()].map(([groupKey, groupFieldsList]) => (
         <div key={groupKey}>
           <SectionHeader title={t(groupKey)} />
-          {groupFieldsList.map((field) => (
-            <SettingRow
-              key={field.key}
-              id={`settings.${field.key}`}
-              label={t(field.labelKey)}
-              description={field.descKey ? t(field.descKey) : undefined}
-            >
-              {renderControl(field)}
-            </SettingRow>
-          ))}
+          <SettingsCard>
+            {groupFieldsList.map((field) => (
+              <SettingRow
+                key={field.key}
+                id={`settings.${field.key}`}
+                label={t(field.labelKey)}
+                description={field.descKey ? t(field.descKey) : undefined}
+              >
+                {renderControl(field)}
+              </SettingRow>
+            ))}
+          </SettingsCard>
         </div>
       ))}
       {extra}

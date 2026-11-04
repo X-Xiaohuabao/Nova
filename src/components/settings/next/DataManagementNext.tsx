@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import SettingRow from "./SettingRow";
 import SectionHeader from "./SectionHeader";
+import SettingsCard from "./SettingsCard";
 
 export default function DataManagementNext() {
   const { t } = useTranslation();
@@ -29,6 +30,7 @@ export default function DataManagementNext() {
   return (
     <div>
       <SectionHeader title={t("settings.data.storage")} />
+      <SettingsCard>
       <SettingRow id="settings.dataDirectory" label={t("settings.data.directory")} description={t("settings.data.directoryDesc")}>
         <div className="flex items-center gap-2">
           <Input className="w-56" value="~/.teacoder" readOnly />
@@ -45,7 +47,10 @@ export default function DataManagementNext() {
         <span className="text-[13px] text-foreground/85">—</span>
       </SettingRow>
 
-      <SectionHeader title={t("settings.data.operations")} />
+            </SettingsCard>
+
+<SectionHeader title={t("settings.data.operations")} />
+      <SettingsCard>
       <SettingRow id="settings.exportData" label={t("settings.data.export")} description={t("settings.data.exportDesc")}>
         <Button variant="outline" size="sm" onClick={() => toast.info(t("settings.data.exportPlaceholder"))}>
           {t("settings.data.export")}
@@ -97,6 +102,7 @@ export default function DataManagementNext() {
           </AlertDialogContent>
         </AlertDialog>
       </SettingRow>
+      </SettingsCard>
     </div>
   );
 }

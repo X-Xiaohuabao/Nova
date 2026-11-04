@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import SettingRow from "./SettingRow";
 import SectionHeader from "./SectionHeader";
+import SettingsCard from "./SettingsCard";
 
 /** 语言偏好三态（跟随系统 / 具体语言） */
 type LanguagePref = "system" | Language;
@@ -79,6 +80,7 @@ export default function GeneralSettingsNext({ highlightKey }: GeneralSettingsNex
   return (
     <div>
       <SectionHeader title={t("settings.appearance")} />
+      <SettingsCard>
       <SettingRow
         id="settings.theme"
         label={t("settings.theme")}
@@ -125,8 +127,10 @@ export default function GeneralSettingsNext({ highlightKey }: GeneralSettingsNex
           </SelectContent>
         </Select>
       </SettingRow>
+      </SettingsCard>
 
       <SectionHeader title={t("settings.language")} />
+      <SettingsCard>
       <SettingRow
         id="settings.language"
         label={t("settings.language")}
@@ -145,6 +149,7 @@ export default function GeneralSettingsNext({ highlightKey }: GeneralSettingsNex
           </SelectContent>
         </Select>
       </SettingRow>
+      </SettingsCard>
     </div>
   );
 }
