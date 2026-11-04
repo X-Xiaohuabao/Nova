@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Star } from "lucide-react";
 import { useAppStore } from "@/stores/appStore";
 import { openPathInFileManager } from "@/utils/ipc";
+import ProjectDefaultsDialog from "@/components/tabs/next/ProjectDefaultsDialog";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -77,6 +78,8 @@ export default function SidebarTreeNext({
 
   const [renaming, setRenaming] = useState<RenameTarget>(null);
   const [renameValue, setRenameValue] = useState("");
+  // 项目默认模型配置弹窗（M4）：null = 关闭，否则为项目 id
+  const [defaultsProjectId, setDefaultsProjectId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null);
 
   const favoriteSessions = useMemo(
@@ -241,6 +244,9 @@ export default function SidebarTreeNext({
                   <ContextMenuItem onSelect={() => startRename({ kind: "project", id: project.id, name: project.name })}>
                     {t("tree.rename")}
                   </ContextMenuItem>
+                  <ContextMenuItem onSelect={() => setDefaultsProjectId(project.id)}>
+                    {t("sessions.projectDefaults")}
+                  </ContextMenuItem>
                   <ContextMenuItem
                     onSelect={() => {
                       void openPathInFileManager(project.path).catch(() => {});
@@ -332,6 +338,11 @@ export default function SidebarTreeNext({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <ProjectDefaultsDialog
+        project={projects.find((p) => p.id === defaultsProjectId) ?? null}
+        open={defaultsProjectId !== null}
+        onClose={() => setDefaultsProjectId(null)}
+      />
     </>
   );
 }

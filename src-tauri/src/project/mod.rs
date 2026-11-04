@@ -36,6 +36,18 @@ pub struct CreateProjectInput {
 pub struct UpdateProjectInput {
     pub name: Option<String>,
     pub color: Option<String>,
+    /// 提供则全量替换项目默认配置四字段（内部 None = 清空该字段，回退全局）
+    pub default_config: Option<ProjectDefaultConfigInput>,
+}
+
+/// 项目默认配置的写入载荷（v17 四字段，全量替换语义）。
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectDefaultConfigInput {
+    pub tool_type: Option<String>,
+    pub llm_provider_id: Option<String>,
+    pub model_name: Option<String>,
+    pub claude_models: Option<String>,
 }
 
 const PROJECT_COLUMNS: &str = "id, name, path, color, created_at, updated_at, sort_order, \
@@ -135,6 +147,19 @@ pub fn update_project(
     if let Some(ref color) = input.color {
         set_clauses.push("color = ?".to_string());
         params.push(Box::new(color.clone()));
+    }
+
+    // 全量替换：四个字段一次性写入，未提供的字段写 NULL（清空回退全局）。
+    if let Some(ref config) = input.default_config {
+        for (column, value) in [
+            ("default_tool_type", &config.tool_type),
+            ("default_llm_provider_id", &config.llm_provider_id),
+            ("default_model_name", &config.model_name),
+            ("default_claude_models", &config.claude_models),
+        ] {
+            set_clauses.push(format!("{column} = ?"));
+            params.push(Box::new(value.clone()));
+        }
     }
 
     let sql = format!(

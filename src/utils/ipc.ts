@@ -336,7 +336,17 @@ export async function projectCreate(input: {
 
 export async function projectUpdate(
   id: string,
-  input: { name?: string; color?: string },
+  input: {
+    name?: string;
+    color?: string;
+    /** 提供则全量替换项目默认配置（字段留空 = 清空回退全局） */
+    defaultConfig?: {
+      toolType?: string;
+      llmProviderId?: string;
+      modelName?: string;
+      claudeModels?: string;
+    };
+  },
 ): Promise<Project> {
   return invoke<Project>("project_update", { id, input });
 }

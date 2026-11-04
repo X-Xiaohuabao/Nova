@@ -406,7 +406,20 @@ interface AppState {
   projects: Project[];
   loadProjects: () => Promise<void>;
   createProject: (name: string, path: string, color?: string) => Promise<Project>;
-  updateProject: (id: string, updates: { name?: string; color?: string }) => Promise<void>;
+  updateProject: (
+    id: string,
+    updates: {
+      name?: string;
+      color?: string;
+      /** 提供则全量替换项目默认配置（字段留空 = 清空回退全局） */
+      defaultConfig?: {
+        toolType?: string;
+        llmProviderId?: string;
+        modelName?: string;
+        claudeModels?: string;
+      };
+    },
+  ) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
   /** 按给定顺序重排项目（从 0 连续编号）。传全量 id，顺序即展示顺序。 */
   reorderProjects: (ids: string[]) => Promise<void>;
