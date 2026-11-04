@@ -2,7 +2,7 @@ import { StrictMode, useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import ChatPlaceholder from "@/components/chat/ChatPlaceholder";
+import ChatView from "@/components/chat/ChatView";
 import ResponsiveDialog from "@/components/common/ResponsiveDialog";
 import SettingsPageNext from "@/components/settings/next/SettingsPageNext";
 import SearchPanelNext from "@/components/tabs/next/SearchPanelNext";
@@ -79,7 +79,7 @@ function ShellPreview() {
         onToggleTheme={cycleTheme}
         runtime={runtime}
       >
-        {view === "chat" ? <ChatPlaceholder /> : <SettingsPageNext />}
+        {view === "chat" ? <ChatView sessionId="preview-session" /> : <SettingsPageNext />}
       </WindowFrame>
 
       {/* 预览专用：内容区视图切换（T9 验证用） */}

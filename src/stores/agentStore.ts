@@ -221,12 +221,18 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
     const unlistenState = listen<AgentEventPayload>("agent:state", (e) => {
       get().applyAgentEvent(e.payload.sessionId, e.payload.event);
     });
-    const [un1, un2] = await Promise.all([unlistenMessage, unlistenState]);
-    return () => {
+    try {
+      const [un1, un2] = await Promise.all([unlistenMessage, unlistenState]);
+      return () => {
+        set({ listenerBound: false });
+        un1();
+        un2();
+      };
+    } catch {
+      // 非 Tauri 运行时（浏览器预览台）listen 不可用：复位标记并静默降级为空监听
       set({ listenerBound: false });
-      un1();
-      un2();
-    };
+      return () => undefined;
+    }
   },
 
   applyAgentEvent: (sessionId, event) => {
@@ -264,14 +270,15 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
   },
 
   send: async (sessionId, text) => {
-    // 乐观入列：用户消息立即上屏，失败由 error 事件标红重试
+    // 乐观入列：用户消息立即上屏；发送失败把该条标红（design doc §6 失败形态）
+    const localId = nextMessageId();
     set((s) => ({
       messages: {
         ...s.messages,
         [sessionId]: [
           ...(s.messages[sessionId] ?? []),
           {
-            id: nextMessageId(),
+            id: localId,
             role: "user" as const,
             text,
             streaming: false,
@@ -280,7 +287,23 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
         ],
       },
     }));
-    await agentSend(sessionId, text);
+    try {
+      await agentSend(sessionId, text);
+    } catch {
+      set((s) => {
+        const list = s.messages[sessionId];
+        if (!list) return s;
+        return {
+          ...s,
+          messages: {
+            ...s.messages,
+            [sessionId]: list.map((m) =>
+              m.id === localId ? { ...m, error: true } : m,
+            ),
+          },
+        };
+      });
+    }
   },
 
   interrupt: async (sessionId) => {

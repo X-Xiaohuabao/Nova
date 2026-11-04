@@ -69,3 +69,10 @@
 .placeholder-in {
   animation: placeholder-in 0.3s ease both;
 }
+
+/* 减弱动效：装饰性动画降级为直接呈现（design-agent-chat §8 红线） */
+@media (prefers-reduced-motion: reduce) {
+  .placeholder-in {
+    animation: none;
+  }
+}

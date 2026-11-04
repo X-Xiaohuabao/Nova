@@ -47,7 +47,23 @@
   },
   "chat": {
     "title": "聊天视图挂载点",
-    "desc": "智能体统一接入（独立特性）在此挂载聊天 UI"
+    "desc": "智能体统一接入（独立特性）在此挂载聊天 UI",
+    "emptyTitle": "开始新对话",
+    "emptyDesc": "向智能体描述你的任务，或从下面的示例开始",
+    "example1": "帮我看看这个项目的目录结构，梳理各模块职责",
+    "example2": "修复当前的测试失败，并解释原因",
+    "example3": "给这段代码补充单元测试",
+    "inputPlaceholder": "给智能体发送消息…（Enter 发送，Shift+Enter 换行）",
+    "send": "发送",
+    "stop": "停止生成",
+    "backToBottom": "回到底部",
+    "waitingBanner": "智能体正在等待你的输入或决策",
+    "toolRunning": "执行中",
+    "toolDone": "完成",
+    "toolFailed": "失败",
+    "toolParams": "参数",
+    "toolResult": "结果",
+    "streamLabel": "消息流"
   },
   "theme": {
     "light": "浅色",

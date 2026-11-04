@@ -13,8 +13,8 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { claudeTranscriptRead } from "../../utils/ipc";
-import { MarkdownBody } from "./MarkdownBody";
-import { tokenizeQuery } from "./markdownHighlight";
+import { MarkdownBody } from "../markdown/MarkdownBody";
+import { tokenizeQuery } from "../markdown/markdownHighlight";
 import type { TranscriptEntry } from "../../types";
 
 interface TranscriptPanelProps {

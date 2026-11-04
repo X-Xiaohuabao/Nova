@@ -47,7 +47,23 @@
   },
   "chat": {
     "title": "Chat View Mount Point",
-    "desc": "Agent unified access (separate feature) mounts chat UI here"
+    "desc": "Agent unified access (separate feature) mounts chat UI here",
+    "emptyTitle": "Start a new conversation",
+    "emptyDesc": "Describe your task to the agent, or start from an example",
+    "example1": "Review this project's structure and summarize each module",
+    "example2": "Fix the failing tests and explain why",
+    "example3": "Add unit tests for this code",
+    "inputPlaceholder": "Message the agent… (Enter to send, Shift+Enter for newline)",
+    "send": "Send",
+    "stop": "Stop generating",
+    "backToBottom": "Back to bottom",
+    "waitingBanner": "The agent is waiting for your input or decision",
+    "toolRunning": "Running",
+    "toolDone": "Done",
+    "toolFailed": "Failed",
+    "toolParams": "Parameters",
+    "toolResult": "Result",
+    "streamLabel": "Message stream"
   },
   "theme": {
     "light": "Light",
