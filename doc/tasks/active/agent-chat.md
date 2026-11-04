@@ -35,6 +35,7 @@
 
 - [x] V1-4 聊天区拉通全宽（2026-11-04 用户拍板，提交 005a8fe）：移除 720px 居中限宽改为内容区铺满（左右 24px），对齐设置面板拉通决策（4a92866）；design-agent-chat.md §2 已同步更新
 - [x] V1-5 布局根因修复（2026-11-04）：单 pane 场景 flexBasis 误用残留 splitRatio（默认 0.5）→ 内容被压成左半边、右侧空白无分隔条；空 tab 分屏同时自动塌缩。终端视图同受益（非聊天特有 bug）
+- [x] V1-6 真机四层故障修复（2026-11-04，提交 0248774）：①CLI 2.1.148 起 print 模式 stream-json 必带 --verbose（缺失时 CLI 启动即退出，UI 永等 result）；②openTab 早退改查 agentStore.running——异常退出后 DB isRunning 脏数据致恢复的聊天 tab 永不启动通道；③空壳会话（挂死期创建、JSONL 未落盘）预检不再拒绝，按新会话注入原预分配 --session-id；④**协议事实：CLI 的 system/init 等首条用户消息才发出（消息驱动初始化，与官方 SDK 行为一致）**——starting 态必须放开输入（仅 thinking 锁发送），否则 UI 等 init、CLI 等消息互相死锁；另加 20s 启动守卫兜底真死进程
 - [ ] V1 真机 E2E 验证（T5/T6 验收的机器侧收口，代码已全绿）
   - 验收: `pnpm tauri dev` 跑通——新建 claude 会话默认进聊天视图；发消息流式渲染；让 Claude 改文件触发权限卡（允许/拒绝行为正确）；提问卡应答后 agent 继续；停止按钮/Esc 中断且内容保留；聊天⇄终端切换正常且终端视图与现状零差异；重启后视图偏好保持；PTY 通道回归（codex/gemini/opencode/terminal/ssh 建会话正常）
   - 涉及: 全链路
