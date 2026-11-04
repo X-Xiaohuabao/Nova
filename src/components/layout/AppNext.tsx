@@ -359,19 +359,30 @@ export default function AppNext() {
           )}
         </aside>
 
-        {/* 内容区 */}
+        {/* 内容区：空 tab 的 pane 不参与渲染（残留空分屏自动塌缩）；
+            单 pane 时无视残留 splitRatio 占满全宽 */}
         {view === "panes" &&
-          (panes.length === 0 ? (
-            <ChatPlaceholder />
-          ) : (
-            <div ref={panesHostRef} className="flex min-h-0 min-w-0 flex-1">
-              {panes.map((pane, index) => (
-                <div
-                  key={pane.id}
-                  className="flex min-w-0 flex-col"
-                  style={{ flexBasis: index === 0 ? `${splitRatio * 100}%` : `${(1 - splitRatio) * 100}%` }}
-                  onPointerDown={() => setActivePane(pane.id)}
-                >
+          (() => {
+            const visiblePanes = panes.filter((p) => p.openTabIds.length > 0);
+            if (visiblePanes.length === 0) {
+              return <ChatPlaceholder />;
+            }
+            const split = visiblePanes.length >= 2;
+            return (
+              <div ref={split ? panesHostRef : undefined} className="flex min-h-0 min-w-0 flex-1">
+                {visiblePanes.map((pane, index) => (
+                  <div
+                    key={pane.id}
+                    className="flex min-w-0 flex-col"
+                    style={{
+                      flexBasis: !split
+                        ? "100%"
+                        : index === 0
+                          ? `${splitRatio * 100}%`
+                          : `${(1 - splitRatio) * 100}%`,
+                    }}
+                    onPointerDown={() => setActivePane(pane.id)}
+                  >
                   <div className="flex min-h-0 flex-1 flex-col">
                     <PaneViewNext
                       paneId={pane.id}
@@ -388,17 +399,18 @@ export default function AppNext() {
                       )}
                     />
                   </div>
-                  {index === 0 && panes.length >= 2 && (
+                  {split && index === 0 && (
                     <PaneSplitter
                       ratio={splitRatio}
                       onRatioChange={setSplitRatio}
                       containerRef={panesHostRef}
                     />
                   )}
-                </div>
-              ))}
-            </div>
-          ))}
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         {view === "settings" && (
           <div className="min-h-0 min-w-0 flex-1">
             <SettingsPageNext />
