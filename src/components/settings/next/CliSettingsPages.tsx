@@ -18,7 +18,6 @@ import SettingsCard from "./SettingsCard";
 /* ============ Claude ============ */
 
 const CLAUDE_FIELDS: FieldDef[] = [
-  { key: "model", labelKey: "settings.model", groupKey: "settings.claudeBehavior", type: "text" },
   { key: "autoSubmit", labelKey: "settings.claude.autoSubmit", descKey: "settings.claude.autoSubmitDesc", groupKey: "settings.claudeBehavior", type: "switch" },
   { key: "permissionMode", labelKey: "settings.claude.permissionMode", descKey: "settings.claude.permissionModeDesc", groupKey: "settings.claudeBehavior", type: "select", options: [
     { value: "default", labelKey: "settings.perm.default" },
@@ -34,7 +33,7 @@ export function ClaudeSettingsNext() {
     <ToolSettingsPageNext
       toolType="claude"
       toolLabel="Claude Code"
-      defaults={{ model: "claude-sonnet-4", autoSubmit: false, permissionMode: "default", maxOutputLength: 8192, customInstructions: "" }}
+      defaults={{ autoSubmit: false, permissionMode: "default", maxOutputLength: 8192, customInstructions: "" }}
       fields={CLAUDE_FIELDS}
       extra={<QuickCommandsEditorNext toolType="claude" />}
     />
@@ -44,7 +43,6 @@ export function ClaudeSettingsNext() {
 /* ============ Codex ============ */
 
 const CODEX_FIELDS: FieldDef[] = [
-  { key: "model", labelKey: "settings.codex.model", groupKey: "settings.claudeBehavior", type: "text" },
   { key: "autoApprove", labelKey: "settings.codex.autoApprove", descKey: "settings.codex.autoApproveDesc", groupKey: "settings.claudeBehavior", type: "switch" },
   { key: "sandboxMode", labelKey: "settings.codex.sandboxMode", descKey: "settings.codex.sandboxModeDesc", groupKey: "settings.claudeBehavior", type: "select", options: [
     { value: "disabled", labelKey: "settings.sandbox.disabled" },
@@ -58,7 +56,7 @@ export function CodexSettingsNext() {
     <ToolSettingsPageNext
       toolType="codex"
       toolLabel="Codex CLI"
-      defaults={{ model: "codex-1", autoApprove: false, sandboxMode: "strict" }}
+      defaults={{ autoApprove: false, sandboxMode: "strict" }}
       fields={CODEX_FIELDS}
       extra={<QuickCommandsEditorNext toolType="codex" />}
     />
@@ -68,7 +66,6 @@ export function CodexSettingsNext() {
 /* ============ Gemini ============ */
 
 const GEMINI_FIELDS: FieldDef[] = [
-  { key: "model", labelKey: "settings.gemini.model", groupKey: "settings.claudeBehavior", type: "text" },
   { key: "autoExecute", labelKey: "settings.gemini.autoExecute", descKey: "settings.gemini.autoExecuteDesc", groupKey: "settings.claudeBehavior", type: "switch" },
   { key: "safetyLevel", labelKey: "settings.gemini.safetyLevel", descKey: "settings.gemini.safetyLevelDesc", groupKey: "settings.claudeBehavior", type: "select", options: [
     { value: "default", labelKey: "settings.perm.default" },
@@ -82,7 +79,7 @@ export function GeminiSettingsNext() {
     <ToolSettingsPageNext
       toolType="gemini"
       toolLabel="Gemini CLI"
-      defaults={{ model: "gemini-2.5-pro", autoExecute: false, safetyLevel: "default" }}
+      defaults={{ autoExecute: false, safetyLevel: "default" }}
       fields={GEMINI_FIELDS}
     />
   );
@@ -91,7 +88,6 @@ export function GeminiSettingsNext() {
 /* ============ OpenCode ============ */
 
 const OPENCODE_FIELDS: FieldDef[] = [
-  { key: "model", labelKey: "settings.opencode.model", groupKey: "settings.claudeBehavior", type: "text" },
   { key: "autoExecute", labelKey: "settings.opencode.autoExecute", descKey: "settings.opencode.autoExecuteDesc", groupKey: "settings.claudeBehavior", type: "switch" },
 ];
 
@@ -100,7 +96,7 @@ export function OpenCodeSettingsNext() {
     <ToolSettingsPageNext
       toolType="opencode"
       toolLabel="OpenCode"
-      defaults={{ model: "gpt-4o", autoExecute: false }}
+      defaults={{ autoExecute: false }}
       fields={OPENCODE_FIELDS}
     />
   );
@@ -111,7 +107,6 @@ export function OpenCodeSettingsNext() {
 const ANTIGRAVITY_FIELDS: FieldDef[] = [
   { key: "apiKey", labelKey: "settings.antigravity.apiKey", descKey: "settings.antigravity.apiKeyDesc", groupKey: "settings.claudeBehavior", type: "password" },
   { key: "endpoint", labelKey: "settings.antigravity.endpoint", groupKey: "settings.claudeBehavior", type: "text" },
-  { key: "model", labelKey: "settings.antigravity.model", groupKey: "settings.claudeBehavior", type: "text" },
   { key: "autoCommit", labelKey: "settings.antigravity.autoCommit", descKey: "settings.antigravity.autoCommitDesc", groupKey: "settings.claudeBehavior", type: "switch" },
 ];
 
@@ -120,7 +115,7 @@ export function AntigravitySettingsNext() {
     <ToolSettingsPageNext
       toolType="antigravity"
       toolLabel="Antigravity"
-      defaults={{ apiKey: "", endpoint: "", model: "", autoCommit: false }}
+      defaults={{ apiKey: "", endpoint: "", autoCommit: false }}
       fields={ANTIGRAVITY_FIELDS}
     />
   );
