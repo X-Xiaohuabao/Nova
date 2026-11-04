@@ -64,16 +64,16 @@ export default function ChatInput({
   const canSend = draft.trim().length > 0 && !disabled && !generating;
 
   return (
-    <div className="border-t border-border bg-background px-4 pb-3 pt-2">
+    <div className="border-t border-border bg-background px-6 pb-3 pt-2">
       {state === "waiting_input" && (
-        <div className="mx-auto mb-2 flex w-full max-w-[720px] items-center gap-1.5 rounded-md border border-border bg-secondary/60 px-2.5 py-1.5 text-xs text-foreground/80">
+        <div className="mb-2 flex w-full items-center gap-1.5 rounded-md border border-border bg-secondary/60 px-2.5 py-1.5 text-xs text-foreground/80">
           <TriangleAlert size={13} strokeWidth={2} className="shrink-0 text-primary" />
           {t("chat.waitingBanner")}
         </div>
       )}
       <div
         className={cn(
-          "mx-auto flex w-full max-w-[720px] items-end gap-2 rounded-xl border bg-card px-3 py-2 transition-shadow",
+          "flex w-full items-end gap-2 rounded-xl border bg-card px-3 py-2 transition-shadow",
           state === "waiting_input" ? "border-primary shadow-[0_0_0_2px_var(--ring)]" : "border-border",
         )}
       >

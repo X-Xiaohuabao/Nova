@@ -39,7 +39,7 @@ export function PermissionCard({
   const summary = summarizeInput(view.input);
 
   return (
-    <div className="mx-auto w-full max-w-[720px] rounded-xl border border-border bg-card p-3 shadow-sm">
+    <div className="w-full rounded-xl border border-border bg-card p-3 shadow-sm">
       <div className="flex items-center gap-2">
         <ShieldAlert size={16} strokeWidth={2} className="shrink-0 text-primary" />
         <span className="text-[13px] font-medium text-foreground">
@@ -94,7 +94,7 @@ export function QuestionCard({
   const canSubmit = Object.keys(picked).length > 0 || freeText.trim().length > 0;
 
   return (
-    <div className="mx-auto w-full max-w-[720px] rounded-xl border border-border bg-card p-3 shadow-sm">
+    <div className="w-full rounded-xl border border-border bg-card p-3 shadow-sm">
       <div className="flex items-center gap-2">
         <CircleHelp size={16} strokeWidth={2} className="shrink-0 text-primary" />
         <span className="text-[13px] font-medium text-foreground">

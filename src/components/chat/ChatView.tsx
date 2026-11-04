@@ -105,7 +105,7 @@ export default function ChatView({ sessionId, toolType = "claude" }: ChatViewPro
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="h-full overflow-y-auto px-4 py-4"
+          className="h-full overflow-y-auto px-6 py-4"
           role="log"
           aria-live="polite"
           aria-label={t("chat.streamLabel")}
@@ -116,7 +116,7 @@ export default function ChatView({ sessionId, toolType = "claude" }: ChatViewPro
               onPick={(text) => setDraft(text)}
             />
           ) : (
-            <div className="mx-auto flex w-full max-w-[720px] flex-col gap-5 pb-2">
+            <div className="flex w-full flex-col gap-5 pb-2">
               {messages.map((message) => (
                 <ChatMessageItem
                   key={message.id}
@@ -156,7 +156,7 @@ export default function ChatView({ sessionId, toolType = "claude" }: ChatViewPro
         )}
       </div>
       {(pendingPermission || pendingQuestion) && (
-        <div className="px-4 pb-2">
+        <div className="px-6 pb-2">
           {pendingPermission && (
             <PermissionCard
               view={pendingPermission}

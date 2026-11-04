@@ -108,7 +108,7 @@ export default function ChatMessageItem({ message, toolType, toolLabel, onRetry 
       <div className="flex flex-col items-end gap-1">
         <div
           className={cn(
-            "max-w-[75%] rounded-xl rounded-tr-sm px-3 py-2 text-[13px] leading-relaxed",
+            "max-w-[70%] rounded-xl rounded-tr-sm px-3 py-2 text-[13px] leading-relaxed",
             message.error
               ? "border-l-[3px] border-destructive bg-primary/10 text-foreground"
               : "bg-primary/10 text-foreground",
