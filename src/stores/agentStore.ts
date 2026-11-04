@@ -270,24 +270,31 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
       // 已绑定：返回空清理函数，调用方无需感知是否首个
       return () => undefined;
     }
-    set({ listenerBound: true });
-    const unlistenMessage = listen<AgentEventPayload>("agent:message", (e) => {
-      get().applyAgentEvent(e.payload.sessionId, e.payload.event);
-    });
-    const unlistenState = listen<AgentEventPayload>("agent:state", (e) => {
-      get().applyAgentEvent(e.payload.sessionId, e.payload.event);
-    });
-    try {
-      const [un1, un2] = await Promise.all([unlistenMessage, unlistenState]);
-      return () => {
-        set({ listenerBound: false });
-        un1();
-        un2();
-      };
-    } catch {
-      // 非 Tauri 运行时（浏览器预览台）listen 不可用：复位标记并静默降级为空监听
-      set({ listenerBound: false });
-      return () => undefined;
+    // ChatView 恢复期挂载极早，可能早于 Tauri IPC 完全就绪——listen 失败必须
+    // 重试（带退避），否则事件永久无人接收：UI 发出消息后 CLI 正常响应，
+    // 界面却永远停在「思考中」。非 Tauri 运行时（浏览器预览台）重试耗尽后降级。
+    for (let attempt = 0; ; attempt += 1) {
+      try {
+        const un1 = await listen<AgentEventPayload>("agent:message", (e) => {
+          get().applyAgentEvent(e.payload.sessionId, e.payload.event);
+        });
+        const un2 = await listen<AgentEventPayload>("agent:state", (e) => {
+          get().applyAgentEvent(e.payload.sessionId, e.payload.event);
+        });
+        set({ listenerBound: true });
+        return () => {
+          set({ listenerBound: false });
+          un1();
+          un2();
+        };
+      } catch (err) {
+        if (attempt >= 4) {
+          // 浏览器预览台等无 IPC 环境：放弃并保持未绑定（UI 不依赖事件也可渲染）
+          console.debug("agent 事件监听绑定失败（已重试）:", err);
+          return () => undefined;
+        }
+        await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
+      }
     }
   },
 
@@ -352,8 +359,14 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
         get().applyAgentEvent(sid, { kind: "error", message: i18n.t("chat.startTimeout") });
       }, START_TIMEOUT_MS);
     } catch (e) {
-      // 启动失败：回滚运行标志、状态置 error，并推错误卡片入流（不再静默卡"启动中"）
       const message = e instanceof Error ? e.message : String(e);
+      if (message.includes("已在运行")) {
+        // 页面 reload/热更新后恢复 tab：Rust 侧进程仍在服务，非错误——
+        // 维持运行态等待事件（不推错误卡、不置 error）
+        set((s) => ({ ...s, running: { ...s.running, [params.sessionId]: true } }));
+        return;
+      }
+      // 启动失败：回滚运行标志、状态置 error，并推错误卡片入流（不再静默卡"启动中"）
       set((s) => ({
         ...s,
         running: { ...s.running, [params.sessionId]: false },
