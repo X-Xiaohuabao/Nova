@@ -345,6 +345,23 @@ export type SessionModelSwitchResult =
   | "hot-switch" // 聊天通道仅换模型：调用方应发送 /model <model> 热切换
   | "shared"; // 双开：字段已保存但热切换/重启均不可用，需向用户说明原因
 
+/** 新建会话的完整入参（createSession 编排链共用） */
+export interface CreateSessionPayload {
+  projectId: string;
+  toolType: string;
+  title?: string;
+  profileId?: string;
+  color?: string;
+  thinkingIntensity?: string;
+  templateId?: string;
+  cliArgs?: string;
+  envVars?: string;
+  categoryId?: string;
+  llmProviderId?: string;
+  modelName?: string;
+  claudeModels?: ClaudeModels;
+}
+
 /**
  * Claude 会话恢复参数推导：有 cliSessionId 精确 --resume，否则 --continue。
  * 与 openTab 的 PTY 路径同一规则，供切换视图时的通道重启复用。
@@ -427,32 +444,12 @@ interface AppState {
   // 会话列表（从后端加载，替换旧的 sessions: TabState[]）
   sessions: Session[];
   loadSessions: () => Promise<void>;
-  createSession: (input: {
-    projectId: string;
-    toolType: string;
-    title?: string;
-    profileId?: string;
-    color?: string;
-    thinkingIntensity?: string;
-    templateId?: string;
-    cliArgs?: string;
-    envVars?: string;
-    categoryId?: string;
-    llmProviderId?: string;
-    modelName?: string;
-    claudeModels?: {
-      sonnet?: string;
-      opus?: string;
-      haiku?: string;
-      fable?: string;
-      subagent?: string;
-      sonnet1M?: boolean;
-      opus1M?: boolean;
-      haiku1M?: boolean;
-      fable1M?: boolean;
-      subagent1M?: boolean;
-    };
-  }) => Promise<Session>;
+  /** 新建会话编排：入库 → 启动 → 登记 tab；启动失败回滚删库记录（M5-S2） */
+  createSession: (input: CreateSessionPayload) => Promise<Session>;
+  /** 仅入库（不启动、不登记 tab）——createSession 编排第一步，可独立复用 */
+  createSessionRecord: (input: CreateSessionPayload) => Promise<Session>;
+  /** 把会话登记进活动 pane 并激活——createSession 编排最后一步 */
+  registerSessionTab: (session: Session) => void;
   updateSession: (id: string, updates: Partial<Session>) => Promise<void>;
   /** 会话内模型配置切换：持久化 + 生效策略判定（/model 热切换指令由调用方发送）。
    *  仅供应商/模型——tool_type 创建后不可变（cli_args 编码依赖它，见 update_session）。 */
@@ -790,36 +787,18 @@ export const useAppStore = create<AppState>((set, get) => ({
     }));
     set({ sessions: normalized });
   },
-  createSession: async (input) => {
+  createSessionRecord: async (input) => {
     const cliSessionId = input.toolType === "claude" ? crypto.randomUUID() : undefined;
-    const title = input.title;
-    const session = await sessionCreate({
+    return sessionCreate({
       ...input,
       claudeModels: serializeClaudeModels(input.claudeModels),
-      title,
+      title: input.title,
       cliSessionId,
     });
-    const project = get().projects.find((p) => p.id === input.projectId);
-    await launchNewSession({
-      session,
-      toolType: input.toolType,
-      profileId: input.profileId,
-      workDir: project?.path || "~",
-      envVars: parseEnvVars(input.envVars || ""),
-      cliArgs: input.cliArgs,
-      cliSessionId,
-      llmProviderId: input.llmProviderId,
-      modelName: input.modelName,
-      claudeModels: input.claudeModels,
-      title,
-    });
-    const updatedSession = {
-      ...session,
-      isRunning: true,
-      claudeModels: parseClaudeModels(input.claudeModels),
-    };
+  },
+  registerSessionTab: (session) => {
     set((state) => {
-      // 创建新会话时，同时把它加入活动 pane（若无 pane 则新建一个）
+      // 登记会话 tab：加入活动 pane（若无 pane 则新建一个）
       let nextPanes: Pane[];
       let nextActivePaneId: string | null;
       if (state.panes.length === 0) {
@@ -838,13 +817,46 @@ export const useAppStore = create<AppState>((set, get) => ({
       const openTabIds = flattenPaneOpenIds(nextPanes);
       saveOpenTabIds(openTabIds);
       return {
-        sessions: [...state.sessions, updatedSession],
+        sessions: state.sessions.some((s) => s.id === session.id)
+          ? state.sessions
+          : [...state.sessions, session],
         panes: nextPanes,
         activePaneId: nextActivePaneId,
         openTabIds,
         activeTabId: session.id,
       };
     });
+  },
+  createSession: async (input) => {
+    // 编排（M5-S2）：入库 → 启动 → 登记 tab。启动失败回滚删库记录，
+    // 不留从未打开过的幽灵会话；tab 在成功后才登记，天然无僵尸。
+    const session = await get().createSessionRecord(input);
+    const project = get().projects.find((p) => p.id === input.projectId);
+    try {
+      await launchNewSession({
+        session,
+        toolType: input.toolType,
+        profileId: input.profileId,
+        workDir: project?.path || "~",
+        envVars: parseEnvVars(input.envVars || ""),
+        cliArgs: input.cliArgs,
+        cliSessionId: session.cliSessionId ?? undefined,
+        llmProviderId: input.llmProviderId,
+        modelName: input.modelName,
+        claudeModels: input.claudeModels,
+        title: input.title,
+      });
+    } catch (err) {
+      // PTY 启动失败（agent 通道错误在聊天流内呈现为错误卡片，不会抛到这里）
+      await sessionDelete(session.id).catch(() => {});
+      throw err;
+    }
+    const updatedSession = {
+      ...session,
+      isRunning: true,
+      claudeModels: parseClaudeModels(input.claudeModels),
+    };
+    get().registerSessionTab(updatedSession);
     return updatedSession;
   },
   updateSession: async (id, updates) => {
