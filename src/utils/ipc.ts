@@ -30,7 +30,8 @@ export async function startSession(params: {
   profileId: string;
   workDir: string;
   tabId: string;
-  envVars?: Record<string, string>;
+  /** 用户自定义环境变量（对应 Rust start_session 的 user_env_vars 参数） */
+  userEnvVars?: Record<string, string>;
   cliArgs?: string;
   cliSessionId?: string;
   llmProviderId?: string;

@@ -71,7 +71,9 @@
     "denied": "已拒绝",
     "questionTitle": "智能体需要你的决策",
     "questionOther": "其他答案（可选）…",
-    "questionSubmit": "提交"
+    "questionSubmit": "提交",
+    "switchToTerminal": "切换到终端视图",
+    "switchToChat": "切换到聊天视图"
   },
   "theme": {
     "light": "浅色",

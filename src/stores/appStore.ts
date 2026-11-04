@@ -41,12 +41,42 @@ import type { SessionMove } from "../utils/ipc";
 import { parseClaudeModels, serializeClaudeModels } from "../utils/claudeModels";
 import type { ClaudeModels } from "../utils/claudeModels";
 import { stripResumeArgs } from "../utils/cliArgs";
+import { useAgentStore } from "./agentStore";
 
 const OPEN_TABS_KEY = "teacoder_open_tabs";
 const TERMINAL_SETTINGS_KEY = "teacoder_terminal_settings";
 const QUICK_COMMANDS_KEY = "teacoder_quick_commands";
 const SPLIT_RATIO_KEY = "teacoder_split_ratio";
 const PANES_LAYOUT_KEY = "teacoder_panes_layout";
+const SESSION_VIEW_MODES_KEY = "teacoder_session_view_modes";
+
+/** 会话视图形态：聊天（agent 通道，claude 默认）/ 终端（PTY 通道） */
+export type SessionViewMode = "chat" | "terminal";
+
+function loadSessionViewModes(): Record<string, SessionViewMode> {
+  try {
+    const raw = localStorage.getItem(SESSION_VIEW_MODES_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    if (parsed && typeof parsed === "object") {
+      const out: Record<string, SessionViewMode> = {};
+      for (const [k, v] of Object.entries(parsed)) {
+        if (v === "chat" || v === "terminal") out[k] = v;
+      }
+      return out;
+    }
+    return {};
+  } catch {
+    return {};
+  }
+}
+
+function saveSessionViewModes(modes: Record<string, SessionViewMode>) {
+  try {
+    localStorage.setItem(SESSION_VIEW_MODES_KEY, JSON.stringify(modes));
+  } catch {
+    // non-critical
+  }
+}
 
 // 已打开窗口数上限。每个 tab 常驻一个 PTY 子进程，超量会显著吃内存和 CPU。
 const MAX_OPEN_TABS = 18;
@@ -278,13 +308,62 @@ interface LaunchNewSessionParams {
  * 注入，若只建库不起 PTY，副本停留在"已打开但无终端"状态，下次 openTab 会拿
  * 一个磁盘上尚不存在的 UUID 去 `--resume`，必然失败。
  */
+/**
+ * 启动智能体聊天通道（agent 子进程，替代 PTY）。
+ *
+ * 与 PTY 通道同源注入（Rust 侧共用 launch_env::assemble）；
+ * cliArgs 可携带 --resume（切换视图/重开时恢复上下文）。
+ */
+async function startAgentChannel(session: Session, workDir: string, cliArgs?: string): Promise<void> {
+  await useAgentStore.getState().start({
+    sessionId: session.id,
+    workDir,
+    profileId: session.profileId || undefined,
+    llmProviderId: session.llmProviderId || undefined,
+    modelName: session.modelName || undefined,
+    userEnvVars: parseEnvVars(session.envVars || ""),
+    cliArgs,
+    cliSessionId: session.cliSessionId || undefined,
+    claudeModels: serializeClaudeModels(session.claudeModels),
+  });
+}
+
+/** 会话当前视图形态：显式选择优先；claude 默认聊天，其余默认终端 */
+export function effectiveViewMode(session: Session, viewModes: Record<string, SessionViewMode>): SessionViewMode {
+  return viewModes[session.id] ?? (session.toolType === "claude" ? "chat" : "terminal");
+}
+
+/**
+ * Claude 会话恢复参数推导：有 cliSessionId 精确 --resume，否则 --continue。
+ * 与 openTab 的 PTY 路径同一规则，供切换视图时的通道重启复用。
+ */
+function claudeResumeCliArgs(session: Session): string | undefined {
+  let args: string[] = [];
+  try {
+    const parsed = JSON.parse(session.cliArgs || "[]");
+    if (Array.isArray(parsed)) args = parsed;
+  } catch {
+    // 保持空数组
+  }
+  const hasResume = args.some((a) => a === "--resume" || a === "-r" || a === "--continue" || a === "-c");
+  if (hasResume) return JSON.stringify(args);
+  if (session.cliSessionId) return JSON.stringify(["--resume", session.cliSessionId, ...args]);
+  return JSON.stringify(["--continue", ...args]);
+}
+
 async function launchNewSession(params: LaunchNewSessionParams): Promise<void> {
+  // 智能体会话默认聊天视图（B3 决策）：走 agent 子进程通道
+  if (params.toolType === "claude" && effectiveViewMode(params.session, useAppStore.getState().sessionViewModes) === "chat") {
+    await startAgentChannel(params.session, params.workDir, params.cliArgs);
+    return;
+  }
+
   await startSession({
     toolType: params.toolType,
     profileId: params.profileId || "",
     workDir: params.workDir,
     tabId: params.session.id,
-    envVars: params.envVars,
+    userEnvVars: params.envVars,
     cliArgs: params.cliArgs,
     cliSessionId: params.cliSessionId,
     llmProviderId: params.llmProviderId,
@@ -404,6 +483,12 @@ interface AppState {
 
   closeTab: (id: string, paneId?: string) => void;
   openTab: (id: string, opts?: { targetPaneId?: string }) => Promise<void>;
+
+  /** 会话视图形态（localStorage 持久化；claude 默认 chat） */
+  sessionViewModes: Record<string, SessionViewMode>;
+  /** 切换会话视图（仅 claude 生效）：停旧通道 → 起新通道，聊天消息保留 */
+  setSessionViewMode: (id: string, mode: SessionViewMode) => Promise<void>;
+
   restoreTabs: () => void;
   closeAllTabs: () => void;
   setActiveTab: (id: string | null) => void;
@@ -761,18 +846,26 @@ export const useAppStore = create<AppState>((set, get) => ({
           cliArgs = JSON.stringify(["--resume", cliSessionId]);
         }
       }
-      startSession({
-        toolType: after.toolType,
-        profileId: after.profileId || "",
-        workDir: project?.path || "~",
-        tabId: id,
-        envVars,
-        cliArgs,
-        cliSessionId,
-        llmProviderId: after.llmProviderId,
-        modelName: after.modelName,
-        claudeModels: serializeClaudeModels(after.claudeModels),
-      }).catch(() => {});
+      // claude 且聊天视图 → agent 通道复制（带 --resume 续上下文）
+      if (
+        after.toolType === "claude" &&
+        effectiveViewMode(after, useAppStore.getState().sessionViewModes) === "chat"
+      ) {
+        startAgentChannel(after, project?.path || "~", cliArgs).catch(() => {});
+      } else {
+        startSession({
+          toolType: after.toolType,
+          profileId: after.profileId || "",
+          workDir: project?.path || "~",
+          tabId: id,
+          userEnvVars: envVars,
+          cliArgs,
+          cliSessionId,
+          llmProviderId: after.llmProviderId,
+          modelName: after.modelName,
+          claudeModels: serializeClaudeModels(after.claudeModels),
+        }).catch(() => {});
+      }
     }
   },
   deleteSession: async (id) => {
@@ -780,6 +873,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (session?.isRunning) {
       stopSession(id).catch(() => {});
     }
+    useAgentStore.getState().stop(id).catch(() => {});
     await sessionDelete(id);
     set((state) => {
       // 从所有 pane 里移除该 session
@@ -879,6 +973,49 @@ export const useAppStore = create<AppState>((set, get) => ({
   panes: initialPanes,
   activePaneId: persistedLayout?.activePaneId ?? (initialPanes[0]?.id ?? null),
   splitRatio: loadSplitRatio(),
+
+  sessionViewModes: loadSessionViewModes(),
+
+  setSessionViewMode: async (id, mode) => {
+    const state = get();
+    const session = state.sessions.find((s) => s.id === id);
+    // 仅 claude 支持聊天通道；其余会话固定终端视图
+    if (!session || session.toolType !== "claude") return;
+    if (effectiveViewMode(session, state.sessionViewModes) === mode) return;
+
+    const nextModes = { ...state.sessionViewModes, [id]: mode };
+    set({ sessionViewModes: nextModes });
+    saveSessionViewModes(nextModes);
+
+    const project = state.projects.find((p) => p.id === session.projectId);
+    const workDir = project?.path || "~";
+    if (mode === "terminal") {
+      // 聊天 → 终端：agent 子进程挂起（消息保留），起 PTY（带恢复参数）
+      await useAgentStore.getState().suspend(id);
+      startSession({
+        toolType: "claude",
+        profileId: session.profileId || "",
+        workDir,
+        tabId: id,
+        userEnvVars: parseEnvVars(session.envVars || ""),
+        cliArgs: claudeResumeCliArgs(session),
+        llmProviderId: session.llmProviderId,
+        modelName: session.modelName,
+        claudeModels: serializeClaudeModels(session.claudeModels),
+      }).catch(() => {});
+    } else {
+      // 终端 → 聊天：停 PTY，起 agent 子进程（带恢复参数）；已在跑则跳过
+      stopSession(id).catch(() => {});
+      if (!useAgentStore.getState().running[id]) {
+        await startAgentChannel(session, workDir, claudeResumeCliArgs(session));
+      }
+    }
+    // 切换即有活通道，会话保持运行态
+    sessionUpdate(id, { isRunning: true, closedAt: 0 }).catch(() => {});
+    set((s) => ({
+      sessions: s.sessions.map((x) => (x.id === id ? { ...x, isRunning: true, closedAt: undefined } : x)),
+    }));
+  },
 
   setActivePane: (paneId) => {
     set((state) => {
@@ -1109,6 +1246,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (session?.isRunning) {
         stopSession(id).catch(() => {});
       }
+      // 智能体通道（若在跑）一并停止并清空前端态；未跑时为无害 no-op
+      useAgentStore.getState().stop(id).catch(() => {});
       // 归零时写 closedAt 和 isRunning
       sessionUpdate(id, { isRunning: false, closedAt: Date.now() }).catch(() => {});
     }
@@ -1237,18 +1376,26 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
     // 启动会话。CLI 启动失败时静默：终端会显示具体错误（如工作目录不存在、可执行文件缺失），
     // 重复探测/回退反而会污染用户看到的内容。
-    startSession({
-      toolType: session.toolType,
-      profileId: session.profileId || "",
-      workDir: project?.path || "~",
-      tabId: id,
-      envVars,
-      cliArgs,
-      cliSessionId: willResumeSessionId,
-      llmProviderId: session.llmProviderId,
-      modelName: session.modelName,
-      claudeModels: serializeClaudeModels(session.claudeModels),
-    }).catch(() => {});
+    // claude 且聊天视图 → agent 子进程通道（cliArgs 已含恢复参数；消息/状态由 agentStore 持有）
+    if (
+      session.toolType === "claude" &&
+      effectiveViewMode(session, useAppStore.getState().sessionViewModes) === "chat"
+    ) {
+      await startAgentChannel(session, project?.path || "~", cliArgs).catch(() => {});
+    } else {
+      startSession({
+        toolType: session.toolType,
+        profileId: session.profileId || "",
+        workDir: project?.path || "~",
+        tabId: id,
+        userEnvVars: envVars,
+        cliArgs,
+        cliSessionId: willResumeSessionId,
+        llmProviderId: session.llmProviderId,
+        modelName: session.modelName,
+        claudeModels: serializeClaudeModels(session.claudeModels),
+      }).catch(() => {});
+    }
     // 标记 isRunning，清除 closedAt
     sessionUpdate(id, { isRunning: true, closedAt: 0 }).catch(() => {});
     set((state) => {

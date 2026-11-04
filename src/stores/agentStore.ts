@@ -9,6 +9,7 @@
 import { create } from "zustand";
 import { listen } from "@tauri-apps/api/event";
 import i18n from "@/i18n";
+import { useAppStore } from "@/stores/appStore";
 import type {
   AgentEvent,
   AgentEventPayload,
@@ -226,6 +227,8 @@ interface AgentStoreState {
   pendingPermissions: Record<string, PermissionRequestView>;
   /** 每会话待答问题卡（AskUserQuestion；解析失败不生成） */
   pendingQuestions: Record<string, QuestionRequestView>;
+  /** 子进程存活标志（区分 states 残留与真实进程；切视图 suspend 后为 false） */
+  running: Record<string, boolean>;
   /** 事件监听是否已建立（应用级一次） */
   listenerBound: boolean;
 
@@ -239,6 +242,8 @@ interface AgentStoreState {
   send: (sessionId: string, text: string) => Promise<void>;
   /** 中断当前生成 */
   interrupt: (sessionId: string) => Promise<void>;
+  /** 杀进程但保留消息/状态（切到终端视图用；回来时按 --resume 续聊） */
+  suspend: (sessionId: string) => Promise<void>;
   /** 停止会话并清空本会话状态 */
   stop: (sessionId: string) => Promise<void>;
   /** 会话视图卸载时清理（进程生命周期由 stop 管理，本接口只清前端态） */
@@ -254,6 +259,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
   messages: {},
   pendingPermissions: {},
   pendingQuestions: {},
+  running: {},
   listenerBound: false,
 
   bindListener: async () => {
@@ -296,6 +302,11 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
           ...s.messages,
           [sessionId]: applyEventToMessages(prevMessages, event),
         },
+        running: {
+          ...s.running,
+          // 子进程退出即失活（重复的 session_ended 幂等）
+          [sessionId]: event.kind === "session_ended" ? false : s.running[sessionId] ?? true,
+        },
         ...(permission
           ? {
               pendingPermissions: {
@@ -314,14 +325,25 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
           : {}),
       };
     });
+    // 子进程退出联动 appStore 运行态（与 pty:exit → TerminalView 同步语义对齐）
+    if (event.kind === "session_ended") {
+      useAppStore.getState().updateSession(sessionId, { isRunning: false, closedAt: Date.now() }).catch(() => {});
+    }
   },
 
   start: async (params) => {
     set((s) => ({
       states: { ...s.states, [params.sessionId]: "starting" },
       messages: { ...s.messages, [params.sessionId]: s.messages[params.sessionId] ?? [] },
+      running: { ...s.running, [params.sessionId]: true },
     }));
-    await agentSessionStart(params);
+    try {
+      await agentSessionStart(params);
+    } catch (e) {
+      // 启动失败回滚运行标志并透传错误（openTab/切换层据此提示）
+      set((s) => ({ ...s, running: { ...s.running, [params.sessionId]: false } }));
+      throw e;
+    }
   },
 
   send: async (sessionId, text) => {
@@ -365,8 +387,15 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
     await agentInterrupt(sessionId);
   },
 
+  suspend: async (sessionId) => {
+    set((s) => ({ ...s, running: { ...s.running, [sessionId]: false } }));
+    await agentSessionStop(sessionId).catch(() => {
+      // 进程已退出（session_ended 先到）时 stop 报会话不存在——预期内，吞掉
+    });
+  },
+
   stop: async (sessionId) => {
-    await agentSessionStop(sessionId);
+    await get().suspend(sessionId);
     get().clearSession(sessionId);
   },
 
@@ -376,15 +405,18 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
       const { [sessionId]: _dropMsgs, ...restMessages } = s.messages;
       const { [sessionId]: _dropPerm, ...restPerms } = s.pendingPermissions;
       const { [sessionId]: _dropQ, ...restQs } = s.pendingQuestions;
+      const { [sessionId]: _dropRun, ...restRunning } = s.running;
       void _dropState;
       void _dropMsgs;
       void _dropPerm;
       void _dropQ;
+      void _dropRun;
       return {
         states: restStates,
         messages: restMessages,
         pendingPermissions: restPerms,
         pendingQuestions: restQs,
+        running: restRunning,
       };
     });
   },

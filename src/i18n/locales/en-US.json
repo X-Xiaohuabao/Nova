@@ -71,7 +71,9 @@
     "denied": "Denied",
     "questionTitle": "The agent needs your decision",
     "questionOther": "Other answer (optional)…",
-    "questionSubmit": "Submit"
+    "questionSubmit": "Submit",
+    "switchToTerminal": "Switch to terminal view",
+    "switchToChat": "Switch to chat view"
   },
   "theme": {
     "light": "Light",

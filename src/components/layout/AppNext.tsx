@@ -43,13 +43,16 @@ import NewSessionModalNext from "@/components/tabs/next/NewSessionModalNext";
 import EditSessionModalNext from "@/components/tabs/next/EditSessionModalNext";
 import SearchPanelNext from "@/components/tabs/next/SearchPanelNext";
 import ChatPlaceholder from "@/components/chat/ChatPlaceholder";
+import ChatView from "@/components/chat/ChatView";
 import TerminalView from "@/components/terminal/TerminalView";
 import FileTransferPanel from "@/components/terminal/FileTransferPanel";
 import { cn } from "@/lib/utils";
+import { effectiveViewMode } from "@/stores/appStore";
+import { MessageSquare, SquareTerminal } from "lucide-react";
 
 type MainView = "panes" | "settings" | "cost" | "help";
 
-/** 单 pane 内容：活动会话终端 + 记录/传输浮层（portal 宿主为终端容器） */
+/** 单 pane 内容：按视图形态分流——聊天（agent 通道）/ 终端（PTY 通道），claude 会话右上角可切换 */
 function PaneContent({
   tabId,
   enableInput,
@@ -61,12 +64,51 @@ function PaneContent({
   workDir: string | null;
   toolType: string;
 }) {
+  const { t } = useTranslation();
   const session = useAppStore((s) => s.sessions.find((x) => x.id === tabId));
+  const viewMode = useAppStore((s) =>
+    s.sessions.find((x) => x.id === tabId)
+      ? effectiveViewMode(s.sessions.find((x) => x.id === tabId)!, s.sessionViewModes)
+      : "terminal",
+  );
+  const setSessionViewMode = useAppStore((s) => s.setSessionViewMode);
   const hostRef = useRef<HTMLDivElement | null>(null);
 
   if (!session) {
     return <ChatPlaceholder />;
   }
+
+  // claude 会话的视图切换控件（design doc §1：右上角图标切换，非全局设置）
+  const viewToggle =
+    session.toolType === "claude" ? (
+      <button
+        type="button"
+        onClick={() => {
+          void setSessionViewMode(session.id, viewMode === "chat" ? "terminal" : "chat");
+        }}
+        aria-label={viewMode === "chat" ? t("chat.switchToTerminal") : t("chat.switchToChat")}
+        title={viewMode === "chat" ? t("chat.switchToTerminal") : t("chat.switchToChat")}
+        className="absolute top-2 right-2 z-20 flex h-7 w-7 items-center justify-center rounded-md border border-border bg-background/80 text-muted-foreground backdrop-blur transition-colors hover:text-foreground"
+      >
+        {viewMode === "chat" ? (
+          <SquareTerminal size={14} strokeWidth={2} />
+        ) : (
+          <MessageSquare size={14} strokeWidth={2} />
+        )}
+      </button>
+    ) : null;
+
+  // 聊天视图：agent 子进程通道（claude 专属）
+  if (session.toolType === "claude" && viewMode === "chat") {
+    return (
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        <ChatView sessionId={session.id} toolType="claude" />
+        {viewToggle}
+        <span className="hidden">{toolType}</span>
+      </div>
+    );
+  }
+
   const supported = session.toolType === "ssh" || session.toolType === "terminal";
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
@@ -84,6 +126,7 @@ function PaneContent({
           </div>
         )}
       </div>
+      {viewToggle}
       <span className="hidden">{toolType}</span>
     </div>
   );
