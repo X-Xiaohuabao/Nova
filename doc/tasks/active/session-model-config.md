@@ -9,10 +9,10 @@
 
 ### M1 数据层
 
-- [ ] 迁移 v16:projects 表新增 default_tool_type / default_llm_provider_id / default_model_name / default_claude_models
+- [x] 迁移 v17:projects 表新增 default_tool_type / default_llm_provider_id / default_model_name / default_claude_models(2026-11-04 完成;⚠️ 台账原记 v16,实际 v16 已被 transfer_log 占用顺延为 v17;default_llm_provider_id 为 TEXT(uuid)而非设计初稿的 INTEGER,以现有 llm_providers.id 类型为准;迁移器目录扫描自动发现,schema_version 幂等)
   - 验收: 迁移幂等执行;全部 nullable;project_list 返回新字段
   - 涉及: src-tauri/migrations/、src-tauri/src/commands/、src/types/
-- [ ] 三层解析单一真相源:IPC resolve_session_defaults(project_id),回退链 会话→项目→全局(is_default)→兜底;删除"第一个 Profile 偏好"暗规则
+- [x] 三层解析单一真相源:IPC resolve_session_defaults(project_id),回退链 会话→项目→全局(is_default)→兜底;删除"第一个 Profile 偏好"暗规则(2026-11-04 完成;解析核心 llm_provider/defaults.rs 纯函数 resolve_core + 9 单测锁定回退链(项目全命中/项目工具落全局/全局不兼容落第一兼容/失效供应商下落/全局工具偏好/无兼容工具兜底/首可用工具/claude 5 档构建/默认模型取首);NewSessionModalNext 移除 profileLlmDefaults 状态、pickTool 的 getToolSettings 异步读取与三级回退 effect 链,改为弹窗打开时一次 resolve 采纳(userPickedToolRef 防覆盖用户手选);手动切工具的默认供应商为本地同步推导(全局默认兼容→第一兼容),与后端规则的统一收口留待 M2;检查链 clippy -D warnings / test 242 / tsc 全绿)
   - 验收: NewSessionModalNext 不再有异步猜测默认值的 effect;多项目/多供应商下默认值可预测
   - 涉及: src-tauri/src/llm_provider/、src/components/tabs/next/NewSessionModalNext.tsx
 
@@ -33,7 +33,7 @@
 
 ### M4 项目默认配置 UI
 
-- [ ] 项目右键/编辑弹窗:默认智能体+供应商+模型三字段编辑(v16 字段)
+- [ ] 项目右键/编辑弹窗:默认智能体+供应商+模型三字段编辑(v17 字段)
   - 验收: 设置后该项目新建会话默认值随之变化;清空则回退全局
   - 涉及: SidebarTreeNext.tsx、NewProjectModalNext 或新组件
 

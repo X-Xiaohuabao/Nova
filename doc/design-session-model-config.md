@@ -38,11 +38,11 @@
 
 ### 3.1 数据层
 
-**D1. projects 表新增默认配置**(迁移 `v16_project_default_llm.sql`)
+**D1. projects 表新增默认配置**(迁移 `v17_project_default_llm.sql`;原稿记 v16,实施时 v16 已被 transfer_log 占用顺延)
 
 ```
 default_tool_type        TEXT     -- 默认智能体(可空)
-default_llm_provider_id  INTEGER  -- 默认供应商(可空)
+default_llm_provider_id  TEXT     -- 默认供应商 id(可空,引用 llm_providers.id 的 TEXT uuid;原稿误记 INTEGER)
 default_model_name       TEXT     -- 默认模型名(可空)
 default_claude_models    TEXT     -- claude 5 档映射 JSON(可空,与 sessions.claude_models 同构)
 ```
