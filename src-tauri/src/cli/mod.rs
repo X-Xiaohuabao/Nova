@@ -1,4 +1,5 @@
 pub mod detector;
+pub mod launch_env;
 
 use serde::{Deserialize, Serialize};
 

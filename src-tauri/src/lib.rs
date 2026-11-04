@@ -132,9 +132,13 @@ pub fn run() {
             }
         })
         .manage(PtyManager::new())
-        .manage(agent::AgentManager::new())
+        .manage(std::sync::Arc::new(agent::AgentManager::new()))
         .manage(crate::ssh::registry::TransferRegistry::new())
         .invoke_handler(tauri::generate_handler![
+            commands::agent::agent_session_start,
+            commands::agent::agent_send,
+            commands::agent::agent_interrupt,
+            commands::agent::agent_session_stop,
             commands::cli::detect_cli_tools,
             commands::pty::start_session,
             commands::pty::stop_session,

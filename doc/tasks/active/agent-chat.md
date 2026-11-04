@@ -6,7 +6,7 @@
 
 ## 任务清单
 
-- [ ] T1 Rust agent 模块骨架：AgentDriver trait + AgentEvent 统一事件模型 + ClaudeDriver（spawn `claude -p --input-format stream-json --output-format stream-json` 双向子进程、NDJSON 按行读写、映射并 emit `agent:message`/`agent:state`）
+- [x] T1 Rust agent 模块骨架：AgentDriver trait + AgentEvent 统一事件模型 + ClaudeDriver（spawn `claude -p --input-format stream-json --output-format stream-json` 双向子进程、NDJSON 按行读写、映射并 emit `agent:message`/`agent:state`）（2026-11-04 完成，提交 e9e7c45；clippy -D warnings 与 cargo test 220 通过（agent 新增 9 测：system/assistant/tool_use/tool_result/result 用量/stream_event delta/control_request/容错/user 组装）；手动冒烟移至 T2——IPC 命令层接线后才能从前端触发）
   - 验收: cargo clippy -D warnings / cargo test 通过；NDJSON→AgentEvent 解析有单元测试（喂样例行断言事件，含 system/assistant/result/stream_event 四类）；`pnpm tauri dev` 手动冒烟能收到 system init 事件
   - 涉及: src-tauri/src/agent/（mod.rs / claude.rs，新增）、src-tauri/src/lib.rs（模块注册）
 - [ ] T2 IPC 命令层 + 环境注入复用：`agent_session_start` / `agent_send` / `agent_interrupt` / `agent_session_stop` 四命令；从 commands/pty.rs 抽出 Profile 隔离 + Keychain 凭据 + LLM Provider 环境组装为共享函数，PTY 与 agent 两通道共用

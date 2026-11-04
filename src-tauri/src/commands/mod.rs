@@ -1,3 +1,4 @@
+pub mod agent;
 pub mod claude_settings;
 pub mod cli;
 pub mod cost;

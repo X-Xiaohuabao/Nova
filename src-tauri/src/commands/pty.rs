@@ -1,9 +1,6 @@
 use std::collections::HashMap;
 use serde::Deserialize;
 
-use crate::crypto::keychain;
-use crate::llm_provider::env_inject::EnvInjection;
-use crate::profile;
 use crate::pty::manager::PtyManager;
 use crate::pty::ToolType;
 use crate::storage::AppDatabase;
@@ -25,137 +22,24 @@ pub fn start_session(
     model_name: Option<String>,
     claude_models: Option<String>,
 ) -> Result<(), String> {
-    let mut env_vars = HashMap::new();
-    let mut provider_inj: Option<EnvInjection> = None;
-    let mut profile_app_data_root: Option<String> = None;
-
-    if let Some(ref pid) = profile_id {
-        // Load profile for data isolation env vars
-        let profiles = profile::list_profiles(&db, None)?;
-        if let Some(p) = profiles.iter().find(|p| p.id == *pid) {
-            profile_app_data_root = p.app_data_root.clone();
-            if let Some(ref root) = p.app_data_root {
-                match p.tool_type.as_str() {
-                    "claude" => {
-                        env_vars.insert("CLAUDE_CONFIG_DIR".to_string(), root.clone());
-                    }
-                    "codex" => {
-                        env_vars.insert("CODEX_HOME".to_string(), root.clone());
-                    }
-                    "gemini" => {
-                        env_vars.insert("GEMINI_HOME".to_string(), root.clone());
-                    }
-                    "opencode" => {
-                        env_vars.insert("OPENCODE_HOME".to_string(), root.clone());
-                    }
-                    _ => {}
-                }
-            }
-
-            // Inject API key from keychain as environment variable
-            if p.auth_type == "api_key" {
-                if let Ok(Some(api_key)) = keychain::get_secret(pid, "api_key") {
-                    match p.tool_type.as_str() {
-                        "claude" => {
-                            env_vars.insert("ANTHROPIC_API_KEY".to_string(), api_key);
-                        }
-                        "codex" => {
-                            env_vars.insert("OPENAI_API_KEY".to_string(), api_key);
-                        }
-                        "gemini" => {
-                            env_vars.insert("GOOGLE_API_KEY".to_string(), api_key);
-                        }
-                        "opencode" => {
-                            env_vars.insert("OPENCODE_API_KEY".to_string(), api_key);
-                        }
-                        _ => {}
-                    }
-                }
-            }
-
-            // Inject base URL if configured
-            if let Some(ref url) = p.base_url {
-                match p.tool_type.as_str() {
-                    "claude" => {
-                        env_vars.insert("ANTHROPIC_BASE_URL".to_string(), url.clone());
-                    }
-                    "codex" => {
-                        env_vars.insert("OPENAI_BASE_URL".to_string(), url.clone());
-                    }
-                    _ => {}
-                }
-            }
-        }
-    }
-
-    // LLM Provider 注入（Profile 之后、user_env_vars 之前）；
-    // 强制要求：若 provider 需要凭证但缺失则报错，不静默忽略。
-    // 不兼容组合（如 claude × openai）由 compute_injection 返回空注入，调用方不报错。
-    if let Some(ref lpid) = llm_provider_id {
-        if let Some(provider) = crate::llm_provider::get_provider(&db, lpid)? {
-            if !provider.is_active {
-                return Err(format!(
-                    "LLM 供应商「{}」已停用，请重新选择",
-                    provider.name
-                ));
-            }
-
-            let tool_str = match tool_type {
-                ToolType::Claude => "claude",
-                ToolType::Codex => "codex",
-                ToolType::Gemini => "gemini",
-                ToolType::OpenCode => "opencode",
-                ToolType::Terminal | ToolType::Ssh => "",
-            };
-
-            let inj = crate::llm_provider::env_inject::compute_injection(
-                tool_str,
-                &provider.provider_kind,
-                &provider.auth_type,
-                provider.api_key.as_deref(),
-                provider.oauth_token.as_deref(),
-                provider.base_url.as_deref(),
-                model_name.as_deref(),
-            );
-
-            // 凭证检查：compute_injection 在合法组合下返回 Some。
-            // 此处校验凭证是否存在，缺失则报错（避免静默）。
-            let has_credential = inj.api_key_var.is_some();
-            if !has_credential && !tool_str.is_empty() {
-                // tool 合法但凭证缺失：除 opencode 外，要求必须有凭证
-                if !matches!(tool_type, ToolType::OpenCode) {
-                    let cred_type = if provider.auth_type == "oauth" { "OAuth Token" } else { "API Key" };
-                    return Err(format!(
-                        "LLM 供应商「{}」未配置 {}",
-                        provider.name, cred_type
-                    ));
-                }
-            }
-
-            // Provider 注入统一通过 compose_env 合并，避免在多处重复写入 env_vars。
-            provider_inj = Some(inj);
-        }
-    }
-
-    // 合并 Profile + LLM Provider + user_env_vars（后者覆盖前者）。
-    let mut env_vars = crate::llm_provider::env_merge::compose_env(
-        env_vars,
-        provider_inj.unwrap_or_default(),
-        user_env_vars.unwrap_or_default(),
-    );
-
-    // Claude Code 模型 tier 映射 → ANTHROPIC_DEFAULT_*_MODEL[_NAME] + ANTHROPIC_MODEL + CLAUDE_CODE_SUBAGENT_MODEL
-    // 仅注入非空字段；user_env_vars 不覆盖此层（保持 TeaCoder 唯一权威性）。
-    for (k, v) in crate::llm_provider::env_inject::compute_claude_tier_env(claude_models.as_deref()) {
-        env_vars.insert(k, v);
-    }
+    // 环境组装走共享模块（agent 聊天通道同源，凭据/隔离行为一致）
+    let launch = crate::cli::launch_env::assemble(
+        &db,
+        &tool_type,
+        profile_id.as_deref(),
+        llm_provider_id.as_deref(),
+        model_name.as_deref(),
+        user_env_vars,
+        claude_models.as_deref(),
+    )?;
+    let env_vars = launch.vars;
 
     // 启动 Claude Code 前清理 ~/.claude/settings.json 的 env 字段，
     // 避免用户在该文件里手动配置的环境变量与 TeaCoder 的注入冲突。
     // best-effort：失败不阻塞 PTY 启动。
     if matches!(tool_type, ToolType::Claude) {
         if let Err(e) =
-            crate::commands::claude_settings::clean_claude_settings_env(profile_app_data_root.as_deref())
+            crate::commands::claude_settings::clean_claude_settings_env(launch.claude_app_data_root.as_deref())
         {
             eprintln!("清理 Claude Code settings.json 失败: {}", e);
         }
