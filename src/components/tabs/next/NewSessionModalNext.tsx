@@ -16,8 +16,14 @@ import { ChevronDown } from "lucide-react";
 import { useAppStore } from "@/stores/appStore";
 import { detectCliTools, testSshConnection, resolveSessionDefaults } from "@/utils/ipc";
 import { CLAUDE_TIER_ENTRIES, parseClaudeModels } from "@/utils/claudeModels";
-import { BUILTIN_SESSION_TEMPLATES, TOOL_PROVIDER_KIND_MAP } from "@/types";
-import type { ToolType, CliTool, LlmProvider, SshArgs, SessionDefaults } from "@/types";
+import { BUILTIN_SESSION_TEMPLATES } from "@/types";
+import type { ToolType, CliTool, SshArgs, SessionDefaults } from "@/types";
+import {
+  compatibleProviders,
+  pickDefaultProvider,
+  buildDefaultClaudeModels,
+  providerDefaultModel,
+} from "@/utils/sessionModel";
 import { EMPTY_SSH_ARGS, serializeSshArgs } from "@/utils/sshArgs";
 import { CLI_TOOLS, sortCliToolsByAvailability, isCliToolAvailable, type CliToolMeta } from "@/components/cli/cliTools";
 import CliArgsClaudeNext from "@/components/cli/CliArgsClaudeNext";
@@ -70,13 +76,6 @@ function buildCliArgs(toolType: ToolType, params: Record<string, unknown>): stri
   return args.length > 0 ? JSON.stringify(args) : "";
 }
 
-function buildDefaultClaudeModels(provider: LlmProvider) {
-  const defModel =
-    provider.models.find((m) => m.isDefault)?.modelName ?? provider.models[0]?.modelName;
-  if (!defModel) return {};
-  return { sonnet: defModel, opus: defModel, haiku: defModel, fable: defModel, subagent: defModel };
-}
-
 type ClaudeModelsState = {
   sonnet?: string;
   opus?: string;
@@ -123,12 +122,6 @@ export default function NewSessionModalNext({ open: isOpen, projectId, categoryI
 
   const project = projects.find((p) => p.id === projectId);
   const filteredCategories = projectId ? categories.filter((c) => c.projectId === projectId) : [];
-
-  const compatibleProviders = (toolType: ToolType | null): LlmProvider[] => {
-    if (!toolType) return [];
-    const allowedKinds = TOOL_PROVIDER_KIND_MAP[toolType] ?? [];
-    return llmProviders.filter((p) => p.isActive && allowedKinds.includes(p.providerKind));
-  };
 
   useEffect(() => {
     if (isOpen && cliTools.length === 0) {
@@ -233,16 +226,13 @@ export default function NewSessionModalNext({ open: isOpen, projectId, categoryI
       setClaudeModels({});
       return;
     }
-    const compat = compatibleProviders(meta.id);
-    const provider = compat.find((p) => p.isDefault) ?? compat[0];
+    const provider = pickDefaultProvider(llmProviders, meta.id);
     setLlmProviderId(provider?.id);
     if (meta.id === "claude") {
       setClaudeModels(provider ? buildDefaultClaudeModels(provider) : {});
       setModelName(undefined);
     } else {
-      setModelName(
-        provider?.models.find((m) => m.isDefault)?.modelName ?? provider?.models[0]?.modelName,
-      );
+      setModelName(provider ? providerDefaultModel(provider) : undefined);
       setClaudeModels({});
     }
   };
@@ -410,7 +400,7 @@ export default function NewSessionModalNext({ open: isOpen, projectId, categoryI
         </div>
 
         {/* LLM 供应商（非 ssh/terminal） */}
-        {selectedTool !== "ssh" && selectedTool !== "terminal" && (
+        {selectedTool && selectedTool !== "ssh" && selectedTool !== "terminal" && (
           <div>
             <label className="mb-1 block text-xs text-muted-foreground">{t("sessions.llmProvider")}</label>
             <Select
@@ -422,7 +412,7 @@ export default function NewSessionModalNext({ open: isOpen, projectId, categoryI
                   setClaudeModels(buildDefaultClaudeModels(next));
                   setModelName(undefined);
                 } else if (next) {
-                  setModelName(next.models.find((m) => m.isDefault)?.modelName);
+                  setModelName(providerDefaultModel(next));
                   setClaudeModels({});
                 } else {
                   setModelName(undefined);
@@ -432,7 +422,7 @@ export default function NewSessionModalNext({ open: isOpen, projectId, categoryI
             >
               <SelectTrigger className="w-full"><SelectValue placeholder={t("sessions.llmProviderPlaceholder")} /></SelectTrigger>
               <SelectContent>
-                {compatibleProviders(selectedTool).map((p) => (
+                {compatibleProviders(llmProviders, selectedTool).map((p) => (
                   <SelectItem key={p.id} value={p.id}>{p.name}（{p.providerKind}）</SelectItem>
                 ))}
               </SelectContent>

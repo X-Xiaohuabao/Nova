@@ -338,6 +338,13 @@ export function effectiveViewMode(session: Session, viewModes: Record<string, Se
   return viewModes[session.id] ?? (session.toolType === "claude" ? "chat" : "terminal");
 }
 
+/** 会话内模型切换的生效策略结果（switchSessionModel 返回，反馈文案由调用方决定） */
+export type SessionModelSwitchResult =
+  | "ok" // 已保存，会话未运行（下次启动即用新配置）
+  | "restart-required" // 已保存，会话运行中——重启后生效
+  | "hot-switch" // 聊天通道仅换模型：调用方应发送 /model <model> 热切换
+  | "shared"; // 双开：字段已保存但热切换/重启均不可用，需向用户说明原因
+
 /**
  * Claude 会话恢复参数推导：有 cliSessionId 精确 --resume，否则 --continue。
  * 与 openTab 的 PTY 路径同一规则，供切换视图时的通道重启复用。
@@ -434,6 +441,16 @@ interface AppState {
     };
   }) => Promise<Session>;
   updateSession: (id: string, updates: Partial<Session>) => Promise<void>;
+  /** 会话内模型配置切换：持久化 + 生效策略判定（/model 热切换指令由调用方发送）。
+   *  仅供应商/模型——tool_type 创建后不可变（cli_args 编码依赖它，见 update_session）。 */
+  switchSessionModel: (
+    id: string,
+    patch: {
+      llmProviderId?: string;
+      modelName?: string;
+      claudeModels?: ClaudeModels;
+    },
+  ) => Promise<SessionModelSwitchResult>;
   deleteSession: (id: string) => Promise<void>;
   /**
    * 批量重排会话的归属与位置。`moves` 需包含受影响的**全部分组**（拖动时的源组与
@@ -875,6 +892,44 @@ export const useAppStore = create<AppState>((set, get) => ({
         }).catch(() => {});
       }
     }
+  },
+  switchSessionModel: async (id, patch) => {
+    const before = get().sessions.find((s) => s.id === id);
+    if (!before) return "ok";
+
+    // 只持久化字段，不走 updateSession——那条路会对运行中的 claude 会话自动重启，
+    // 而本 action 的语义是"按通道给生效策略"，重启与否由用户决定。
+    const updated = await sessionUpdate(id, {
+      llmProviderId: patch.llmProviderId,
+      modelName: patch.modelName,
+      claudeModels: patch.claudeModels ? serializeClaudeModels(patch.claudeModels) : undefined,
+    });
+    set((state) => ({
+      sessions: state.sessions.map((s) =>
+        s.id === id ? { ...s, ...updated, claudeModels: parseClaudeModels(updated.claudeModels) } : s,
+      ),
+    }));
+
+    // 双开：字段已保存，但热切换/重启都会让另一分屏失联——明确告知原因
+    if (instanceCount(get().panes, id) > 1) return "shared";
+
+    const after = get().sessions.find((s) => s.id === id);
+    if (!after) return "ok";
+
+    // 聊天通道 + claude + 供应商未变 + agent 运行中 → 可 /model 热切换
+    const configUnchanged =
+      !patch.llmProviderId || patch.llmProviderId === before.llmProviderId;
+    const nextModel = patch.modelName ?? patch.claudeModels?.sonnet;
+    if (
+      after.toolType === "claude" &&
+      effectiveViewMode(after, get().sessionViewModes) === "chat" &&
+      configUnchanged &&
+      nextModel &&
+      useAgentStore.getState().running[id]
+    ) {
+      return "hot-switch";
+    }
+    return after.isRunning ? "restart-required" : "ok";
   },
   deleteSession: async (id) => {
     const session = get().sessions.find((s) => s.id === id);

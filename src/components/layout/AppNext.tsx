@@ -42,6 +42,8 @@ import HelpPageNext from "@/components/help/HelpPageNext";
 import NewProjectModalNext from "@/components/tabs/next/NewProjectModalNext";
 import NewCategoryModalNext from "@/components/tabs/next/NewCategoryModalNext";
 import NewSessionModalNext from "@/components/tabs/next/NewSessionModalNext";
+import SessionModelSwitcher from "@/components/tabs/next/SessionModelSwitcher";
+import { MODEL_SWITCHABLE_TOOLS } from "@/utils/sessionModel";
 import EditSessionModalNext from "@/components/tabs/next/EditSessionModalNext";
 import SearchPanelNext from "@/components/tabs/next/SearchPanelNext";
 import ChatPlaceholder from "@/components/chat/ChatPlaceholder";
@@ -274,6 +276,9 @@ export default function AppNext() {
               modelName={activeSession.modelName}
               costUsd={activeCost?.costUsd}
             />
+            {MODEL_SWITCHABLE_TOOLS.includes(activeSession.toolType) && (
+              <SessionModelSwitcher session={activeSession} />
+            )}
           </span>
         ) : (
           t("shell.ready")
