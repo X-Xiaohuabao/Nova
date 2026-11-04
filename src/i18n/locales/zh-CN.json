@@ -42,7 +42,8 @@
     "demoSearch": "会话搜索(Ctrl+P)",
     "demoNewProject": "新建项目",
     "emptyProjects": "还没有项目，点上方「新建项目」开始",
-    "viewPanes": "会话"
+    "viewPanes": "会话",
+    "viewHelp": "帮助"
   },
   "chat": {
     "title": "聊天视图挂载点",

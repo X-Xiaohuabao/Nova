@@ -239,13 +239,14 @@ html, body, #root {
 /* README 顶部的 logo 块用的是已废弃的 align 属性,浏览器不再据此居中 */
 .help-body div[align="center"] { text-align: center; }
 
-/* 帮助窗口的正文与目录。目录默认收起,由右上角的浮动按钮展开,
-   展开后占右侧一列,正文列自己滚动。 */
+/* 帮助页的正文与目录。整页高度由外层卡片（画布底衬居中白卡）撑满,
+   目录默认展开（窄屏收起）,右上角浮动按钮切换;正文列自己滚动。 */
 .help-layout {
   position: relative;
   display: flex;
   align-items: stretch;
-  height: 70vh;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: hidden;
 }
 .help-main {

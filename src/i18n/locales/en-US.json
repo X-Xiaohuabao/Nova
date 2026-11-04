@@ -42,7 +42,8 @@
     "demoSearch": "Search (Ctrl+P)",
     "demoNewProject": "New project",
     "emptyProjects": "No projects yet — click \"New Project\" above to start",
-    "viewPanes": "Sessions"
+    "viewPanes": "Sessions",
+    "viewHelp": "Help"
   },
   "chat": {
     "title": "Chat View Mount Point",

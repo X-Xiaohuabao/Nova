@@ -1,9 +1,9 @@
 /**
- * 帮助窗口（新骨架，H2 / T13）。
+ * 帮助页（右侧视图形态，替代原弹窗）。
  *
  * README Markdown 渲染 + 右侧目录（渲染后标题扫描）；渲染配置复用
  * markdownShared（插件数组模块级常量，避免重跑 unified 流水线）。
- * help-* 布局类沿用全局样式。
+ * 页面壳对齐设置页范式：画布底衬居中 800px 白卡，正文列独立滚动。
  */
 
 import { useLayoutEffect, useRef, useState } from "react";
@@ -17,19 +17,14 @@ import {
   readmeRaw,
 } from "./markdownShared";
 import { groupOutline, type OutlineItem } from "./docOutline";
-import ResponsiveDialog from "@/components/common/ResponsiveDialog";
 import { Button } from "@/components/ui/button";
-
-interface HelpModalNextProps {
-  open: boolean;
-  onClose: () => void;
-}
 
 function HelpContent() {
   const { t } = useTranslation();
   const contentRef = useRef<HTMLDivElement>(null);
   const [outline, setOutline] = useState<OutlineItem[]>([]);
-  const [tocOpen, setTocOpen] = useState(false);
+  // 页面空间充裕，桌面默认展开目录；窄屏（<768px）默认收起，可随时切换
+  const [tocOpen, setTocOpen] = useState(() => window.innerWidth >= 768);
 
   // 目录直接读渲染出来的标题（layout effect 赶在绘制前建好，目录跟正文同帧出现）
   useLayoutEffect(() => {
@@ -49,7 +44,7 @@ function HelpContent() {
 
   const scrollToHeading = (id: string) => {
     const target = document.getElementById(id);
-    // 只认弹窗内的锚点,免得跟应用别处的 id 撞车
+    // 只认帮助页内的锚点,免得跟应用别处的 id 撞车
     if (!target || !contentRef.current?.contains(target)) return;
     target.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -114,19 +109,12 @@ function HelpContent() {
   );
 }
 
-export default function HelpModalNext({ open, onClose }: HelpModalNextProps) {
-  const { t } = useTranslation();
+export default function HelpPageNext() {
   return (
-    <ResponsiveDialog
-      open={open}
-      onOpenChange={(o) => {
-        if (!o) onClose();
-      }}
-      title={t("help.title")}
-      size="lg"
-      contentClassName="sm:max-w-[900px] h-[80vh]"
-    >
-      <HelpContent />
-    </ResponsiveDialog>
+    <div className="h-full min-h-0 w-full overflow-hidden bg-muted/40 p-4 md:p-6">
+      <div className="mx-auto flex h-full w-full max-w-[800px] flex-col overflow-hidden rounded-xl border border-border/60 bg-background shadow-sm">
+        <HelpContent />
+      </div>
+    </div>
   );
 }

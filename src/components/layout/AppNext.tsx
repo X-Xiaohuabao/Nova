@@ -36,7 +36,7 @@ import PaneViewNext from "@/components/panes/PaneViewNext";
 import PaneSplitter from "@/components/panes/PaneSplitter";
 import SettingsPageNext from "@/components/settings/next/SettingsPageNext";
 import CostDashboardNext from "@/components/cost/CostDashboardNext";
-import HelpModalNext from "@/components/help/HelpModalNext";
+import HelpPageNext from "@/components/help/HelpPageNext";
 import NewProjectModalNext from "@/components/tabs/next/NewProjectModalNext";
 import NewCategoryModalNext from "@/components/tabs/next/NewCategoryModalNext";
 import NewSessionModalNext from "@/components/tabs/next/NewSessionModalNext";
@@ -47,7 +47,7 @@ import TerminalView from "@/components/terminal/TerminalView";
 import FileTransferPanel from "@/components/terminal/FileTransferPanel";
 import { cn } from "@/lib/utils";
 
-type MainView = "panes" | "settings" | "cost";
+type MainView = "panes" | "settings" | "cost" | "help";
 
 /** 单 pane 内容：活动会话终端 + 记录/传输浮层（portal 宿主为终端容器） */
 function PaneContent({
@@ -118,8 +118,6 @@ export default function AppNext() {
   const editSessionModalOpen = useAppStore((s) => s.editSessionModalOpen);
   const setEditSessionModalOpen = useAppStore((s) => s.setEditSessionModalOpen);
   const editingSessionId = useAppStore((s) => s.editingSessionId);
-  const helpOpen = useAppStore((s) => s.helpOpen);
-  const setHelpOpen = useAppStore((s) => s.setHelpOpen);
   const setCliTools = useAppStore((s) => s.setCliTools);
   const setProfiles = useAppStore((s) => s.setProfiles);
   const loadProjects = useAppStore((s) => s.loadProjects);
@@ -293,6 +291,7 @@ export default function AppNext() {
                       { view: "panes" as MainView, icon: <MessageSquarePlus size={13} />, label: t("shell.viewPanes") },
                       { view: "settings" as MainView, icon: <SettingsIcon size={13} />, label: t("shell.viewSettings") },
                       { view: "cost" as MainView, icon: <PieChart size={13} />, label: t("cost.title") },
+                      { view: "help" as MainView, icon: <CircleHelp size={13} />, label: t("shell.viewHelp") },
                     ]
                   ).map((entry) => (
                     <button
@@ -311,15 +310,6 @@ export default function AppNext() {
                       {entry.icon}
                     </button>
                   ))}
-                  <button
-                    type="button"
-                    title={t("help.title")}
-                    aria-label={t("help.title")}
-                    onClick={() => setHelpOpen(true)}
-                    className="flex h-7 flex-1 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
-                  >
-                    <CircleHelp size={13} />
-                  </button>
                 </div>
               </div>
             </>
@@ -376,6 +366,11 @@ export default function AppNext() {
             <CostDashboardNext />
           </div>
         )}
+        {view === "help" && (
+          <div className="min-h-0 min-w-0 flex-1">
+            <HelpPageNext />
+          </div>
+        )}
       </div>
 
 
@@ -398,7 +393,6 @@ export default function AppNext() {
         onClose={() => setEditSessionModalOpen(false)}
       />
       <SearchPanelNext />
-      <HelpModalNext open={helpOpen} onClose={() => setHelpOpen(false)} />
       <AgreementModalNext open={onboarding.showAgreement} onAccept={onboarding.completeAgreement} />
       <OnboardingGuideNext
         open={onboarding.showGuide}
