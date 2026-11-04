@@ -525,6 +525,9 @@ interface AppState {
   editingSessionId: string | null;
   setEditSessionModalOpen: (open: boolean, sessionId?: string | null) => void;
 
+  /** 重启智能体聊天通道：fresh=true 清空上下文与界面历史（/clear 语义） */
+  agentRestartChannel: (sessionId: string, fresh?: boolean) => Promise<void>;
+
   sessionTemplates: SessionTemplate[];
   globalThinkingIntensity: string;
   setGlobalThinkingIntensity: (intensity: string) => void;
@@ -1769,6 +1772,21 @@ export const useAppStore = create<AppState>((set, get) => ({
   editingSessionId: null,
   setEditSessionModalOpen: (open, sessionId) =>
     set({ editSessionModalOpen: open, editingSessionId: open ? (sessionId ?? null) : null }),
+
+  agentRestartChannel: async (sessionId, fresh = false) => {
+    const state = get();
+    const session = state.sessions.find((s) => s.id === sessionId);
+    if (!session || session.toolType !== "claude") return;
+    // 先挂起旧进程；fresh 另清前端态（消息/状态）且不带恢复参数（全新上下文）
+    await useAgentStore.getState().suspend(sessionId);
+    if (fresh) useAgentStore.getState().clearSession(sessionId);
+    const project = state.projects.find((p) => p.id === session.projectId);
+    await startAgentChannel(
+      session,
+      project?.path || "~",
+      fresh ? undefined : claudeResumeCliArgs(session),
+    );
+  },
 
   sessionTemplates: BUILTIN_SESSION_TEMPLATES,
   globalThinkingIntensity: "medium",

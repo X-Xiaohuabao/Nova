@@ -2,13 +2,15 @@
  * 聊天输入区（design doc §6）：多行自适应（1~8 行）、Enter 发送 / Shift+Enter 换行、
  * IME 组合中 Enter 不发送；流式中发送钮变停止钮，Esc 停止生成。
  * waiting_input 态顶部黄条提示（design doc §7）。
+ * draft 以 `/` 开头时上方弹出斜杠命令面板（键盘导航在本组件拦截转发）。
  */
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ArrowUp, Square, TriangleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { AgentSessionState } from "@/types";
+import type { AgentSessionState, SlashCommand } from "@/types";
+import SlashCommandPanel from "./SlashCommandPanel";
 
 /** 8 行高度上限（超出内部滚动），行高按 13px 正文 × 1.6 估算再加内边距余量 */
 const MAX_INPUT_HEIGHT = 8 * 22 + 16;
@@ -21,6 +23,10 @@ interface ChatInputProps {
   onDraftChange: (text: string) => void;
   onSend: (text: string) => void;
   onStop: () => void;
+  /** `/` 面板命令源（ChatView 按会话工作目录加载） */
+  slashCommands?: SlashCommand[];
+  /** 命令执行（分治语义在 ChatView：本地动作 / prompt 展开） */
+  onExecuteCommand?: (cmd: SlashCommand, args: string) => void;
 }
 
 export default function ChatInput({
@@ -30,6 +36,8 @@ export default function ChatInput({
   onDraftChange,
   onSend,
   onStop,
+  slashCommands = [],
+  onExecuteCommand,
 }: ChatInputProps) {
   const { t } = useTranslation();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -37,6 +45,21 @@ export default function ChatInput({
   // 首条 user 消息到达前不会发 system/init，starting 态必须允许用户输入，
   // 否则 UI 等 init、CLI 等消息，互相死锁。
   const generating = state === "thinking";
+
+  /** 斜杠面板：命令段/参数段拆分与匹配（draft 变化即重算，索引复位） */
+  const slashActive = draft.startsWith("/") && slashCommands.length > 0 && !!onExecuteCommand;
+  const slashBody = slashActive ? draft.slice(1) : "";
+  const spaceIdx = slashBody.indexOf(" ");
+  const slashFilter = spaceIdx >= 0 ? slashBody.slice(0, spaceIdx) : slashBody;
+  const slashArgs = spaceIdx >= 0 ? slashBody.slice(spaceIdx + 1).trim() : "";
+  const matchedCommands = useMemo(
+    () => slashCommands.filter((c) => c.name.startsWith(slashFilter)),
+    [slashCommands, slashFilter],
+  );
+  const [activeIndex, setActiveIndex] = useState(0);
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [slashFilter]);
 
   /** 高度自适应：先复位再按内容撑开，封顶后内部滚动 */
   const resize = useCallback(() => {
@@ -51,6 +74,29 @@ export default function ChatInput({
   }, [draft, resize]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // 斜杠面板打开时优先服务面板导航（焦点保持输入框，事件在此转发）
+    if (slashActive && matchedCommands.length > 0 && !e.nativeEvent.isComposing) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActiveIndex((i) => (i + 1) % matchedCommands.length);
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActiveIndex((i) => (i - 1 + matchedCommands.length) % matchedCommands.length);
+        return;
+      }
+      if (e.key === "Enter" || e.key === "Tab") {
+        e.preventDefault();
+        onExecuteCommand?.(matchedCommands[activeIndex], slashArgs);
+        return;
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onDraftChange("");
+        return;
+      }
+    }
     // Esc = 停止生成（design doc §6）；IME 组合中的 Esc 属于取消候选，不拦截
     if (e.key === "Escape" && generating && !e.nativeEvent.isComposing) {
       e.preventDefault();
@@ -75,12 +121,22 @@ export default function ChatInput({
           {t("chat.waitingBanner")}
         </div>
       )}
-      <div
-        className={cn(
-          "flex w-full items-end gap-2 rounded-xl border bg-card px-3 py-2 transition-shadow",
-          state === "waiting_input" ? "border-primary shadow-[0_0_0_2px_var(--ring)]" : "border-border",
+      <div className="relative w-full">
+        {slashActive && (
+          <SlashCommandPanel
+            commands={slashCommands}
+            filter={slashFilter}
+            activeIndex={activeIndex}
+            args={slashArgs}
+            onExecute={(cmd, args) => onExecuteCommand?.(cmd, args)}
+          />
         )}
-      >
+        <div
+          className={cn(
+            "flex w-full items-end gap-2 rounded-xl border bg-card px-3 py-2 transition-shadow",
+            state === "waiting_input" ? "border-primary shadow-[0_0_0_2px_var(--ring)]" : "border-border",
+          )}
+        >
         <textarea
           ref={textareaRef}
           value={draft}
@@ -117,6 +173,7 @@ export default function ChatInput({
             <ArrowUp size={14} strokeWidth={2.5} />
           </button>
         )}
+        </div>
       </div>
     </div>
   );

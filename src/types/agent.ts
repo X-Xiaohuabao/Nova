@@ -112,3 +112,21 @@ export interface ChatMessage {
   /** 发送失败 / 运行错误标记（红边条 + 重试按钮的依据） */
   error?: boolean;
 }
+
+/** 斜杠命令来源（面板分组依据，与 Rust SlashCommandSource 对齐） */
+export type SlashCommandSource =
+  | "builtin_nova"
+  | "builtin_prompt"
+  | "project"
+  | "user"
+  | "skill";
+
+/** 聊天 `/` 面板命令条目（与 Rust SlashCommand 对齐） */
+export interface SlashCommand {
+  /** 命令名（不带 `/`） */
+  name: string;
+  description?: string;
+  source: SlashCommandSource;
+  /** prompt 模板（自定义命令；`$ARGUMENTS` 占位）；本地动作型为空 */
+  prompt?: string;
+}

@@ -19,6 +19,7 @@ import type {
   SshTarget,
   TransferSummary,
   TransferLogRow,
+  SlashCommand,
 } from "../types";
 
 export async function detectCliTools(): Promise<CliTool[]> {
@@ -61,6 +62,10 @@ export async function agentSessionStart(params: {
 
 export async function agentSend(sessionId: string, text: string): Promise<void> {
   return invoke("agent_send", { sessionId, text });
+}
+
+export async function agentListCommands(workDir: string): Promise<SlashCommand[]> {
+  return invoke<SlashCommand[]>("agent_list_commands", { workDir });
 }
 
 export async function agentInterrupt(sessionId: string): Promise<void> {

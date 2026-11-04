@@ -7,10 +7,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import { ArrowDown } from "lucide-react";
-import type { ToolType } from "@/types";
+import type { SlashCommand, ToolType } from "@/types";
 import { TOOL_DISPLAY_NAMES } from "@/types";
 import { useAgentStore } from "@/stores/agentStore";
+import { useAppStore } from "@/stores/appStore";
+import { agentListCommands } from "@/utils/ipc";
 import ChatMessageItem from "./ChatMessageItem";
 import ChatInput from "./ChatInput";
 import ChatEmptyState from "./ChatEmptyState";
@@ -44,6 +47,26 @@ export default function ChatView({ sessionId, toolType = "claude" }: ChatViewPro
   const followingRef = useRef(true);
   const [following, setFollowing] = useState(true);
   const [draft, setDraft] = useState("");
+  const [slashCommands, setSlashCommands] = useState<SlashCommand[]>([]);
+
+  // 斜杠命令源：按会话工作目录加载（项目级命令就近生效）；加载失败按空集（面板不弹）
+  const workDir = useAppStore((s) => {
+    const session = s.sessions.find((x) => x.id === sessionId);
+    return s.projects.find((p) => p.id === session?.projectId)?.path ?? "~";
+  });
+  useEffect(() => {
+    let disposed = false;
+    agentListCommands(workDir)
+      .then((cmds) => {
+        if (!disposed) setSlashCommands(cmds);
+      })
+      .catch(() => {
+        // 命令面板是增强能力，不阻塞聊天
+      });
+    return () => {
+      disposed = true;
+    };
+  }, [workDir]);
 
   // 应用级事件监听：首个 ChatView 挂载时绑定，卸载时解绑
   useEffect(() => {
@@ -87,6 +110,35 @@ export default function ChatView({ sessionId, toolType = "claude" }: ChatViewPro
       void send(sessionId, text);
     },
     [send, sessionId],
+  );
+
+  /** 斜杠命令执行分治：Nova 本地动作 / prompt 展开发送（/clear /model /help 见各自分支） */
+  const handleExecuteCommand = useCallback(
+    (cmd: SlashCommand, args: string) => {
+      setDraft("");
+      if (cmd.source === "builtin_nova") {
+        if (cmd.name === "clear") {
+          void useAppStore.getState().agentRestartChannel(sessionId, true);
+          toast.success(t("chat.cmdCleared"));
+          return;
+        }
+        if (cmd.name === "model") {
+          useAppStore.getState().setEditSessionModalOpen(true, sessionId);
+          return;
+        }
+        if (cmd.name === "help") {
+          toast.info(t("chat.cmdHelp"));
+          return;
+        }
+        return;
+      }
+      // prompt 模板型（自定义命令）：展开 $ARGUMENTS；Skills 以「使用技能」形态发送
+      const text = cmd.prompt
+        ? cmd.prompt.split("$ARGUMENTS").join(args)
+        : t("chat.cmdSkillInvoke", { name: cmd.name, description: cmd.description ?? "", args });
+      handleSend(text);
+    },
+    [handleSend, sessionId, t],
   );
 
   // 尾部已有流式 AI 消息时不再显示思考占位（光标即活动指示）
@@ -181,6 +233,8 @@ export default function ChatView({ sessionId, toolType = "claude" }: ChatViewPro
         onDraftChange={setDraft}
         onSend={handleSend}
         onStop={handleStop}
+        slashCommands={slashCommands}
+        onExecuteCommand={handleExecuteCommand}
       />
     </main>
   );
