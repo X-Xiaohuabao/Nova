@@ -143,6 +143,7 @@ pub fn run() {
             commands::agent::agent_session_stop,
             commands::agent::agent_respond_permission,
             commands::agent::agent_answer_question,
+            commands::agent::agent_list_commands,
             commands::cli::detect_cli_tools,
             commands::pty::start_session,
             commands::pty::stop_session,

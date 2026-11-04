@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use crate::agent::claude::{start_claude, ClaudeStartParams};
+use crate::agent::slash_commands::{self, SlashCommand};
 use crate::agent::AgentManager;
 use crate::cli::ToolType;
 use crate::storage::AppDatabase;
@@ -142,6 +143,12 @@ pub async fn agent_respond_permission(
         .respond_permission(&request_id, allow)
         .await
         .map_err(|e| e.to_string())
+}
+
+/// 枚举聊天 `/` 面板可用命令：项目/用户自定义命令 + Skills + Nova 内置。
+#[tauri::command]
+pub fn agent_list_commands(work_dir: String) -> Vec<SlashCommand> {
+    slash_commands::list_commands(&work_dir)
 }
 
 /// 应答智能体提问（tool_result 回写，终结 AskUserQuestion）。

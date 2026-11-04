@@ -7,6 +7,7 @@
 #![allow(dead_code)]
 
 pub mod claude;
+pub mod slash_commands;
 
 use std::collections::HashMap;
 use std::sync::Arc;
