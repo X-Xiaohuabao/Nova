@@ -43,6 +43,7 @@
 - [ ] V2（design doc §10）：工具调用折叠卡片完整态、复制/重新生成工具条、日期分隔线、错误重试按钮、thinking/waiting_input 完整视觉
 - [x] SC-1 斜杠命令源（2026-11-04，提交 7ab80a8 前后见 git log）：`agent_list_commands` 枚举项目/用户 `.claude/commands` md（frontmatter→description、正文→prompt 模板）+ `.claude/skills` SKILL.md + Nova 内置注册表（clear/model/help）；同名就近覆盖（项目>用户>技能>内置）；5 单测（frontmatter 拆分/引号剥离/去重优先级/SKILL 回退）
 - [x] SC-2 命令面板与分治执行（2026-11-04）：ChatInput `/` 唤起浮层面板（前缀过滤/↑↓导航/Enter·Tab 执行/Esc 关闭，焦点不离开输入框）；/clear=清上下文重启通道（appStore.agentRestartChannel fresh 语义，复用原 cliSessionId 新进程）；/model=复用会话编辑弹窗；自定义命令展开 $ARGUMENTS；技能以「使用技能」prompt 发出；CDP 实测渲染/过滤/内置组全通
-- [ ] SC-3 prompt 型内置命令：/init /review（官方标准 prompt 内置）+ /cost（读 JSONL 统计复用 cost 模块）+ /export（导出对话）
+- [x] SC-3 prompt 型内置与本地命令（2026-11-04，提交 1bf5664）：/init /review（官方语义 prompt 模板，BuiltinPrompt 源，/review 带 $ARGUMENTS）+ /cost（get_session_cost 用量展示）+ /export（对话转 Markdown 走 tauri clipboard）；CDP 实测命令注册/面板/执行分治全通
+- [ ] SC-5 存量排查：sonner Toaster 在部分环境不渲染（CDP 实例中 data-sonner-toaster 缺席，react-aria top-layer 占位）——全局 toast 反馈受影响，需干净环境复验定位（非 SC 系列引入）
 - [ ] SC-4 /compact 两步模拟（总结历史→新会话注入摘要）与其余内置命令取舍
 - [ ] V3（design doc §10 其余）：@文件引用、图片粘贴、同屏双视图
