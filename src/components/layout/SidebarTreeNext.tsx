@@ -6,7 +6,7 @@
  * - 右键菜单（ContextMenu）：项目（新建分类/新建会话/重命名/在文件管理器打开/删除）、
  *   分类（新建会话/重命名/删除）、会话（编辑/收藏/取消收藏/删除）
  * - 双击重命名（inline，Esc/失焦提交）
- * - 删除均经 AlertDialog 确认；文案走 i18n
+ * - 删除均经 ConfirmDialog（全局唯一确认交互）确认；文案走 i18n
  */
 
 import { useMemo, useState } from "react";
@@ -23,16 +23,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -308,36 +299,23 @@ export default function SidebarTreeNext({
       </nav>
 
       {/* 删除确认 */}
-      <AlertDialog
+      <ConfirmDialog
         open={deleteTarget !== null}
         onOpenChange={(o) => {
           if (!o) setDeleteTarget(null);
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t(`tree.deleteTitle.${deleteTarget?.kind ?? "session"}`, { name: deleteTarget?.name ?? "" })}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteTarget?.kind === "session"
-                ? t("tree.deleteSessionDesc")
-                : deleteTarget?.kind === "category"
-                  ? t("tree.deleteCategoryDesc")
-                  : t("tree.deleteProjectDesc")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-white hover:bg-destructive/90"
-              onClick={confirmDelete}
-            >
-              {t("common.delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        title={t(`tree.deleteTitle.${deleteTarget?.kind ?? "session"}`, { name: deleteTarget?.name ?? "" })}
+        description={
+          deleteTarget?.kind === "session"
+            ? t("tree.deleteSessionDesc")
+            : deleteTarget?.kind === "category"
+              ? t("tree.deleteCategoryDesc")
+              : t("tree.deleteProjectDesc")
+        }
+        confirmLabel={t("common.delete")}
+        destructive
+        onConfirm={confirmDelete}
+      />
       <ProjectDefaultsDialog
         project={projects.find((p) => p.id === defaultsProjectId) ?? null}
         open={defaultsProjectId !== null}

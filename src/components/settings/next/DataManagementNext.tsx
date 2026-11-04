@@ -9,17 +9,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
 import SettingRow from "./SettingRow";
 import SectionHeader from "./SectionHeader";
 import SettingsCard from "./SettingsCard";
@@ -62,45 +52,22 @@ export default function DataManagementNext() {
         </Button>
       </SettingRow>
       <SettingRow id="settings.clearCache" label={t("settings.data.clearCache")} description={t("settings.data.clearCacheDesc")}>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="outline" size="sm">{t("settings.data.clearCache")}</Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{t("settings.data.clearCacheConfirmTitle")}</AlertDialogTitle>
-              <AlertDialogDescription>{t("settings.data.clearCacheConfirmDesc")}</AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-              <AlertDialogAction onClick={() => toast.success(t("settings.data.cacheCleared"))}>
-                {t("common.confirm")}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ConfirmDialog
+          trigger={<Button variant="outline" size="sm">{t("settings.data.clearCache")}</Button>}
+          title={t("settings.data.clearCacheConfirmTitle")}
+          description={t("settings.data.clearCacheConfirmDesc")}
+          onConfirm={() => toast.success(t("settings.data.cacheCleared"))}
+        />
       </SettingRow>
       <SettingRow id="settings.clearAll" label={t("settings.data.clearAll")} description={t("settings.data.clearAllDesc")}>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" size="sm">{t("settings.data.clearAll")}</Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{t("settings.data.clearAllConfirmTitle")}</AlertDialogTitle>
-              <AlertDialogDescription>{t("settings.data.clearAllConfirmDesc")}</AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-destructive text-white hover:bg-destructive/90"
-                onClick={() => toast.success(t("settings.data.allCleared"))}
-              >
-                {t("settings.data.clearAllConfirmOk")}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ConfirmDialog
+          trigger={<Button variant="destructive" size="sm">{t("settings.data.clearAll")}</Button>}
+          title={t("settings.data.clearAllConfirmTitle")}
+          description={t("settings.data.clearAllConfirmDesc")}
+          confirmLabel={t("settings.data.clearAllConfirmOk")}
+          destructive
+          onConfirm={() => toast.success(t("settings.data.allCleared"))}
+        />
       </SettingRow>
       </SettingsCard>
     </div>

@@ -20,17 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
 import {
   Select,
   SelectContent,
@@ -567,32 +557,22 @@ export default function LlmProvidersNext() {
                   </Button>
                 )}
                 <div className="ml-auto">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
+                  <ConfirmDialog
+                    trigger={
                       <Button variant="ghost" size="xs" className="text-destructive">
                         {t("common.delete")}
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>{t("settings.providers.deleteTitle", { name: p.name })}</AlertDialogTitle>
-                        <AlertDialogDescription>{t("settings.providers.deleteDesc")}</AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-                        <AlertDialogAction
-                          className="bg-destructive text-white hover:bg-destructive/90"
-                          onClick={() => {
-                            void deleteStore(p.id)
-                              .then(() => toast.success(t("settings.providers.deleted")))
-                              .catch(() => toast.error(t("settings.providers.opFailed")));
-                          }}
-                        >
-                          {t("common.delete")}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                    }
+                    title={t("settings.providers.deleteTitle", { name: p.name })}
+                    description={t("settings.providers.deleteDesc")}
+                    confirmLabel={t("common.delete")}
+                    destructive
+                    onConfirm={() => {
+                      void deleteStore(p.id)
+                        .then(() => toast.success(t("settings.providers.deleted")))
+                        .catch(() => toast.error(t("settings.providers.opFailed")));
+                    }}
+                  />
                 </div>
               </div>
             </div>

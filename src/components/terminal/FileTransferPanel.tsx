@@ -33,16 +33,7 @@ import { formatBytes, shellQuote } from "../../utils/shellQuote";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
 import SshConnectionModalNext from "./SshConnectionModalNext";
 import type {
   DirEntry,
@@ -547,33 +538,22 @@ export default function FileTransferPanel({
           )}
         </button>
 
-      <AlertDialog
+      <ConfirmDialog
         open={deleteTarget !== null}
         onOpenChange={(o) => {
           // 点遮罩不关：免得误触把确认框和面板一起弄没了
           if (!o) setDeleteTarget(null);
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>删除 {deleteTarget?.entry.name ?? ""}？</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteTarget?.entry.isDir
-                ? "该文件夹及其全部内容都会被永久删除，此操作不可撤销。"
-                : "该文件会被永久删除，此操作不可撤销。"}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-white hover:bg-destructive/90"
-              onClick={() => void confirmDelete()}
-            >
-              删除
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        title={`删除 ${deleteTarget?.entry.name ?? ""}？`}
+        description={
+          deleteTarget?.entry.isDir
+            ? "该文件夹及其全部内容都会被永久删除，此操作不可撤销。"
+            : "该文件会被永久删除，此操作不可撤销。"
+        }
+        confirmLabel="删除"
+        destructive
+        onConfirm={() => void confirmDelete()}
+      />
 
       <SshConnectionModalNext
         open={connModalOpen}

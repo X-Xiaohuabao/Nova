@@ -23,17 +23,7 @@ import type { ToolType, Profile } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
 import {
   Select,
   SelectContent,
@@ -298,30 +288,18 @@ export default function ProfileManagementNext() {
             <Button variant="ghost" size="icon-sm" onClick={startCreate} aria-label={t("settings.profiles.new")}>
               <Plus size={14} />
             </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
+            <ConfirmDialog
+              trigger={
                 <Button variant="ghost" size="icon-sm" disabled={!selectedProfile} aria-label={t("common.delete")}>
                   <Minus size={14} />
                 </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    {t("settings.profiles.deleteTitle", { name: selectedProfile?.name ?? "" })}
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>{t("settings.profiles.deleteDesc")}</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-                  <AlertDialogAction
-                    className="bg-destructive text-white hover:bg-destructive/90"
-                    onClick={confirmDelete}
-                  >
-                    {t("common.delete")}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+              }
+              title={t("settings.profiles.deleteTitle", { name: selectedProfile?.name ?? "" })}
+              description={t("settings.profiles.deleteDesc")}
+              confirmLabel={t("common.delete")}
+              destructive
+              onConfirm={confirmDelete}
+            />
           </div>
         </div>
 
@@ -516,26 +494,18 @@ export default function ProfileManagementNext() {
       </div>
 
       {/* 放弃未保存修改确认（切换/新建/取消且表单有改动时） */}
-      <AlertDialog open={discardAction !== null} onOpenChange={(o) => { if (!o) setDiscardAction(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("settings.profiles.discardTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("settings.profiles.discardDesc")}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-white hover:bg-destructive/90"
-              onClick={() => {
-                discardAction?.();
-                setDiscardAction(null);
-              }}
-            >
-              {t("settings.profiles.discard")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={discardAction !== null}
+        onOpenChange={(o) => { if (!o) setDiscardAction(null); }}
+        title={t("settings.profiles.discardTitle")}
+        description={t("settings.profiles.discardDesc")}
+        confirmLabel={t("settings.profiles.discard")}
+        destructive
+        onConfirm={() => {
+          discardAction?.();
+          setDiscardAction(null);
+        }}
+      />
     </div>
   );
 }
