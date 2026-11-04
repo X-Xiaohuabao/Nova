@@ -47,6 +47,25 @@ description: |
 - 控件圆角：**6px**（小件）/ **8px**（中件）；连续圆角感由 token `--radius` 统一驱动
 - 焦点环：**双环**（外白内蓝，2px ring + offset），键盘可达性强制要求
 
+### 按钮（HIG 档位，`ui/Button` 已对齐）
+- 尺寸档：**default 28px / sm 24px / xs 20px / lg 32px**；图标钮同步（icon 28 / icon-sm 24 / icon-xs 20 / icon-lg 32）
+- 变体语义（强制）：
+  - `default` = **主要动作**：accent 蓝填充白字 + 微投影；一个视图内主要动作唯一
+  - `outline` = **标准 push button**：实色底（card）+ 细边框 + 低投影，hover 淡 accent——macOS 里大多数按钮长这样
+  - `ghost` = 工具栏/行内图标钮；`destructive` = 破坏性动作红
+- 交互反馈：hover 背景微变；**按下 `scale(0.98)` + 亮度微降**（link 豁免）；过渡 100~150ms
+
+### 设置卡片分组（Ventura 风格，`settings/next/SettingsSection` 已封装）
+- 一组设置 = **标题在卡片外**（13px medium、非大写、`--foreground/90`）+ **圆角色块卡**（`rounded-xl border-border/40 bg-card`，bg-card 在 bg-background 上形成色块分层）
+- 卡内行间 **hairline** 分割（`divide-border/40`）；行样式 `px-4 py-2.5`、行高基准 36px
+- 禁止裸行 + 分割线的散排（旧观感）；窄屏（<768px）行内 label/控件改上下堆叠
+
+### 滚动条（全局统一）
+- **8px 槽位 / 4px 视觉宽**圆角细条（`border 2px transparent + background-clip: padding-box`）
+- 滑条色：`muted-foreground` 35%（hover 60%），轨道透明——跟随明暗主题
+- 双语法：`::-webkit-scrollbar` + `scrollbar-width/color`（Firefox）；终端 xterm 滚动条对齐同观感
+- 例外：TabBar 滚动条隐藏（右缘渐隐提示）；定义唯一落在 `src/index.css` 全局段
+
 ## 3. 排版（SF 字体体系）
 
 - 字体栈：`system-ui → SF Pro（苹果端自动）→ PingFang SC → Microsoft YaHei → Noto Sans CJK SC`

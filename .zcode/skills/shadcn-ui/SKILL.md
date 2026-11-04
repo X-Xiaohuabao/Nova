@@ -49,6 +49,8 @@ description: |
 | 表单弹窗 | `ResponsiveDialog`（≥768px Dialog / <768px 底部 Sheet，内容一处声明双壳切换） | 裸用 Dialog 不做响应式 |
 | Toast | sonner（全局挂一次，`toast.success/error()`） | message/notification 自实现 |
 | 确认交互 | AlertDialog | 浏览器 `confirm()`、自造弹窗 |
+| 设置分组 | `SettingsSection`（`settings/next/`，标题卡外 + 圆角色块卡 + hairline，Ventura 风格） | 裸行 + 分割线散排 |
+| 按钮档位 | HIG：default 28px 蓝填充=主要动作 / outline=标准 push button / ghost=工具栏；按下 scale(0.98) | 各界面自定高度与配色 |
 | 命令面板/自动补全 | command（cmdk） | 自造下拉搜索 |
 | 文案 | react-i18next `t()`（`src/i18n/` 资源键） | 硬编码用户可见文案（含 aria-label） |
 
@@ -96,6 +98,12 @@ description: |
 | UpOutlined | ChevronUp | EyeOutlined | Eye |
 | EyeInvisibleOutlined | EyeOff | InfoCircleOutlined | Info |
 | ExclamationCircleOutlined | CircleAlert | QuestionCircleOutlined | CircleHelp |
+
+## 复用强制（macOS 观感统一）
+
+- **一切 UI 优先复用 `src/components/ui/` 与已封装模式组件**（Button/SettingsSection/ResponsiveDialog/Toast…），禁止界面里散写按钮样式、分组样式——观感漂移即回退
+- macOS 设计原则（HIG）为**强制规范**：设计决策依据见 macos-hig skill（三原则/度量/排版/颜色/材质/动效/交互七章），新 UI 交互先对照再动手
+- 观感辅助类（`surface-blur`/`traffic-light`/`running-dot`）唯一定义在 `src/styles/observance.css`，由 `src/index.css` 引用；禁止在组件里复刻
 
 ## 检查清单
 
