@@ -70,7 +70,8 @@ const instructions = `## 强制技能激活流程（必须执行）
 - rust-coding: Rust/后端/unwrap/thiserror/tokio/异步/clippy/Cargo/crate/错误处理
 - react-frontend: React/组件/Hooks/Props/TypeScript/strict/前端页面/渲染/状态
 - zustand-state: Zustand/store/全局状态/createStore/selector/状态管理/跨组件共享
-- antd-ui: Ant Design/AntD/组件库/表单/表格/弹窗/Modal/Form/Table/Tailwind/样式/布局/主题
+- shadcn-ui: shadcn/ui 组件/按钮/表单/弹窗/下拉/标签页/TailwindCSS/主题 token/明暗主题/CVA/样式/布局/间距/颜色/Toast/确认交互
+- macos-hig: macOS 设计规范/HIG/尺寸/字号/颜色/间距/动效/什么才像 macOS/视觉走查/设计评审基准
 - pty-terminal: PTY/xterm/终端/portable-pty/伪终端/会话输出/终端渲染/分屏/共享 PTY
 - storage-sqlite: SQLite/rusqlite/数据库/迁移/migrations/JSONL/存储/schema/事务
 - security-keychain: Keychain/keyring/凭据/API Key/Token/加密/脱敏/明文/密钥/安全
@@ -91,6 +92,12 @@ const instructions = `## 强制技能激活流程（必须执行）
 
 要点：先评估 → 再激活 → 后实现；不要跳过激活直接实现，也不要漏掉匹配的技能。`;
 
-// ZCode 要求 stdout 为严格 JSON，additionalContext 键注入对话
-process.stdout.write(JSON.stringify({ additionalContext: instructions }));
+// 双端适配输出（本脚本同时服务 ZCode 与 Claude Code，settings 均指向此文件）：
+// - ZCode：stdout 必须为严格 JSON，additionalContext 键注入对话（ZCode 会注入 ZCODE_PROJECT_DIR 环境变量，以此区分）
+// - Claude Code：UserPromptSubmit 的纯文本 stdout 直接注入为上下文
+if (process.env.ZCODE_PROJECT_DIR) {
+  process.stdout.write(JSON.stringify({ additionalContext: instructions }));
+} else {
+  console.log(instructions);
+}
 process.exit(0);
