@@ -1757,12 +1757,22 @@ export const useAppStore = create<AppState>((set, get) => ({
   newSessionModalOpen: false,
   newSessionProjectId: null,
   newSessionCategoryId: null,
-  setNewSessionModalOpen: (open, projectId, categoryId) =>
+  setNewSessionModalOpen: (open, projectId, categoryId) => {
+    // 未显式指定项目时的默认链：当前活动会话所属项目 → 最近活动会话所属项目
+    // → 第一个项目。调用方禁止各自盲取 projects[0]（design-session-model-config I1）。
+    let effectiveProjectId = projectId;
+    if (open && effectiveProjectId === undefined) {
+      const s = get();
+      const activeProjectId = s.sessions.find((x) => x.id === s.activeTabId)?.projectId;
+      const recentProjectId = [...s.sessions].sort((a, b) => b.updatedAt - a.updatedAt)[0]?.projectId;
+      effectiveProjectId = activeProjectId ?? recentProjectId ?? s.projects[0]?.id ?? null;
+    }
     set({
       newSessionModalOpen: open,
-      newSessionProjectId: open ? (projectId ?? null) : null,
+      newSessionProjectId: open ? (effectiveProjectId ?? null) : null,
       newSessionCategoryId: open ? (categoryId ?? null) : null,
-    }),
+    });
+  },
   newCategoryModalOpen: false,
   newCategoryProjectId: null,
   setNewCategoryModalOpen: (open, projectId) =>

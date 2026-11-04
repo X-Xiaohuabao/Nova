@@ -314,7 +314,7 @@ export default function AppNext() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setNewSessionModalOpen(true, projects[0]?.id ?? null, null)}
+                  onClick={() => setNewSessionModalOpen(true)}
                   aria-label={t("sessions.newSession")}
                   title={t("sessions.newSession")}
                   className="flex h-7 w-7 items-center justify-center rounded-md border border-border/60 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
