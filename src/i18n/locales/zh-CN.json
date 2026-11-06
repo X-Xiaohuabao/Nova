@@ -610,5 +610,18 @@
     "deleteCategoryDesc": "该分类下的会话将移出分类（会话本身保留）。",
     "deleteSessionDesc": "会话记录将被永久删除，此操作不可撤销。",
     "projects": "项目"
+  },
+  "rail": {
+    "messages": "消息",
+    "settings": "设置",
+    "stats": "统计"
+  },
+  "nav": {
+    "searchSessions": "搜索会话",
+    "newSessionNeedsProject": "请先选择项目",
+    "viewSessions": "查看会话",
+    "selectProject": "选择左侧项目查看会话",
+    "noSessions": "暂无会话\n点击上方 + 新建",
+    "noSearchResult": "没有匹配的会话"
   }
 }

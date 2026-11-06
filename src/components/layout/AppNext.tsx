@@ -12,13 +12,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  FolderPlus,
-  MessageSquarePlus,
-  Settings as SettingsIcon,
-  PieChart,
-  CircleHelp,
-} from "lucide-react";
 import { detectCliTools, getSessionCost, listProfiles, pollCosts } from "@/utils/ipc";
 import { listen } from "@tauri-apps/api/event";
 import { TOOL_DISPLAY_NAMES } from "@/types";
@@ -27,10 +20,13 @@ import { useAppStore } from "@/stores/appStore";
 import { toast } from "sonner";
 import { reportOpenTabError } from "@/utils/openTabError";
 import { themeStore, initTheme } from "@/stores/themeStore";
-import { shellStore, SIDEBAR_COLLAPSED_WIDTH } from "@/stores/shellStore";
+import { shellStore } from "@/stores/shellStore";
 import useKeyboardShortcuts from "@/hooks/useKeyboardShortcuts";
 import { useOnboarding, AgreementModalNext, OnboardingGuideNext } from "@/components/onboarding/OnboardingFlowNext";
-import SidebarTreeNext from "@/components/layout/SidebarTreeNext";
+import IconRail from "@/components/layout/IconRail";
+import ProjectColumn from "@/components/layout/ProjectColumn";
+import SessionColumn from "@/components/layout/SessionColumn";
+import type { MainView } from "@/components/layout/views";
 import WindowFrame from "@/components/shell/WindowFrame";
 import StatusBarShell from "@/components/shell/StatusBarShell";
 import { toolVisual } from "@/components/tabs/tabVisuals";
@@ -50,11 +46,8 @@ import ChatPlaceholder from "@/components/chat/ChatPlaceholder";
 import ChatView from "@/components/chat/ChatView";
 import TerminalView from "@/components/terminal/TerminalView";
 import FileTransferPanel from "@/components/terminal/FileTransferPanel";
-import { cn } from "@/lib/utils";
 import { effectiveViewMode } from "@/stores/appStore";
 import { MessageSquare, SquareTerminal } from "lucide-react";
-
-type MainView = "panes" | "settings" | "cost" | "help";
 
 /** 单 pane 内容：按视图形态分流——聊天（agent 通道）/ 终端（PTY 通道），claude 会话右上角可切换 */
 function PaneContent({
@@ -140,7 +133,6 @@ export default function AppNext() {
   const { t } = useTranslation();
   const resolved = themeStore((s) => s.resolved);
   const collapsed = shellStore((s) => s.sidebarCollapsed);
-  const sidebarWidth = shellStore((s) => s.sidebarWidth);
 
   const projects = useAppStore((s) => s.projects);
   const sessions = useAppStore((s) => s.sessions);
@@ -174,7 +166,9 @@ export default function AppNext() {
   const restoreTabs = useAppStore((s) => s.restoreTabs);
 
   const [view, setView] = useState<MainView>("panes");
-  const [expandedProjects, setExpandedProjects] = useState<ReadonlySet<string>>(() => new Set());
+  // 导航态（M1 本地 state；M2 路由化时 activeProjectId 进路由参数并持久化）
+  const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const panesHostRef = useRef<HTMLDivElement | null>(null);
   const onboarding = useOnboarding();
 
@@ -236,17 +230,11 @@ export default function AppNext() {
     return () => window.clearInterval(timer);
   }, [sessions]);
 
-  const toggleProject = (projectId: string) => {
-    setExpandedProjects((prev) => {
-      const next = new Set(prev);
-      if (next.has(projectId)) {
-        next.delete(projectId);
-      } else {
-        next.add(projectId);
-      }
-      return next;
-    });
-  };
+  // 默认激活第一个项目（项目被删后回落，避免悬空激活）
+  useEffect(() => {
+    if (activeProjectId && projects.some((p) => p.id === activeProjectId)) return;
+    setActiveProjectId(projects.length > 0 ? (projects[0]?.id ?? null) : null);
+  }, [projects, activeProjectId]);
 
   const openSession = (sessionId: string) => {
     // 失败原因可见化（如窗口数超限）；未知错误静默由业务上下文负责
@@ -300,74 +288,28 @@ export default function AppNext() {
       footer={statusbar}
     >
       <div className="relative flex min-h-0 flex-1">
-        {/* 桌面侧栏（真实数据） */}
-        <aside
-          className="surface-blur hidden flex-shrink-0 flex-col border-r border-border/60 md:flex"
-          style={{ width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : sidebarWidth }}
-        >
-          {!collapsed && (
-            <>
-              {/* 顶部动作 */}
-              <div className="flex gap-1.5 p-2.5">
-                <button
-                  type="button"
-                  onClick={() => setNewProjectModalOpen(true)}
-                  className="flex h-7 flex-1 items-center justify-center gap-1 rounded-md border border-border/60 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                >
-                  <FolderPlus size={12} />
-                  {t("sessions.newProject")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setNewSessionModalOpen(true)}
-                  aria-label={t("sessions.newSession")}
-                  title={t("sessions.newSession")}
-                  className="flex h-7 w-7 items-center justify-center rounded-md border border-border/60 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                >
-                  <MessageSquarePlus size={12} />
-                </button>
-              </div>
-
-              <SidebarTreeNext
-                expandedProjects={expandedProjects}
-                onToggleProject={toggleProject}
-                onOpenSession={openSession}
-                onNewCategory={(projectId) => setNewCategoryModalOpen(true, projectId)}
-                onNewSession={(projectId, categoryId) => setNewSessionModalOpen(true, projectId, categoryId)}
-              />
-
-              {/* 底部视图入口 */}
-              <div className="border-t border-border/60 p-2">
-                <div className="flex gap-1">
-                  {(
-                    [
-                      { view: "panes" as MainView, icon: <MessageSquarePlus size={13} />, label: t("shell.viewPanes") },
-                      { view: "settings" as MainView, icon: <SettingsIcon size={13} />, label: t("shell.viewSettings") },
-                      { view: "cost" as MainView, icon: <PieChart size={13} />, label: t("cost.title") },
-                      { view: "help" as MainView, icon: <CircleHelp size={13} />, label: t("shell.viewHelp") },
-                    ]
-                  ).map((entry) => (
-                    <button
-                      key={entry.view}
-                      type="button"
-                      title={entry.label}
-                      aria-label={entry.label}
-                      onClick={() => setView(entry.view)}
-                      className={cn(
-                        "flex h-7 flex-1 items-center justify-center rounded-md transition-colors",
-                        view === entry.view
-                          ? "bg-accent text-accent-foreground"
-                          : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
-                      )}
-                    >
-                      {entry.icon}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-        </aside>
+        {/* 模块图标栏（常驻）+ 消息视图导航两列：项目列表 → 激活项目的会话列表。
+            折叠（titlebar 按钮）时隐藏导航两列，仅留图标栏 */}
+        <IconRail view={view} onViewChange={setView} />
+        {view === "panes" && !collapsed && (
+          <>
+            <ProjectColumn
+              activeProjectId={activeProjectId}
+              onSelectProject={setActiveProjectId}
+              searchQuery={searchQuery}
+              onSearchQueryChange={setSearchQuery}
+              onNewSession={(projectId, categoryId) => setNewSessionModalOpen(true, projectId, categoryId)}
+              onNewProject={() => setNewProjectModalOpen(true)}
+            />
+            <SessionColumn
+              project={projects.find((p) => p.id === activeProjectId) ?? null}
+              searchQuery={searchQuery}
+              onOpenSession={openSession}
+              onNewSession={(projectId, categoryId) => setNewSessionModalOpen(true, projectId, categoryId)}
+              onNewCategory={(projectId) => setNewCategoryModalOpen(true, projectId)}
+            />
+          </>
+        )}
 
         {/* 内容区：空 tab 的 pane 不参与渲染（残留空分屏自动塌缩）；
             单 pane 时无视残留 splitRatio 占满全宽 */}

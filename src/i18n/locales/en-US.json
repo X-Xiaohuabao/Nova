@@ -610,5 +610,18 @@
     "deleteCategoryDesc": "Sessions in this category will be moved out of it (sessions are kept).",
     "deleteSessionDesc": "The session record will be permanently deleted. This cannot be undone.",
     "projects": "Projects"
+  },
+  "rail": {
+    "messages": "Messages",
+    "settings": "Settings",
+    "stats": "Stats"
+  },
+  "nav": {
+    "searchSessions": "Search sessions",
+    "newSessionNeedsProject": "Select a project first",
+    "viewSessions": "View sessions",
+    "selectProject": "Select a project to view its sessions",
+    "noSessions": "No sessions yet\nClick + above to create one",
+    "noSearchResult": "No matching sessions"
   }
 }

@@ -25,6 +25,9 @@
   --border: #d9d9de;
   --input: #d2d2d7;
   --ring: rgba(0, 122, 255, 0.4);
+  /* 图标栏 hover 块（60px 栏内 40x40 图标底）：亮色浅灰块，暗色深块 */
+  --rail-tile: #e4e4e8;
+  --rail-tile-foreground: #1d1d1f;
   --radius: 8px;
 }
 
@@ -48,6 +51,8 @@
   --border: #38383c;
   --input: #48484d;
   --ring: rgba(10, 132, 255, 0.5);
+  --rail-tile: #161618;
+  --rail-tile-foreground: #98989d;
   --radius: 8px;
 }
 
@@ -71,6 +76,8 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-rail-tile: var(--rail-tile);
+  --color-rail-tile-foreground: var(--rail-tile-foreground);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
