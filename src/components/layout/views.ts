@@ -1,6 +1,7 @@
 /**
- * 主视图标识。
- * M1（布局先行）：由 AppNext 本地 state 驱动；
- * M2（路由化）：改由 react-router HashRouter 驱动，本类型对应路由表。
+ * 视图布局常量。
+ * 路由化（M2）后视图由 react-router HashRouter 驱动，本文件只留布局共享常量。
  */
-export type MainView = "panes" | "settings" | "cost" | "help";
+
+/** 图标栏宽度（px）：IconRail 自身与 AppShell 视图层的定位共用同一来源 */
+export const RAIL_WIDTH = 60;

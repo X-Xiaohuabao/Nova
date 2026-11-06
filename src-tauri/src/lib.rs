@@ -37,6 +37,14 @@ static CLOSE_BEHAVIOR: Lazy<Mutex<CloseBehavior>> = Lazy::new(|| Mutex::new(Clos
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // dev 下开 WebView2 调试端口：CDP 连接抓性能 trace / 运行时诊断用
+    // （必须在 webview 创建前设置；仅 debug 构建生效，不进生产）
+    #[cfg(debug_assertions)]
+    std::env::set_var(
+        "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS",
+        "--remote-debugging-port=9223",
+    );
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())

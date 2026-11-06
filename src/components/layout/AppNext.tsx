@@ -12,6 +12,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { matchPath, Navigate, Route, Routes, useLocation, useNavigate } from "react-router";
 import { detectCliTools, getSessionCost, listProfiles, pollCosts } from "@/utils/ipc";
 import { listen } from "@tauri-apps/api/event";
 import { TOOL_DISPLAY_NAMES } from "@/types";
@@ -26,7 +27,7 @@ import { useOnboarding, AgreementModalNext, OnboardingGuideNext } from "@/compon
 import IconRail from "@/components/layout/IconRail";
 import ProjectColumn from "@/components/layout/ProjectColumn";
 import SessionColumn from "@/components/layout/SessionColumn";
-import type { MainView } from "@/components/layout/views";
+import { RAIL_WIDTH } from "@/components/layout/views";
 import WindowFrame from "@/components/shell/WindowFrame";
 import StatusBarShell from "@/components/shell/StatusBarShell";
 import { toolVisual } from "@/components/tabs/tabVisuals";
@@ -48,6 +49,7 @@ import TerminalView from "@/components/terminal/TerminalView";
 import FileTransferPanel from "@/components/terminal/FileTransferPanel";
 import { effectiveViewMode } from "@/stores/appStore";
 import { MessageSquare, SquareTerminal } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 /** 单 pane 内容：按视图形态分流——聊天（agent 通道）/ 终端（PTY 通道），claude 会话右上角可切换 */
 function PaneContent({
@@ -165,10 +167,20 @@ export default function AppNext() {
   const loadLlmProviders = useAppStore((s) => s.loadLlmProviders);
   const restoreTabs = useAppStore((s) => s.restoreTabs);
 
-  const [view, setView] = useState<MainView>("panes");
-  // 导航态（M1 本地 state；M2 路由化时 activeProjectId 进路由参数并持久化）
-  const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
+  // 视图与激活项目由路由驱动（M2）：/panes/:projectId
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isPanesRoute = location.pathname === "/panes" || location.pathname.startsWith("/panes/");
+  const routeProjectId = matchPath("/panes/:projectId", location.pathname)?.params.projectId ?? null;
   const [searchQuery, setSearchQuery] = useState("");
+
+  // 已访问视图集合：首访挂载后常驻（保活）。设置/统计/帮助整树挂载实测
+  // 有 200~800ms 主线程阻塞，每次切换重挂是卡顿根因；保活后切换仅翻转可见性
+  const routeView = location.pathname.split("/")[1] ?? "panes";
+  const [mountedViews, setMountedViews] = useState<ReadonlySet<string>>(() => new Set(["panes"]));
+  useEffect(() => {
+    setMountedViews((prev) => (prev.has(routeView) ? prev : new Set(prev).add(routeView)));
+  }, [routeView]);
   const panesHostRef = useRef<HTMLDivElement | null>(null);
   const onboarding = useOnboarding();
 
@@ -230,11 +242,18 @@ export default function AppNext() {
     return () => window.clearInterval(timer);
   }, [sessions]);
 
-  // 默认激活第一个项目（项目被删后回落，避免悬空激活）
+  // 激活项目路由化：无参数时落第一个项目；参数失效（项目被删）时回落，
+  // 项目尚未加载完成（启动链异步）时不动作，加载后本 effect 重跑补齐
   useEffect(() => {
-    if (activeProjectId && projects.some((p) => p.id === activeProjectId)) return;
-    setActiveProjectId(projects.length > 0 ? (projects[0]?.id ?? null) : null);
-  }, [projects, activeProjectId]);
+    if (!isPanesRoute) return;
+    if (routeProjectId && projects.some((p) => p.id === routeProjectId)) return;
+    const fallback = projects[0]?.id;
+    if (fallback) {
+      navigate(`/panes/${fallback}`, { replace: true });
+    } else if (routeProjectId) {
+      navigate("/panes", { replace: true });
+    }
+  }, [isPanesRoute, routeProjectId, projects, navigate]);
 
   const openSession = (sessionId: string) => {
     // 失败原因可见化（如窗口数超限）；未知错误静默由业务上下文负责
@@ -288,33 +307,41 @@ export default function AppNext() {
       footer={statusbar}
     >
       <div className="relative flex min-h-0 flex-1">
-        {/* 模块图标栏（常驻）+ 消息视图导航两列：项目列表 → 激活项目的会话列表。
-            折叠（titlebar 按钮）时隐藏导航两列，仅留图标栏 */}
-        <IconRail view={view} onViewChange={setView} />
-        {view === "panes" && !collapsed && (
-          <>
-            <ProjectColumn
-              activeProjectId={activeProjectId}
-              onSelectProject={setActiveProjectId}
-              searchQuery={searchQuery}
-              onSearchQueryChange={setSearchQuery}
-              onNewSession={(projectId, categoryId) => setNewSessionModalOpen(true, projectId, categoryId)}
-              onNewProject={() => setNewProjectModalOpen(true)}
-            />
-            <SessionColumn
-              project={projects.find((p) => p.id === activeProjectId) ?? null}
-              searchQuery={searchQuery}
-              onOpenSession={openSession}
-              onNewSession={(projectId, categoryId) => setNewSessionModalOpen(true, projectId, categoryId)}
-              onNewCategory={(projectId) => setNewCategoryModalOpen(true, projectId)}
-            />
-          </>
-        )}
+        <IconRail />
+        {/* 消息视图（/panes）：常驻保活——切视图仅翻转可见性，xterm 实例与
+            PTY 事件流不因路由切换销毁（修复切视图丢终端输出与重建卡顿） */}
+        <div
+          aria-hidden={!isPanesRoute}
+          className={cn(
+            "absolute inset-y-0 right-0 flex min-h-0",
+            isPanesRoute ? "visible" : "invisible pointer-events-none",
+          )}
+          style={{ left: RAIL_WIDTH }}
+        >
+          {/* 导航两列：项目列表 → 激活项目的会话列表；折叠（titlebar 按钮）时隐藏 */}
+          {!collapsed && (
+            <>
+              <ProjectColumn
+                activeProjectId={routeProjectId}
+                onSelectProject={(projectId) => navigate(`/panes/${projectId}`)}
+                searchQuery={searchQuery}
+                onSearchQueryChange={setSearchQuery}
+                onNewSession={(projectId, categoryId) => setNewSessionModalOpen(true, projectId, categoryId)}
+                onNewProject={() => setNewProjectModalOpen(true)}
+              />
+              <SessionColumn
+                project={projects.find((p) => p.id === routeProjectId) ?? null}
+                searchQuery={searchQuery}
+                onOpenSession={openSession}
+                onNewSession={(projectId, categoryId) => setNewSessionModalOpen(true, projectId, categoryId)}
+                onNewCategory={(projectId) => setNewCategoryModalOpen(true, projectId)}
+              />
+            </>
+          )}
 
-        {/* 内容区：空 tab 的 pane 不参与渲染（残留空分屏自动塌缩）；
-            单 pane 时无视残留 splitRatio 占满全宽 */}
-        {view === "panes" &&
-          (() => {
+          {/* 内容区：空 tab 的 pane 不参与渲染（残留空分屏自动塌缩）；
+              单 pane 时无视残留 splitRatio 占满全宽 */}
+          {(() => {
             const visiblePanes = panes.filter((p) => p.openTabIds.length > 0);
             if (visiblePanes.length === 0) {
               return <ChatPlaceholder />;
@@ -363,21 +390,52 @@ export default function AppNext() {
               </div>
             );
           })()}
-        {view === "settings" && (
-          <div className="min-h-0 min-w-0 flex-1">
-            <SettingsPageNext />
-          </div>
-        )}
-        {view === "cost" && (
-          <div className="min-h-0 min-w-0 flex-1">
-            <CostDashboardNext />
-          </div>
-        )}
-        {view === "help" && (
-          <div className="min-h-0 min-w-0 flex-1">
-            <HelpPageNext />
-          </div>
-        )}
+        </div>
+
+        {/* 设置/统计/帮助：首访挂载后保活（与消息视图同策略），路由仅翻转可见性。
+            首挂的整树成本只付一次，此后切换是纯 CSS 可见性翻转 */}
+        {(["settings", "cost", "help"] as const).map((view) => {
+          if (!mountedViews.has(view)) return null;
+          const active = routeView === view;
+          return (
+            <div
+              key={view}
+              aria-hidden={!active}
+              className={cn(
+                "absolute inset-y-0 right-0 flex min-h-0 min-w-0",
+                active ? "visible" : "invisible pointer-events-none",
+              )}
+              style={{ left: RAIL_WIDTH }}
+            >
+              {view === "settings" && (
+                <div className="min-h-0 min-w-0 flex-1">
+                  <SettingsPageNext />
+                </div>
+              )}
+              {view === "cost" && (
+                <div className="min-h-0 min-w-0 flex-1">
+                  <CostDashboardNext />
+                </div>
+              )}
+              {view === "help" && (
+                <div className="min-h-0 min-w-0 flex-1">
+                  <HelpPageNext />
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* 路由占位与兜底：具体路径渲染空（内容由上方保活块负责），未知路径回消息视图 */}
+        <Routes>
+          <Route path="/" element={<Navigate to="/panes" replace />} />
+          <Route path="/panes" element={null} />
+          <Route path="/panes/:projectId" element={null} />
+          <Route path="/settings" element={null} />
+          <Route path="/cost" element={null} />
+          <Route path="/help" element={null} />
+          <Route path="*" element={<Navigate to="/panes" replace />} />
+        </Routes>
       </div>
 
 
