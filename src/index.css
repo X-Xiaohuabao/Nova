@@ -66,7 +66,8 @@ html, body, #root {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: transparent;
+  /* 【性能实验·release 版】配合窗口不透明化，页面底色实色 */
+  background: var(--background);
 }
 
 #root {

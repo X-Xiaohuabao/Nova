@@ -1,11 +1,13 @@
 /* ============ macOS 观感辅助类（主应用与预览台共享） ============ */
 /* 依赖 tokens.css 的语义变量；由各入口 CSS 自行 @import。 */
 
-/* 毛玻璃表面：Header / 侧栏 / 状态条共用（仅壳层使用，内容区实色） */
+/* 毛玻璃表面：Header / 侧栏 / 状态条共用（仅壳层使用，内容区实色）
+ * 【性能实验·release 版】blur+透明窗口在集显上的合成税 A/B 验证：
+ * 禁用模糊与透明，实色化，若丝滑度显著改善则坐实合成层开销 */
 .surface-blur {
-  background: color-mix(in srgb, var(--background) 72%, transparent);
-  backdrop-filter: blur(24px) saturate(1.4);
-  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  background: var(--background);
+  /* backdrop-filter: blur(24px) saturate(1.4); */
+  /* -webkit-backdrop-filter: blur(24px) saturate(1.4); */
 }
 
 /* 交通灯：默认纯色圆点，hover 组内浮现符号 */
